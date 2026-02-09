@@ -9,17 +9,18 @@ This same pattern applies to any "track in zone" use case — obstruction detect
 
 ## What you'll build
 
-```
-Webhook Trigger → Type I Check → Event Orchestrator
-                                       │
-                   ┌───────────────────┘
-                   │
-             Create Event path:
-             Capture image → Create event → Generate GIF → Send email
-                   │
-             Close Event path:
-             Close event with duration metadata
-```
+<Frame caption="A complete Type I workflow in n8n — trigger, check, orchestrator with create and close event paths">
+  <img src="/images/guides/track-in-zone-workflow.png" alt="Type I Track in Zone workflow showing Detection Webhook Trigger, Check node, Event Orchestrator with four outputs, and create/close event paths" />
+</Frame>
+
+The workflow follows this structure:
+
+- **Trigger** receives detection data from the state machine
+- **Type I Check** evaluates zone thresholds (intersection, dwell time, velocity)
+- **Event Orchestrator** routes based on check results — create event, no action, update event, or close event
+- **Create path** captures a still image, creates the event, generates a GIF, and sends an email
+- **Close path** closes the event with duration metadata
+- **Replay Trigger** (disabled) is available for testing with historical data
 
 ## Prerequisites
 
