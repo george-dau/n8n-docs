@@ -1,0 +1,114 @@
+---
+title: "Composing Check Types"
+description: "How to combine Type I, II, and III checks to build any detection use case"
+---
+
+## The composable approach
+
+Worlds provides three fundamental check types that can be combined to express any detection use case:
+
+| Type | Question it answers |
+| --- | --- |
+| [**Type I**](/nodes/type-1-track-in-zone) | Is this track in a zone meeting threshold conditions? |
+| [**Type II**](/nodes/type-2-zone-sequence) | Did this track visit zones in a specific order? |
+| [**Type III**](/nodes/type-3-track-interaction) | Did this track interact with another track? |
+
+Rather than building specialized nodes for each use case, you compose these types together in your workflow.
+
+## How composition works
+
+Each check type writes its results to a separate namespace — `checks.type1`, `checks.type2`, `checks.type3` — and preserves all input data. This means you can chain them in sequence:
+
+```
+Trigger → Type I Check → Type II Check → Event Orchestrator
+```
+
+The Event Orchestrator reads the combined `checks` object and evaluates all results using AND or OR logic to decide whether to create, update, or close an event.
+
+## Common compositions
+
+### Type I alone — track in zone
+
+The simplest and most common pattern. A single Type I check handles use cases like:
+
+- Obstruction/loitering (dwell + velocity thresholds)
+- Zone intrusion (intersection threshold)
+- Speeding in zone (velocity threshold)
+
+```
+Trigger → Type I → Event Orchestrator → Event Manager
+```
+
+### Type I + Type II — zone sequence with thresholds
+
+Combine zone presence conditions with directional/sequence validation:
+
+- Wrong-way detection with speed check (was the vehicle going fast in the wrong direction?)
+- Checkpoint compliance (did the vehicle stop at checkpoint A before entering zone B?)
+
+```
+Trigger → Type I → Type II → Event Orchestrator → Event Manager
+```
+
+### Type I + Type III — proximity in zone
+
+Combine zone-based conditions with track-to-track interaction:
+
+- Person near forklift in a specific zone
+- Two vehicles overlapping in a loading bay
+
+```
+Trigger → Type I → Type III → Event Orchestrator → Event Manager
+```
+
+### All three types
+
+For complex safety rules:
+
+- Person entered restricted zone (Type I), bypassed the checkpoint (Type II), and was near equipment (Type III)
+
+```
+Trigger → Type I → Type II → Type III → Event Orchestrator → Event Manager
+```
+
+## Output accumulation
+
+As data flows through multiple check nodes, the `checks` object accumulates:
+
+```json
+{
+  "track_state": { ... },
+  "checks": {
+    "type1": {
+      "passed": true,
+      "matching_zones": ["79"],
+      "zone_details": { ... }
+    },
+    "type2": {
+      "passed": true,
+      "matching_zones": ["zone_b"],
+      "track_sequence": ["zone_a", "zone_c", "zone_b"],
+      "sequences": [ ... ]
+    }
+  }
+}
+```
+
+The Event Orchestrator evaluates all `checks` entries:
+
+- **AND mode** — all checks must pass for conditions to be met
+- **OR mode** — any check passing is sufficient
+
+## Logic within vs. across checks
+
+Understanding the logic layers:
+
+| Level | Logic | Description |
+| --- | --- | --- |
+| **Within a zone** | AND | All enabled thresholds must pass for a zone to match |
+| **Across zones** | OR | At least one zone must match for the check to pass |
+| **Across check types** | AND or OR | Configured on the Event Orchestrator |
+
+<Tip>
+Start with a single Type I check for most use cases. Add Type II or Type III only when your use case genuinely requires sequence or interaction detection. Simpler workflows are easier to debug and maintain.
+</Tip>

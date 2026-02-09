@@ -1,0 +1,67 @@
+---
+title: "Replay Trigger"
+description: "Replay historical track detections for testing workflows without live camera feeds"
+---
+
+The Replay Trigger lets you test workflows using historical detection data. It replays past tracks through the state machine, producing the same signals (`track_created`, `track_updated`, `track_expired`) as live detections.
+
+## When to use
+
+- **Testing workflows** before deploying to production
+- **Debugging** a specific track that caused unexpected behavior
+- **Developing** new workflows without needing access to live cameras
+- **Demonstrating** workflow behavior to stakeholders
+
+## Data source modes
+
+<Tabs>
+  <Tab title="Track ID">
+    Replay specific tracks by their UUIDs. Use this when you have a known track you want to re-process.
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **Track IDs** | Text (multiline) | UUIDs of tracks to replay |
+    | **Timestamp** | DateTime | Approximate time when track occurred. Required for tracks older than 24 hours. |
+  </Tab>
+  <Tab title="Query">
+    Search for tracks by time range, data source, zone, and object type. Use this to replay a broader set of activity.
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **Site** | Select | Site to query |
+    | **Data Sources** | Multi-select | Cameras to query tracks from |
+    | **Zones** | Multi-select | Specific zones to filter by |
+    | **Tags** | Multi-select | Object types to include |
+    | **Start Time** | DateTime | Start of time range (UTC) |
+    | **End Time** | DateTime | End of time range (UTC) |
+    | **Max Tracks** | Number | Maximum tracks to fetch (default: 100) |
+  </Tab>
+</Tabs>
+
+## Processing modes
+
+Like the Detection Webhook Trigger, the Replay Trigger supports both **streaming** and **batch** processing modes.
+
+In streaming mode, you can choose between **auto** replay (tracks are replayed with original timing preserved) or **manual** replay (step through detections one at a time).
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Processing Mode** | Select | Streaming | Streaming or Batch |
+| **Signal Type** | Select | Track State | Track State or Zone State (streaming only) |
+| **Mode** | Select | Auto | Auto or Manual replay (streaming only) |
+| **Cleanup Events** | Boolean | true | Delete events created during replay when complete |
+| **Debug Mode** | Boolean | false | Enable verbose logging |
+
+## Output
+
+The output format is identical to the [Detection Webhook Trigger](/nodes/detection-webhook-trigger). Your workflow doesn't need to know whether data is live or replayed — the same check nodes, orchestrator, and action nodes work with both.
+
+## Credentials
+
+Requires **GraphQL Subscription API** credentials.
+
+<Tip>
+Keep the Replay Trigger in your workflow but **disable it** when running live. This gives you an easy way to test at any time by disabling the live trigger and enabling the replay trigger.
+</Tip>

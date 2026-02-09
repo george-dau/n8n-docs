@@ -1,0 +1,110 @@
+---
+title: "Type II: Zone Sequence"
+description: "Check if a track visited zones in a specific order"
+---
+
+Type II checks evaluate whether a track traversed zones in a configured sequence. This is used for detecting directional violations, validating expected paths, or identifying tracks that skipped required checkpoints.
+
+## When to use
+
+Use Type II for any use case where the core question is "did this object travel through zones in this order?":
+
+- **Wrong-way detection** — track visited zones in the reverse of the expected direction
+- **Checkpoint validation** — track passed through required zones before entering a restricted area
+- **Path compliance** — track followed the expected route through a facility
+- **Entry/exit patterns** — track entered through a specific zone and exited through another
+
+## How it works
+
+1. The node builds the track's **zone sequence** — the chronological order of zones visited
+2. For each configured sequence, it checks if the zones appear in that order within the track sequence
+3. **Bypass zones** can invalidate a match if they appear between sequence zones
+4. The check passes if **at least one** configured sequence matches
+
+## Configuration
+
+### Site
+
+Select the Worlds site to load available zones.
+
+### Zone sequences
+
+Define one or more sequences to check for. Each sequence contains:
+
+| Parameter | Description |
+| --- | --- |
+| **Zones** | Ordered list of zone IDs. The first zone is the start, the last is the **target zone**. |
+| **Bypass Zones** | Optional. Zones that invalidate the match if visited between sequence zones. |
+
+<Note>
+Each sequence requires at least 2 zones. The **last zone** in the sequence is the target zone — it gets added to `matching_zones` when the sequence matches.
+</Note>
+
+### Match mode
+
+| Mode | Description |
+| --- | --- |
+| **Ordered** (recommended) | Zones must appear in order, but other zones can appear between them. Sequence [A, C] matches in path [A, B, C]. |
+| **Exact** | The last N zones must match exactly. Sequence [A, C] only matches if the last 2 zones visited are [A, C] with nothing between. |
+
+### Advanced settings
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| **Check Target** | Auto | `auto` uses history + active for streaming, history only for batch |
+| **Debug Mode** | false | Enable verbose logging |
+
+## Bypass zones
+
+Bypass zones provide a way to invalidate a sequence match. If a track visited a bypass zone between any two zones in the sequence, the match is invalidated.
+
+**Example — wrong-way detection with exception:**
+
+- Sequence: [Zone A, Zone B] (expected forward direction)
+- Bypass zones: [Security Checkpoint]
+- Track path: Zone A → Security Checkpoint → Zone B
+- Result: **No match** — the security checkpoint between A and B invalidates the sequence
+
+This is useful for cases where a specific intermediate zone means the traversal was authorized.
+
+## Output
+
+```json
+{
+  "track_state": { ... },
+  "checks": {
+    "type2": {
+      "passed": true,
+      "check_target": "active",
+      "check_target_source": "auto",
+      "matching_zones": ["zone_b"],
+      "matching_zone_count": 1,
+      "track_sequence": ["zone_a", "zone_c", "zone_b"],
+      "sequences": [
+        {
+          "zones": ["zone_a", "zone_b"],
+          "target_zone": "zone_b",
+          "passed": true,
+          "match_positions": [0, 2],
+          "intermediate_zones": ["zone_c"],
+          "bypass_zones_found": []
+        }
+      ]
+    }
+  }
+}
+```
+
+### Key output fields
+
+| Field | Description |
+| --- | --- |
+| `passed` | Whether any configured sequence was found in the track's zone history |
+| `matching_zones` | Target zones (last zone) of matching sequences |
+| `track_sequence` | The full zone sequence the track traversed |
+| `sequences` | Per-sequence results with match positions, intermediate zones, and bypass zone details |
+| `reason` | If failed: `no_sequences_configured`, `empty_track_sequence`, `no_sequences_matched`, etc. |
+
+## Credentials
+
+Requires **GraphQL Subscription API** credentials (for loading site/zone options).

@@ -1,0 +1,106 @@
+---
+title: "Event Manager"
+description: "Create, update, and close events in the Worlds platform"
+---
+
+The Event Manager creates, updates, and closes events in the Worlds platform via the GraphQL API. It's the node that makes things happen in the Worlds UI — creating event records with metadata, snapshots, and associated tracks.
+
+## When to use
+
+Place this node after the [Event Orchestrator](/nodes/event-orchestrator) to execute the event action. You typically need two Event Manager nodes in a workflow — one on the "Create Event" output and one on the "Close Event" output.
+
+## Operations
+
+<Tabs>
+  <Tab title="Create Event">
+    Creates a new event in Worlds with full metadata.
+
+    ### Required fields
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **Event Producer** | Select | The event producer to create events under (dynamically loaded) |
+    | **Event Type** | String | Event category (e.g., "Operational", "Safety") |
+    | **Event Subtype** | String | Further categorization (e.g., "Obstruction Event") |
+    | **Start Time** | DateTime | When the event started. Typically `={{$json.track_state.last_seen}}` |
+
+    ### Optional fields
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **End Time** | DateTime | If provided, creates the event in a closed state |
+    | **Track IDs** | String | Track IDs to associate with the event |
+    | **Metadata** | Key-Value pairs | Custom metadata (trackId, dataSourceID, tag, position, etc.) |
+    | **Snapshots** | Collection | Camera snapshots to attach (dataSourceId + timestamp) |
+    | **Uploads** | Collection | Binary data to upload (e.g., processed images, GIFs) |
+
+    ### Advanced settings
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **Site IDs** | String | Comma-separated site IDs |
+    | **Data Source IDs** | String | Comma-separated data source IDs |
+    | **Tags** | String | Comma-separated tags |
+    | **Priority** | String | Event priority level |
+    | **Draft** | Boolean | Mark event as draft |
+  </Tab>
+  <Tab title="Update Event">
+    Updates an existing event — adds metadata, snapshots, or track associations.
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **Event ID** | String | The event ID to update |
+    | **Track IDs** | String | Additional track IDs to associate |
+    | **Metadata** | Key-Value pairs | Metadata to merge with existing |
+    | **Snapshots** | Collection | Additional snapshots |
+    | **Uploads** | Collection | Additional uploads |
+  </Tab>
+  <Tab title="Close Event">
+    Closes an existing event with final metadata.
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **Event ID** | String | The event ID to close. Typically `={{$json.eventOrchestrator.global_event_id}}` |
+    | **End Time** | DateTime | When the event ended. Typically `={{$json.track_state.last_seen}}` |
+    | **Track IDs** | String | Final track IDs |
+    | **Metadata** | Key-Value pairs | Final metadata (e.g., duration) |
+    | **Snapshots** | Collection | Final snapshots |
+    | **Clips** | Collection | Video clips (dataSourceId, startTime, endTime) |
+    | **Uploads** | Collection | Final uploads |
+  </Tab>
+  <Tab title="Get Event">
+    Queries event status from the state machine.
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **Scope Type** | Select | track, zone, device, or site |
+    | **Scope ID** | String | The scope ID to query |
+  </Tab>
+</Tabs>
+
+## Output
+
+The create operation returns the created event data:
+
+```json
+{
+  "track_state": { ... },
+  "createdEvent": {
+    "id": "event-uuid-here",
+    "startTime": "2026-01-13T15:18:52.005Z",
+    "type": "Operational",
+    "subType": "Obstruction Event"
+  }
+}
+```
+
+## Credentials
+
+Requires **GraphQL Subscription API** credentials.
+
+## Example
+
+In the [Track in Zone](/guides/track-in-zone) guide, two Event Manager nodes are used:
+
+1. **Create path:** Creates an event with track metadata, position, camera snapshot, and a processed image upload
+2. **Close path:** Closes the event with the end time and calculates duration as metadata: `={{Math.round((new Date($json.track_state.last_seen) - new Date($json.eventOrchestrator.event_start_time)) / 1000)}}`

@@ -1,0 +1,83 @@
+---
+title: "Detection Pipeline"
+description: "How detection data flows from cameras through the state machine to your n8n workflows"
+---
+
+## From camera to workflow
+
+A single detection starts as pixels in a camera frame and ends as structured data in your n8n workflow. Here's what happens at each stage.
+
+### 1. Camera detection
+
+The Worlds platform processes camera feeds using computer vision models. Each frame produces zero or more **detections** — identified objects with:
+
+- **Bounding box** — pixel coordinates of the object in the frame
+- **Object type (tag)** — what was detected (person, forklift, AMR, etc.)
+- **Confidence score** — how certain the model is
+- **Timestamp** — when the frame was captured
+- **Geo-coordinates** — if the camera is geo-calibrated
+
+### 2. Detection stream
+
+Detections are published in real time via the Worlds GraphQL API over WebSocket. A busy site with many cameras can produce hundreds of detections per second.
+
+### 3. State machine processing
+
+The state machine subscribes to the detection stream and does the heavy lifting:
+
+- **Track correlation** — groups sequential detections of the same object into a **track**
+- **State enrichment** — calculates velocity, zone intersections, and dwell times
+- **Signal generation** — emits `track_created` when a new track starts, `track_updated` on each new detection, and `track_expired` when a track goes stale
+
+Each signal includes the complete enriched track state — your workflow never needs to query for additional data.
+
+### 4. Webhook delivery
+
+The state machine delivers signals to n8n via HTTP webhooks. Each workflow registers a webhook URL through its trigger node. The state machine:
+
+- Matches each detection against registered subscriptions (by data source, object type, etc.)
+- Delivers matching signals to the appropriate webhook URLs
+- Processes detections **sequentially per data source** to prevent race conditions
+
+### 5. Workflow execution
+
+Your n8n workflow receives the track state and runs your business logic. A single workflow execution handles one signal for one track.
+
+## Data flow example
+
+Here's a concrete example of a forklift being tracked:
+
+```
+Frame 1: Forklift detected at (500, 300) in camera "Loading Dock A"
+Frame 2: Same forklift at (502, 301) — correlated to same track
+Frame 3: Forklift at (503, 301) — enters Zone "Loading Bay 1"
+...
+Frame 900: Forklift still at (505, 302) — dwell time now 300s, velocity ~0.1 px/s
+```
+
+By frame 900, the state machine has built a rich track state object:
+
+```json
+{
+  "signal": "track_updated",
+  "track_state": {
+    "track_id": "019bb7ea-4050-...",
+    "tag": "forklift",
+    "datasource_name": "Loading Dock A",
+    "motion": {
+      "pix": { "velocity": 0.1, "distance": 12.5 }
+    },
+    "zones": {
+      "active": {
+        "42": {
+          "zone_name": "Loading Bay 1",
+          "dwell_time": 300,
+          "intersection": { "current_percent": 85.2 }
+        }
+      }
+    }
+  }
+}
+```
+
+Your workflow receives this and can apply a Type I check: "Is this forklift in Loading Bay 1, with dwell > 300s, velocity < 2 px/s?" If yes, create an event.

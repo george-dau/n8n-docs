@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Worlds n8n Documentation",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#1170E3",
+    "light": "#4D9BF7",
+    "dark": "#0E58B9"
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -14,109 +14,105 @@
         "tab": "Guides",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
               "index",
-              "quickstart",
-              "development"
+              "getting-started/overview",
+              "getting-started/prerequisites"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/detection-pipeline",
+              "concepts/tracks-and-zones",
+              "concepts/signals",
+              "concepts/check-chaining"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Workflow Guides",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "guides/track-in-zone"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Advanced",
+            "expanded": false,
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "state-machine/overview",
+              "state-machine/api-reference"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Node Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Trigger Nodes",
             "pages": [
-              "api-reference/introduction"
+              "nodes/detection-webhook-trigger",
+              "nodes/replay-trigger"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Check Nodes",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "nodes/check-types-overview",
+              "nodes/type-1-track-in-zone",
+              "nodes/type-2-zone-sequence",
+              "nodes/type-3-track-interaction"
+            ]
+          },
+          {
+            "group": "Event Nodes",
+            "pages": [
+              "nodes/event-orchestrator",
+              "nodes/event-manager"
+            ]
+          },
+          {
+            "group": "Action Nodes",
+            "pages": [
+              "nodes/actions",
+              "nodes/debug"
             ]
           }
         ]
       }
     ],
     "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
+      "anchors": []
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png"
   },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:support@worlds.io"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
+    ]
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/worlds-io"
     }
   }
 }

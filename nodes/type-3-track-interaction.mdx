@@ -1,0 +1,138 @@
+---
+title: "Type III: Track Interaction"
+description: "Check if a track interacted with other tracks matching tag and threshold criteria"
+---
+
+Type III checks evaluate whether a track had interactions with other tracked objects. Interactions are detected by the state machine based on bounding box overlap and proximity, and this node applies tag filtering and threshold conditions.
+
+## When to use
+
+Use Type III for any use case where the core question is "did this object interact with that type of object?":
+
+- **Safety near-miss** — person within dangerous proximity of a forklift
+- **Equipment interaction** — two specific vehicle types overlapping
+- **Congestion interaction** — tracks of the same type clustering together
+- **Escort compliance** — vehicle must be accompanied by a person
+
+## How it works
+
+1. The node reads the track's `interactions` array (populated by the state machine in batch mode)
+2. It matches the **primary tag** (current track's object type) against configured groups
+3. For matching groups, it checks the **secondary tag** (interacting track's object type)
+4. If both tags match, it evaluates threshold conditions (overlap, duration, distance)
+5. The check passes if **at least one** interaction meets all enabled thresholds
+
+### Tag matching
+
+Type III uses a two-tag system:
+
+| Tag | Description | Example |
+| --- | --- | --- |
+| **Primary tag** | The object type of the current track | `person` |
+| **Secondary tag** | The object type of the interacting track | `forklift` |
+
+A threshold group only applies when **both** the primary and secondary tags match.
+
+## Configuration
+
+### Interaction threshold groups
+
+Each group defines a tag pair and optional thresholds:
+
+| Parameter | Description |
+| --- | --- |
+| **Primary Tags** | Object type(s) of the current track (e.g., person) |
+| **Secondary Tags** | Object type(s) of the interacting track (e.g., forklift, vehicle) |
+| **Overlap** | Minimum bounding box overlap percentage (0–100%) |
+| **Duration** | Minimum interaction duration in seconds |
+| **Distance** | Maximum distance between tracks (pixels or meters) |
+
+Each threshold has an enable toggle, operator (`>=`, `>`, `<=`, `<`, `==`), and value.
+
+<Note>
+If no thresholds are enabled, the check passes on **tag match alone** — any interaction between the configured tag types will pass.
+</Note>
+
+### Debug mode
+
+Boolean toggle for verbose logging.
+
+## Output
+
+```json
+{
+  "track_state": { ... },
+  "checks": {
+    "type3": {
+      "passed": true,
+      "primary_track_id": "track-uuid-1",
+      "primary_tag": "person",
+      "primary_tag_matched": true,
+      "matching_interactions": ["track-uuid-2"],
+      "matching_interaction_count": 1,
+      "matching_track_pair_ids": ["track-uuid-1::track-uuid-2"],
+      "matching_tags": ["forklift"],
+      "interaction_details": {
+        "track-uuid-2": {
+          "track_id": "track-uuid-2",
+          "tag": "forklift",
+          "track_pair_id": "track-uuid-1::track-uuid-2",
+          "passed": true,
+          "total_duration": 12.5,
+          "first_interaction_at": "2026-01-13T15:12:52.005Z",
+          "last_interaction_at": "2026-01-13T15:13:04.505Z",
+          "thresholds": {
+            "overlap": {
+              "enabled": true,
+              "operator": ">=",
+              "threshold": 10,
+              "actual": 25.5,
+              "passed": true,
+              "unit": "%"
+            },
+            "duration": {
+              "enabled": true,
+              "operator": ">=",
+              "threshold": 5,
+              "actual": 12.5,
+              "passed": true,
+              "unit": "s"
+            }
+          }
+        }
+      },
+      "interactions_checked": 3
+    }
+  }
+}
+```
+
+### Key output fields
+
+| Field | Description |
+| --- | --- |
+| `passed` | Whether any interaction met all thresholds |
+| `primary_tag_matched` | Whether the current track's tag matched any group's primary tags |
+| `matching_interactions` | Track IDs of interacting tracks that passed |
+| `matching_track_pair_ids` | Canonical pair IDs (sorted alphabetically) for deduplication |
+| `matching_tags` | Object types of matching interacting tracks |
+| `interaction_details` | Per-interaction threshold breakdown |
+| `reason` | If failed: `primary_tag_not_configured`, `no_interactions_in_input`, `no_interactions_met_thresholds`, etc. |
+
+### Track pair IDs
+
+Type III generates canonical track pair IDs by alphabetically sorting the two track IDs. This ensures the same pair always produces the same ID regardless of which track is primary:
+
+```
+track-a::track-b  (always this order, never track-b::track-a)
+```
+
+This is useful for deduplication when both tracks in a pair trigger the same workflow.
+
+## Batch mode requirement
+
+Type III checks require **interaction data** which is only available in **batch mode**. The state machine calculates interactions (bounding box overlap, proximity) when processing batch subscriptions. Streaming mode does not include interaction data.
+
+## Credentials
+
+No credentials required. Tag options are configured manually.

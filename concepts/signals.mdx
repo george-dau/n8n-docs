@@ -1,0 +1,63 @@
+---
+title: "Signals"
+description: "Understanding track_created, track_updated, and track_expired signals"
+---
+
+## What are signals?
+
+A **signal** is an event emitted by the state machine when something changes about a track. Every item that arrives at your workflow's trigger node includes a `signal` field indicating what happened.
+
+There are three signal types:
+
+## track_created
+
+Fired **once** when a new track is first detected. This is the first time the state machine has seen this object.
+
+At this point the track state is minimal — there's only one detection, so velocity is zero, dwell time is zero, and zone data may be sparse.
+
+**Common use:** Most workflows **do not** act on `track_created` because there isn't enough data to make meaningful decisions yet.
+
+## track_updated
+
+Fired on **every subsequent detection** after the track is created. This is by far the most common signal — a track that lasts 5 minutes at 1 detection/second generates ~300 `track_updated` signals.
+
+Each update includes the fully enriched track state with current velocity, dwell times, zone intersections, and more. The data gets richer over time as more detections accumulate.
+
+**Common use:** This is where most business logic runs. Your checks evaluate the current state on each update and the Event Orchestrator decides whether conditions warrant creating or closing an event.
+
+## track_expired
+
+Fired **once** when the state machine hasn't received a detection for this track within the TTL window (default: 15 seconds). The track is considered gone.
+
+The expired signal includes the **final** track state — the last known position, total dwell times, complete zone history, and final velocity measurements.
+
+**Common use:** Used for "track summary" workflows that only care about the complete lifecycle. Also used by the Event Orchestrator to close events when a track disappears. Batch processing workflows typically emit data only on track expiration.
+
+## Signal flow example
+
+```
+Time 0s:   Object detected     → signal: "track_created"
+Time 1s:   Object re-detected  → signal: "track_updated"  (velocity: 5 px/s)
+Time 2s:   Object enters zone  → signal: "track_updated"  (zone active, dwell: 0s)
+...
+Time 300s: Object still in zone → signal: "track_updated" (dwell: 298s, velocity: 0.5 px/s)
+Time 301s: Object still in zone → signal: "track_updated" (dwell: 299s) ← check threshold met!
+...
+Time 500s: Object leaves frame  → (no more detections)
+Time 515s: TTL expires          → signal: "track_expired"  (final state)
+```
+
+## Filtering signals in your workflow
+
+The Detection Webhook Trigger delivers all three signal types by default. You can use the signal type in your workflow logic — for example, the Event Orchestrator uses `track_expired` to know when to close events.
+
+If you only want to process certain signals, you can add an n8n **IF** node after the trigger to filter:
+
+```javascript
+// Only process updates (skip created and expired)
+{{ $json.signal === "track_updated" }}
+```
+
+<Note>
+Most workflows process all signals and let the check nodes and Event Orchestrator handle the logic. You typically don't need to manually filter signals.
+</Note>

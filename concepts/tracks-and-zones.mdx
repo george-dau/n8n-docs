@@ -1,0 +1,169 @@
+---
+title: "Tracks & Zones"
+description: "Understanding the core data structures in Worlds detection workflows"
+---
+
+## Tracks
+
+A **track** represents a single detected object moving through a camera's field of view over time. The state machine creates a track when an object is first detected and maintains it as new detections arrive.
+
+### Track state object
+
+Every signal delivered to your workflow includes a `track_state` object with the full current state of the track:
+
+```json
+{
+  "track_state": {
+    "track_id": "019bb7ea-4050-7e9b-8761-f8df773fd3e5",
+    "tag": "forklift",
+    "datasource_id": "507eaeca-cc89-4501-9e0d-0d062a8f355d",
+    "datasource_name": "Op 120",
+    "device_id": "41",
+    "site_id": "3",
+    "site_name": "Mid-Range Engine Plant CMEP",
+    "first_seen": "2026-01-13T15:12:52.005Z",
+    "last_seen": "2026-01-13T15:18:52.005Z",
+    "track_age": "360.000",
+    "detection_count": 43,
+    "position": { ... },
+    "motion": { ... },
+    "zones": { ... },
+    "interactions": [ ... ]
+  }
+}
+```
+
+### Key track fields
+
+| Field | Description |
+| --- | --- |
+| `track_id` | Unique identifier for this track (UUID) |
+| `tag` | Object type detected (e.g., "forklift", "person", "amr") |
+| `datasource_id` | Camera/data source UUID |
+| `datasource_name` | Human-readable camera name |
+| `site_id` / `site_name` | The site where this camera is located |
+| `first_seen` / `last_seen` | ISO 8601 timestamps for track start and latest detection |
+| `track_age` | Duration of the track in seconds |
+| `detection_count` | Number of individual detections in this track |
+
+### Position
+
+The track's current position includes both pixel and geo-referenced coordinates:
+
+```json
+{
+  "position": {
+    "pix": { "x": 902, "y": 448 },
+    "geo": { "lon": -85.950773951, "lat": 39.130477131 },
+    "polygon": {
+      "coordinates": [[[867, 397], [937, 397], [937, 499], [867, 499], [867, 397]]]
+    }
+  }
+}
+```
+
+- `pix` — pixel coordinates of the object's center in the camera frame
+- `geo` — geographic longitude/latitude (if camera is geo-calibrated)
+- `polygon` — the bounding box of the detected object
+
+### Motion
+
+Velocity and distance metrics in both pixel and geographic units:
+
+```json
+{
+  "motion": {
+    "pix": { "velocity": 6.52, "distance": 438.77, "sample_count": 41 },
+    "geo": { "velocity": 0.23, "distance": 16.57, "sample_count": 41 }
+  }
+}
+```
+
+- `velocity` — rolling average speed (px/s or m/s)
+- `distance` — total distance traveled
+- `sample_count` — number of detection pairs used for calculation
+
+## Zones
+
+A **zone** is a defined polygon region within a camera's field of view. Zones are configured in the Worlds platform and represent areas of interest — loading bays, walkways, restricted areas, intersections, etc.
+
+### Active zones
+
+The `zones.active` object contains every zone the track currently intersects:
+
+```json
+{
+  "zones": {
+    "active": {
+      "79": {
+        "zone_id": "79",
+        "zone_name": "op120-zone",
+        "entered_at": "2026-01-13T15:12:52.005Z",
+        "dwell_time": 360,
+        "detection_count": 43,
+        "intersection": {
+          "current_percent": 59.25,
+          "avg_percent": 21.17,
+          "sample_count": 43
+        },
+        "motion": {
+          "pix": { "velocity": 6.52, "distance": 438.77 },
+          "geo": { "velocity": 0.23, "distance": 16.57 }
+        }
+      }
+    }
+  }
+}
+```
+
+### Key zone fields
+
+| Field | Description |
+| --- | --- |
+| `zone_id` / `zone_name` | Zone identifier and human-readable name |
+| `entered_at` | When the track first entered this zone |
+| `dwell_time` | How long the track has been in this zone (seconds) |
+| `detection_count` | Number of detections while in this zone |
+| `intersection.current_percent` | How much of the object's bounding box overlaps the zone right now (0–100%) |
+| `intersection.avg_percent` | Average intersection over the track's time in this zone |
+| `motion` | Per-zone velocity and distance (may differ from overall track motion) |
+
+### Zone history
+
+When a track exits a zone, it moves from `zones.active` to `zones.history`:
+
+```json
+{
+  "zones": {
+    "history": [
+      {
+        "zone_id": "42",
+        "zone_name": "Loading Bay 1",
+        "entered_at": "2026-01-13T15:10:00.000Z",
+        "exited_at": "2026-01-13T15:12:30.000Z",
+        "dwell_time": 150,
+        "motion": { ... }
+      }
+    ]
+  }
+}
+```
+
+History is useful for checks like zone sequence validation (did the track visit zones in a specific order?) and historical velocity analysis.
+
+### Zone sequence
+
+The `zones.sequence` array records the order in which zones were entered:
+
+```json
+{
+  "zones": {
+    "sequence": [
+      { "zone_id": "42", "entered_at": "2026-01-13T15:10:00.000Z" },
+      { "zone_id": "79", "entered_at": "2026-01-13T15:12:52.005Z" }
+    ]
+  }
+}
+```
+
+This is used by the zone sequence check to detect wrong-way travel or validate that objects follow expected paths.

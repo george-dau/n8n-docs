@@ -1,0 +1,142 @@
+---
+title: "Type I: Track in Zone"
+description: "Check if a track's interaction with configured zones meets threshold conditions"
+---
+
+Type I checks evaluate whether a track is present in specific zones and whether its zone interaction metrics (intersection, dwell time, velocity) meet configured thresholds.
+
+## When to use
+
+Use Type I for any use case where the core question is "is this object in this zone doing this thing?":
+
+- **Obstruction / loitering** — dwell time above threshold, velocity below threshold
+- **Zone intrusion** — any presence in a restricted zone with minimum intersection
+- **Congestion** — multiple tracks in a zone exceeding thresholds
+- **Speeding** — velocity above threshold in a zone
+- **Stopped vehicle** — velocity below threshold for extended dwell time
+
+## How it works
+
+1. The node reads the track's zone data (active zones for live data, historical zones for expired tracks)
+2. For each zone that has a threshold configuration, it evaluates **all enabled thresholds**
+3. A zone passes if **all** enabled thresholds pass (AND logic within a zone)
+4. The overall check passes if **at least one** zone passes (OR logic across zones)
+
+## Configuration
+
+### Site
+
+Select the Worlds site. This loads the available zones for threshold configuration.
+
+### Threshold groups
+
+Threshold groups define which zones to check and what thresholds to apply. Each group contains:
+
+| Parameter | Description |
+| --- | --- |
+| **Zone IDs** | Which zones this group applies to |
+| **Intersection** | Minimum overlap between the object's bounding box and the zone polygon |
+| **Dwell Time** | How long the object has been in the zone |
+| **Velocity** | How fast the object is moving within the zone |
+
+Each threshold has:
+- **Enable toggle** — only enabled thresholds are evaluated
+- **Operator** — `>=`, `>`, `<=`, `<`, `==`
+- **Value** — the threshold value
+
+**Threshold units:**
+
+| Threshold | Unit | Description |
+| --- | --- | --- |
+| Intersection | % (0–100) | Percentage of bounding box overlapping the zone |
+| Dwell Time | seconds | Time spent in the zone |
+| Velocity | px/s or m/s | Speed within the zone (pixel or geo-referenced) |
+
+<Tip>
+You can create multiple threshold groups to apply different thresholds to different zones. A zone can only belong to one group.
+</Tip>
+
+### Advanced settings
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| **Check Target** | Auto | `auto` detects from trigger mode. Override with `active` or `history`. |
+| **Debug Mode** | false | Enable verbose logging |
+
+## Output
+
+```json
+{
+  "track_state": { ... },
+  "checks": {
+    "type1": {
+      "passed": true,
+      "check_target": "active",
+      "check_target_source": "auto",
+      "matching_zones": ["79"],
+      "matching_zone_count": 1,
+      "zone_details": {
+        "79": {
+          "zone_id": "79",
+          "zone_name": "op120-zone",
+          "source": "active",
+          "passed": true,
+          "thresholds": {
+            "intersection": {
+              "enabled": true,
+              "operator": ">=",
+              "threshold": 10,
+              "actual": 59.25,
+              "passed": true,
+              "unit": "%"
+            },
+            "dwellTime": {
+              "enabled": true,
+              "operator": ">=",
+              "threshold": 300,
+              "actual": 360,
+              "passed": true,
+              "unit": "seconds"
+            },
+            "velocity": {
+              "enabled": true,
+              "operator": "<",
+              "threshold": 5,
+              "actual": 1.2,
+              "passed": true,
+              "unit": "px/s"
+            }
+          }
+        }
+      },
+      "zones_checked": ["79"],
+      "zones_not_configured": ["42"],
+      "zones_not_found": []
+    }
+  }
+}
+```
+
+### Key output fields
+
+| Field | Description |
+| --- | --- |
+| `passed` | Whether any zone met all thresholds |
+| `matching_zones` | Zone IDs that passed |
+| `zone_details` | Per-zone breakdown showing each threshold's actual vs. configured value |
+| `zones_checked` | Zones that were evaluated (had threshold config and were present in input) |
+| `zones_not_configured` | Zones the track was in but had no threshold config |
+| `reason` | If failed: `no_zones_configured`, `no_zones_data_in_input`, `no_zones_met_all_thresholds`, etc. |
+
+## Active vs. historical zones
+
+| Check Target | Source | When |
+| --- | --- | --- |
+| **Active** | `zones.active` | Streaming/live — zones the track is currently in |
+| **History** | `zones.history` | Batch/expired — zones the track was previously in |
+
+For historical zones, the node uses **"any entry passes" logic** — if a track visited the same zone multiple times, only one entry needs to pass all thresholds.
+
+## Credentials
+
+Requires **GraphQL Subscription API** credentials (for loading site/zone options).

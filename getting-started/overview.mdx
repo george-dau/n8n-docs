@@ -1,0 +1,91 @@
+---
+title: "Architecture Overview"
+description: "How the Worlds detection pipeline connects to n8n workflows"
+---
+
+## The detection pipeline
+
+The Worlds platform uses computer vision to detect and track objects (people, vehicles, equipment) across camera feeds in real time. The n8n integration turns those raw detections into automated business logic.
+
+Here's how data flows from camera to action:
+
+```
+Camera Feeds
+    │
+    ▼
+Worlds Detection API (GraphQL + WebSocket)
+    │  raw detections: bounding boxes, object types, positions
+    ▼
+State Machine (Go service)
+    │  maintains track state, zone intersections, velocity, dwell time
+    │  emits signals: track_created, track_updated, track_expired
+    ▼
+n8n Workflow (via webhook)
+    │
+    ├─ Trigger Node ─── receives track/zone state per signal
+    ├─ Check Nodes ──── apply business logic (zones, dwell, velocity)
+    ├─ Orchestrator ─── manages event lifecycle (create/update/close)
+    └─ Action Nodes ─── create events, capture images, send alerts
+```
+
+## What each layer does
+
+### Worlds Detection API
+
+The Worlds platform processes camera feeds and produces detections — each detection identifies an object (person, forklift, AMR, etc.) with a bounding box, position, and timestamp. Detections are streamed in real time via GraphQL WebSocket subscriptions.
+
+### State Machine
+
+The state machine is a Go service that sits between the Worlds API and n8n. It solves a critical problem: raw detection streams arrive at high frequency and out of order. The state machine:
+
+- **Maintains track state** — aggregates individual detections into coherent tracks with position, velocity, and zone data
+- **Calculates zone intersections** — determines which zones a track is in and how much it overlaps
+- **Tracks dwell time** — measures how long an object has been in each zone
+- **Calculates velocity** — both pixel-based and geo-referenced
+- **Emits signals** — sends `track_created`, `track_updated`, and `track_expired` events to n8n via webhooks
+- **Ensures ordering** — processes detections sequentially per data source to prevent race conditions
+
+### n8n Workflow
+
+Your workflow receives fully enriched track state data and applies business logic using Worlds custom nodes:
+
+1. **Trigger Node** — entry point, receives track state from the state machine
+2. **Check Nodes** — evaluate conditions using composable Type I/II/III checks
+3. **Event Orchestrator** — decides whether to create, update, or close an event based on check results
+4. **Event Manager** — executes the event action in the Worlds platform
+5. **Action Nodes** — supplementary operations like image capture, GIF generation, or email alerts
+
+## The three-step workflow pattern
+
+Every Worlds n8n workflow follows the same fundamental pattern:
+
+<Steps>
+  <Step title="Inject raw data">
+    The **Detection Webhook Trigger** receives enriched track state from the state machine. Each incoming item contains the track's position, velocity, zone data, dwell times, and zone intersection percentages.
+  </Step>
+  <Step title="Apply business logic">
+    **Check Nodes** (Type I, II, III) evaluate whether conditions are met. Type I checks zone thresholds (intersection, dwell time, velocity), Type II checks zone sequences, and Type III checks track-to-track interactions. These compose together to express any detection use case.
+  </Step>
+  <Step title="Create events">
+    The **Event Orchestrator** evaluates the check results and routes to the appropriate action. The **Event Manager** creates, updates, or closes events in the Worlds platform. **Action Nodes** can capture images, generate GIFs, and send email notifications.
+  </Step>
+</Steps>
+
+## Key concepts
+
+Before building workflows, it helps to understand a few core concepts:
+
+<Columns cols={2}>
+  <Card title="Tracks & Zones" icon="vector-polygon" href="/concepts/tracks-and-zones">
+    What tracks and zones are, and the data they carry.
+  </Card>
+  <Card title="Signals" icon="signal-stream" href="/concepts/signals">
+    When and why track_created, track_updated, and track_expired fire.
+  </Card>
+  <Card title="Composing Check Types" icon="link-horizontal" href="/concepts/check-chaining">
+    How to combine Type I, II, and III checks to build any use case.
+  </Card>
+  <Card title="Detection Pipeline" icon="diagram-project" href="/concepts/detection-pipeline">
+    Deep dive into how data moves through the system.
+  </Card>
+</Columns>

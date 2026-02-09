@@ -1,0 +1,63 @@
+---
+title: "Debug"
+description: "Debug and manage event state in the state machine's Redis store"
+---
+
+The Debug node provides direct access to event state in the state machine's Redis store. Use it for troubleshooting, testing, and manual state management.
+
+## When to use
+
+- **Troubleshooting** — inspect event state when workflows aren't behaving as expected
+- **Testing** — create or delete event state manually to test specific workflow paths
+- **Recovery** — force an event into a specific state to recover from edge cases
+
+## Operations
+
+<Tabs>
+  <Tab title="Create Event">
+    Create an event entry directly in the state machine's Redis store.
+
+    | Parameter | Type | Default | Description |
+    | --- | --- | --- | --- |
+    | **Scope Type** | Select | track | Entity type: track, zone, device, or site |
+    | **Scope ID** | String | — | Scope identifier (e.g., a track UUID) |
+    | **Workflow ID** | Expression | `={{$workflow.id}}` | Workflow ID for the event key |
+    | **Workflow Name** | Expression | `={{$workflow.name}}` | Workflow name stored with the event |
+  </Tab>
+  <Tab title="Get Event">
+    Look up an event's current state.
+
+    | Parameter | Type | Default | Description |
+    | --- | --- | --- | --- |
+    | **Scope ID** | String | — | Scope identifier to look up |
+    | **Workflow ID** | Expression | `={{$workflow.id}}` | Workflow ID for the event key |
+  </Tab>
+  <Tab title="Force State">
+    Force an event into a specific state. Use with caution.
+
+    | Parameter | Type | Default | Description |
+    | --- | --- | --- | --- |
+    | **Scope ID** | String | — | Scope identifier |
+    | **Workflow ID** | Expression | `={{$workflow.id}}` | Workflow ID for the event key |
+    | **Force State** | Select | active | Target state: pending, active, closing, or closed |
+    | **Closure Reason** | Select | — | Optional: conditions_not_met, event_timeout, track_expired, manual_close |
+  </Tab>
+  <Tab title="Delete Event">
+    Remove an event entry from Redis entirely.
+
+    | Parameter | Type | Default | Description |
+    | --- | --- | --- | --- |
+    | **Scope ID** | String | — | Scope identifier of the event to delete |
+    | **Workflow ID** | Expression | `={{$workflow.id}}` | Workflow ID for the event key |
+  </Tab>
+</Tabs>
+
+All operations support a **Debug Mode** toggle for verbose logging.
+
+## Credentials
+
+No credentials required. The Debug node communicates directly with the state machine's Redis instance.
+
+<Warning>
+The Debug node modifies state machine state directly. Use it for development and troubleshooting only — not in production workflows. Forcing state or deleting events can cause the Event Orchestrator to behave unexpectedly.
+</Warning>

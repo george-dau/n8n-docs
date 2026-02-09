@@ -1,0 +1,78 @@
+---
+title: "Check Types Overview"
+description: "The three composable check types that form the foundation of every Worlds workflow"
+---
+
+The Worlds Track Checks node provides three check types that can be composed together to build any detection use case. Each type examines a different aspect of track behavior.
+
+## The three types
+
+<Columns cols={3}>
+  <Card title="Type I" icon="location-dot" href="/nodes/type-1-track-in-zone">
+    **Track in Zone**
+
+    Is a track in a zone meeting threshold conditions?
+  </Card>
+  <Card title="Type II" icon="route" href="/nodes/type-2-zone-sequence">
+    **Zone Sequence**
+
+    Did a track visit zones in a specific order?
+  </Card>
+  <Card title="Type III" icon="people-arrows" href="/nodes/type-3-track-interaction">
+    **Track Interaction**
+
+    Did two tracks interact with each other?
+  </Card>
+</Columns>
+
+## Composing use cases
+
+Most real-world detection use cases are compositions of these three types:
+
+| Use Case | Types Used | Description |
+| --- | --- | --- |
+| Obstruction / loitering | Type I | Track in zone with high dwell time, low velocity |
+| Wrong-way detection | Type II | Track visits zones in forbidden order |
+| Safety near-miss | Type III | Person track interacts with vehicle track |
+| Congestion monitoring | Type I | Multiple tracks in zone exceeding thresholds |
+| Unauthorized zone entry | Type I + II | Track enters restricted zone after bypassing checkpoint |
+| Person-vehicle proximity in zone | Type I + Type III | Track in specific zone AND interacting with another track type |
+
+## How checks compose
+
+Each check type writes its results to a separate namespace (`checks.type1`, `checks.type2`, `checks.type3`) and preserves all input data. This means you can chain them in sequence:
+
+```
+Trigger → Type I Check → Type II Check → Event Orchestrator
+```
+
+The Event Orchestrator reads the `checks` object and evaluates all results together using AND or OR logic.
+
+## Common output structure
+
+All three types share the same output pattern:
+
+```json
+{
+  "track_state": { ... },
+  "checks": {
+    "type1": {
+      "passed": true,
+      "matching_zones": ["42", "79"],
+      "matching_zone_count": 2,
+      "zone_details": { ... }
+    }
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `passed` | Whether the check conditions were met |
+| `matching_zones` / `matching_interactions` | Which zones or tracks matched |
+| `zone_details` / `interaction_details` | Detailed per-zone or per-interaction results with threshold breakdowns |
+| `reason` | If `passed` is false, explains why (e.g., `no_zones_met_all_thresholds`) |
+
+## Auto check target
+
+All check types automatically detect whether to check **active zones** (for streaming/live data) or **historical zones** (for batch/expired tracks) based on the trigger mode. You can override this in advanced settings.

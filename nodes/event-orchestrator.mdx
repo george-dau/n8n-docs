@@ -1,0 +1,98 @@
+---
+title: "Event Orchestrator"
+description: "Intelligent event lifecycle routing based on check results"
+---
+
+The Event Orchestrator evaluates check results from upstream nodes and routes the workflow to the appropriate action: create a new event, update an existing one, close an event, or do nothing.
+
+## When to use
+
+Place this node after your check nodes. It reads the `checks` results and manages event state so your workflow correctly handles the full event lifecycle — from detection to resolution.
+
+## How it works
+
+The orchestrator maintains event state in the state machine's Redis store. On each execution, it:
+
+1. Reads the `checks` object from the input (set by upstream check nodes)
+2. Evaluates whether conditions are met (using AND or OR logic across all checks)
+3. Looks up the current event state for this scope
+4. Routes to the appropriate output based on conditions + event state
+
+### Routing logic
+
+| Conditions met? | Active event? | Output | Description |
+| --- | --- | --- | --- |
+| Yes | No | **Create Event** | Conditions are met for the first time — create a new event |
+| Yes | Yes | **Update Event** | Conditions still met with an active event — optionally update it |
+| No | No | **No Action** | Conditions not met and no event — nothing to do |
+| No | Yes | **Close Event** | Conditions no longer met but event exists — close it |
+
+## Outputs
+
+The node has **four outputs**, one for each routing decision:
+
+| Output | Index | Description |
+| --- | --- | --- |
+| **Create Event** | 0 | Wire this to your event creation logic (Event Manager, image capture, etc.) |
+| **No Action** | 1 | Typically left unwired — nothing needs to happen |
+| **Update Event** | 2 | Wire this if you want to update events while conditions persist |
+| **Close Event** | 3 | Wire this to your Event Manager in close mode |
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Scope Type** | Select | track | Entity that events are scoped to: `track`, `zone`, `device`, or `site` |
+| **Scope Expression** | Expression | `={{$json.track_state.track_id}}` | Expression to extract the scope ID from the input data |
+| **Logic Operator** | Select | AND | How to combine multiple checks: `AND` (all must pass) or `OR` (at least one) |
+
+### Advanced options
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Auto Event Closure (Hours)** | Number | 24 | Maximum event duration before automatic closure. Set to 0 to disable. |
+| **Scope Cooldown (Hours)** | Number | 0 | Cooldown period after closing before a new event can be created for the same scope |
+| **Debug Mode** | Boolean | false | Enable verbose logging |
+
+## Scope types
+
+The scope determines how events are grouped:
+
+| Scope | Use case | Example |
+| --- | --- | --- |
+| **track** | One event per tracked object | Obstruction detection — each vehicle gets its own event |
+| **zone** | One event per zone | Congestion — one event per zone regardless of which tracks are in it |
+| **device** | One event per camera | Camera-level alerting |
+| **site** | One event per site | Site-wide incident tracking |
+
+## Output data
+
+The orchestrator adds an `eventOrchestrator` object to the output:
+
+```json
+{
+  "track_state": { ... },
+  "checks": { ... },
+  "eventOrchestrator": {
+    "action": "create_event",
+    "scope": "019bb7ea-4050-...",
+    "scope_type": "track",
+    "global_event_id": null,
+    "event_start_time": null
+  }
+}
+```
+
+On the **close** output, `global_event_id` contains the Worlds event ID to close, and `event_start_time` is when the event was created (useful for calculating duration).
+
+## Credentials
+
+No credentials required. The orchestrator communicates with the state machine directly.
+
+## Example
+
+In the [Track in Zone](/guides/track-in-zone) guide, the orchestrator:
+- Uses `track` scope (one event per tracked object)
+- Reads the Type I check results
+- Routes to **Create Event** on first detection → captures image, creates event, generates GIF, sends email
+- Routes to **Close Event** when the object moves away → closes the event with duration metadata

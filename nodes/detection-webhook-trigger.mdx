@@ -1,0 +1,99 @@
+---
+title: "Detection Webhook Trigger"
+description: "Receive real-time track and zone state from the Worlds detection pipeline"
+---
+
+The Detection Webhook Trigger is the entry point for most Worlds workflows. It registers a webhook with the state machine and receives enriched track or zone state data as detections occur.
+
+## When to use
+
+Use this node as the first node in any workflow that needs to respond to live detection events. Every workflow starts with either this trigger or the [Replay Trigger](/nodes/replay-trigger) for testing.
+
+## Modes
+
+<Tabs>
+  <Tab title="Streaming">
+    Receives individual signals (`track_created`, `track_updated`, `track_expired`) as they happen. Each workflow execution processes one signal for one track.
+
+    This is the default and most common mode. Use it for real-time alerting, event creation, and any workflow that needs to react immediately.
+  </Tab>
+  <Tab title="Batch">
+    Receives periodic summaries of all tracks at a configurable interval. Tracks are emitted only when they expire, with complete interaction data.
+
+    Use batch mode for analytics, reporting, or workflows that need to analyze track-to-track interactions (proximity, overlap).
+  </Tab>
+</Tabs>
+
+## Signal types
+
+When using streaming mode, you can choose what type of state data to receive:
+
+| Signal Type | Description |
+| --- | --- |
+| **Track State** | Per-track signals with position, velocity, zone data, and dwell times. Most common. |
+| **Zone State** | Per-zone signals with occupancy counts and active track lists. Use for zone-level monitoring. |
+
+## Configuration
+
+### Required parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| **Mode** | Select | `Streaming` or `Batch` |
+| **Signal Type** | Select | `Track State` or `Zone State` (streaming only) |
+| **Site** | Select | The Worlds site to monitor (dynamically loaded from API) |
+
+### Filtering parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| **Data Sources** | Multi-select | Cameras to monitor. Required for zone state and batch mode. Leave empty for all (track state streaming only). |
+| **Zones** | Multi-select | Specific zones to monitor. Leave empty for all zones. Streaming only. |
+| **Object Types** | Multi-select | Object types to filter (e.g., forklift, person, AMR). Leave empty for all. |
+
+### Batch mode options
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Batch Interval** | Number | 30 | Seconds between batch summaries (10–300) |
+| **Pixel Proximity Threshold** | Number | 50 | Max pixel distance between bounding boxes to count as an interaction |
+| **Geo Proximity Threshold** | Number | 5 | Max geographic distance (meters) for interaction detection |
+
+### Other options
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Debug Mode** | Boolean | false | Enable verbose logging in the n8n console |
+
+## Output
+
+Each execution receives a JSON object with:
+
+```json
+{
+  "signal": "track_updated",
+  "track_state": {
+    "track_id": "019bb7ea-...",
+    "tag": "forklift",
+    "datasource_id": "507eaeca-...",
+    "datasource_name": "Op 120",
+    "site_id": "3",
+    "site_name": "Mid-Range Engine Plant CMEP",
+    "first_seen": "2026-01-13T15:12:52.005Z",
+    "last_seen": "2026-01-13T15:18:52.005Z",
+    "position": { ... },
+    "motion": { ... },
+    "zones": { ... }
+  }
+}
+```
+
+See [Tracks & Zones](/concepts/tracks-and-zones) for the full track state structure.
+
+## Credentials
+
+Requires **GraphQL Subscription API** credentials. See [Prerequisites](/getting-started/prerequisites) for setup.
+
+## Example
+
+In the [Track in Zone](/guides/track-in-zone) guide, the trigger is configured to monitor multiple cameras for several vehicle types at a specific site.

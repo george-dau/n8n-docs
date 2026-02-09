@@ -1,0 +1,114 @@
+---
+title: "State Machine Overview"
+description: "The Go service that bridges the Worlds detection stream and n8n workflows"
+---
+
+The state machine is a Go service that sits between the Worlds detection API and your n8n workflows. It subscribes to live detection streams, maintains track and zone state, and delivers enriched signals to n8n via webhooks.
+
+## Why it exists
+
+Raw detection streams from the Worlds API arrive at high frequency — potentially hundreds of detections per second across multiple cameras. Processing these directly in n8n would cause:
+
+- **Race conditions** — multiple detections for the same track arriving simultaneously
+- **Incomplete data** — individual detections lack context like velocity, dwell time, and zone intersection
+- **Resource exhaustion** — n8n would need a WebSocket connection per workflow per camera
+
+The state machine solves all three problems.
+
+## What it does
+
+### Track state management
+
+The state machine aggregates individual detections into coherent **tracks**. Each track maintains:
+
+- Current position (pixel + geo)
+- Velocity (rolling average in px/s and m/s)
+- Active zones with dwell times and intersection percentages
+- Zone history (previously visited zones)
+- Zone sequence (order of zone visits)
+- Detection count and age
+
+### Signal generation
+
+The state machine emits three signal types to n8n:
+
+| Signal | When | Contains |
+| --- | --- | --- |
+| `track_created` | New object first detected | Initial track state (minimal data) |
+| `track_updated` | Each subsequent detection | Full enriched track state |
+| `track_expired` | No detection for TTL period (default 15s) | Final track state with complete history |
+
+### Per-datasource ordering
+
+Detections are processed **sequentially per data source** (camera). This prevents race conditions — your workflow is guaranteed to process signals for a given camera in order.
+
+### Subscription management
+
+Workflows register with the state machine via webhook URLs. The state machine:
+
+- Matches detections against registered subscriptions by data source, object type, and zone
+- Delivers only matching signals to each workflow
+- Reuses WebSocket connections across subscriptions sharing the same credentials
+
+## Architecture
+
+```
+Worlds GraphQL API
+    │ (WebSocket)
+    ▼
+Connection Manager (pools by credentials)
+    │
+    ▼
+Subscription Client (auth, reconnection)
+    │
+    ▼
+Detection Stream
+    │
+    ▼
+Datasource Router (pre-filter, fan-out)
+    ├── Worker: Camera A (sequential)
+    ├── Worker: Camera B (sequential)
+    └── Worker: Camera N (sequential)
+         │
+         ├── Track Store (Redis DB2)
+         ├── Zone State Store (Redis DB2)
+         ├── Zone Cache (Redis DB1)
+         └── Webhook Emitter → n8n workflows
+```
+
+## Redis database layout
+
+The state machine uses multiple Redis databases for isolation:
+
+| Database | Purpose |
+| --- | --- |
+| DB0 | n8n BullMQ job queue (not used by state machine) |
+| DB1 | Configuration — subscriptions, zone polygon cache |
+| DB2 | Streaming state — track state, zone state |
+| DB3 | Batch data — raw detections for batch processing |
+| DB4 | Replay isolation — replay session state |
+
+## Configuration
+
+Key environment variables:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `REDIS_HOST` | — | Redis server hostname (required) |
+| `REDIS_PORT` | — | Redis server port (required) |
+| `API_PORT` | 8080 | REST API port |
+| `TRACK_TTL` | 15 | Seconds before a track expires |
+| `ZONE_CACHE_TTL` | 3600 | Seconds to cache zone polygons |
+| `DETECTION_TTL` | 14400 | Seconds to store raw detections (batch mode) |
+| `PREFILTER_ENABLED` | true | Skip detections that don't match any subscription |
+
+## Batch processing
+
+For workflows that need complete track data and track-to-track interactions, the state machine supports batch mode:
+
+- Stores raw detections in DB3
+- Emits tracks only when they expire (complete lifecycle)
+- Calculates track-to-track interactions (bounding box overlap, proximity)
+- Delivers batch payloads at configurable intervals
+
+See the [Detection Webhook Trigger](/nodes/detection-webhook-trigger) batch mode for configuration.

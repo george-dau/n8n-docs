@@ -1,0 +1,139 @@
+---
+title: "State Machine API"
+description: "REST API reference for the n8n state machine service"
+---
+
+The state machine exposes a REST API for subscription management, event state, track/zone queries, and replay sessions.
+
+**Base URL:** `http://n8n-state-machine:8080` (default)
+
+## Health
+
+### GET /health
+
+Check if the service is running.
+
+```bash
+curl http://n8n-state-machine:8080/health
+```
+
+```json
+{ "status": "ok" }
+```
+
+## Subscriptions
+
+### POST /api/subscriptions/{id}
+
+Register or update a webhook subscription.
+
+```bash
+curl -X POST http://n8n-state-machine:8080/api/subscriptions/my-workflow \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhook_url": "http://n8n:5678/webhook/detections",
+    "workflow_name": "obstruction-detection",
+    "mode": "streaming",
+    "signal_type": "track_state",
+    "filters": {
+      "datasource_ids": ["507eaeca-cc89-4501-9e0d-0d062a8f355d"],
+      "tags": ["forklift", "person"]
+    },
+    "credentials": {
+      "graphql_url": "https://your-instance.worlds.io/graphql",
+      "ws_url": "wss://your-instance.worlds.io/graphql",
+      "x_token_id": "your-token-id",
+      "x_token_value": "your-token-value"
+    }
+  }'
+```
+
+### GET /api/subscriptions
+
+List all active subscriptions.
+
+### GET /api/subscriptions/{id}
+
+Get a specific subscription.
+
+### DELETE /api/subscriptions/{id}
+
+Remove a subscription. The state machine stops delivering signals for this subscription.
+
+<Note>
+Subscriptions are managed automatically by the trigger nodes. You typically don't need to call these endpoints directly.
+</Note>
+
+## Events (Event Orchestrator)
+
+### POST /api/events/{scope_id}
+
+Check or create event state for a scope. Used by the Event Orchestrator node.
+
+```bash
+curl -X POST http://n8n-state-machine:8080/api/events/track-uuid-here \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scope_type": "track",
+    "workflow_id": "workflow-uuid",
+    "workflow_name": "obstruction-detection",
+    "conditions_met": true
+  }'
+```
+
+### PATCH /api/events/{scope_id}
+
+Update event state (e.g., store the global event ID after creation).
+
+## Track State
+
+### GET /api/tracks/{track_id}
+
+Query the current state of a track.
+
+```bash
+curl http://n8n-state-machine:8080/api/tracks/019bb7ea-4050-7e9b-8761-f8df773fd3e5
+```
+
+Returns the full track state object (position, velocity, zones, etc.).
+
+### GET /api/tracks/closest-frame
+
+Find the detection frame closest to a given timestamp.
+
+```bash
+curl "http://n8n-state-machine:8080/api/tracks/closest-frame?track_id=019bb7ea&timestamp=2026-01-13T15:12:52Z"
+```
+
+## Zone State
+
+### GET /api/zones/{zone_id}
+
+Query the current state of a zone (active tracks, occupancy count).
+
+## Replay
+
+### POST /api/replay/{id}
+
+Start a replay session for testing.
+
+```bash
+curl -X POST http://n8n-state-machine:8080/api/replay/test-session \
+  -H "Content-Type: application/json" \
+  -d '{
+    "track_ids": ["019bb7ea-4050-7e9b-8761-f8df773fd3e5"],
+    "mode": "auto"
+  }'
+```
+
+### GET /api/replay/{id}
+
+Get replay session status.
+
+### DELETE /api/replay/{id}
+
+Stop and clean up a replay session.
+
+<Note>
+Replay sessions are managed automatically by the [Replay Trigger](/nodes/replay-trigger) node. These endpoints are documented for debugging purposes.
+</Note>

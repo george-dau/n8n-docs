@@ -1,97 +1,55 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Worlds n8n Nodes"
+description: "Build automated detection workflows using Worlds custom nodes for n8n"
 ---
 
-## Setting up
+Build workflows that turn real-time computer vision detections into automated actions — events, alerts, emails, and more.
 
-Get your documentation site up and running in minutes.
+## How it works
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+Every workflow follows the same three-step pattern:
 
-## Make it yours
+<Steps>
+  <Step title="Inject detection data">
+    A **Trigger Node** receives real-time track and zone data from the Worlds detection pipeline via the state machine.
+  </Step>
+  <Step title="Apply business logic">
+    **Check Nodes** evaluate conditions — is the object in a specific zone? Has it been there long enough? Is it moving too slowly? Chain checks together to build precise rules.
+  </Step>
+  <Step title="Take action">
+    **Event and Action Nodes** create events in the Worlds UI, capture images, generate GIFs, send email alerts, and more.
+  </Step>
+</Steps>
 
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
+## Get started
 
 <Columns cols={2}>
   <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
+    title="Architecture Overview"
+    icon="sitemap"
+    href="/getting-started/overview"
   >
-    Use MDX to style your docs pages.
+    Understand how detections flow from cameras through the state machine into your n8n workflows.
   </Card>
   <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
+    title="Prerequisites"
+    icon="list-check"
+    href="/getting-started/prerequisites"
   >
-    Add sample code to demonstrate how to use your product.
+    What you need before building your first workflow.
   </Card>
   <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
+    title="Node Reference"
+    icon="cube"
+    href="/nodes/detection-webhook-trigger"
   >
-    Display images and other media.
+    Detailed reference for every Worlds custom node.
   </Card>
   <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
+    title="Track in Zone Guide"
+    icon="route"
+    href="/guides/track-in-zone"
   >
-    Write once and reuse across your docs.
+    Walk through a complete Type I workflow step by step.
   </Card>
 </Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>

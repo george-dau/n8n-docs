@@ -1,0 +1,92 @@
+---
+title: "Worlds Actions"
+description: "General-purpose action node for AI operations, image processing, email, and data queries"
+---
+
+The Worlds Actions node is a multi-resource node that provides access to various Worlds platform capabilities beyond event management. Select a resource to access different operations.
+
+## Resources
+
+### Process Detection Image
+
+Create still images or animated GIFs from detection data. Used to capture visual evidence for events.
+
+<Tabs>
+  <Tab title="Create Still Image">
+    Generates a single annotated image showing the detection at a specific timestamp.
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **Track IDs** | Array | Track IDs to include in the image |
+    | **Timestamp** | DateTime | The point in time to capture |
+    | **Zone IDs** | Array | Zones to overlay on the image |
+
+    Returns a `processedImage` field containing the base64-encoded image and a `metadata` object with the timestamp.
+  </Tab>
+  <Tab title="Create GIF">
+    Generates an animated GIF showing the detection sequence over time.
+
+    | Parameter | Type | Description |
+    | --- | --- | --- |
+    | **Track IDs** | Array | Track IDs to include |
+    | **Timestamp** | DateTime | Reference timestamp |
+
+    Returns a `gif_base64` field containing the base64-encoded GIF.
+  </Tab>
+</Tabs>
+
+### Send Worlds Email
+
+Send email notifications using the Worlds SendGrid email template system.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| **Email Subject** | String | Subject line |
+| **Alert Image** | String | Base64-encoded image or GIF to include |
+| **Alert Title** | String | Title displayed in the email |
+| **Site Name** | String | Site name for context |
+| **Event Timestamp** | DateTime | When the event occurred |
+| **Camera Name** | String | Camera/data source name |
+| **Event ID** | String | Worlds event ID for linking |
+| **To Recipients** | Collection | Email addresses to send to |
+| **CC/BCC Recipients** | Collection | Additional recipients (in advanced options) |
+
+**Credentials:** Requires **SendGrid API** credentials.
+
+### AI Operations
+
+Access Worlds AI capabilities:
+
+| Operation | Description |
+| --- | --- |
+| **OCR** | Extract text from detection images |
+| **Image Segmentation** | Segment objects in detection images |
+| **Embeddings** | Generate vector embeddings from detections |
+
+### Get Track State
+
+Query the current state of a track from the state machine.
+
+### Get Zone State
+
+Query the current state of a zone from the state machine.
+
+### Create Event
+
+Create events directly (alternative to Event Manager for simpler workflows).
+
+### Event Producer
+
+Query available event producers for your organization.
+
+### Get Event
+
+Query existing events from the Worlds platform.
+
+### Closest Frame
+
+Find the detection frame closest to a given timestamp.
+
+## Credentials
+
+Most resources require **GraphQL Subscription API** credentials. The email resource requires **SendGrid API** credentials.
