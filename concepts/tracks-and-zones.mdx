@@ -42,7 +42,9 @@ Every signal delivered to your workflow includes a `track_state` object with the
 | `datasource_id` | Camera/data source UUID |
 | `datasource_name` | Human-readable camera name |
 | `site_id` / `site_name` | The site where this camera is located |
-| `first_seen` / `last_seen` | ISO 8601 timestamps for track start and latest detection |
+| `track_start` | When the track was first created in the system |
+| `first_seen` | When the state machine first saw this track. Usually the same as `track_start`, but can differ if the system restarted. |
+| `last_seen` | Timestamp of the most recent detection received — updates with every `track_updated` signal |
 | `track_age` | Duration of the track in seconds |
 | `detection_count` | Number of individual detections in this track |
 
@@ -73,15 +75,35 @@ Velocity and distance metrics in both pixel and geographic units:
 ```json
 {
   "motion": {
-    "pix": { "velocity": 6.52, "distance": 438.77, "sample_count": 41 },
-    "geo": { "velocity": 0.23, "distance": 16.57, "sample_count": 41 }
+    "pix": {
+      "velocity": 6.52,
+      "distance": 438.77,
+      "instantaneous_velocity": 10.7,
+      "instantaneous_direction": 86.3,
+      "sample_count": 41
+    },
+    "geo": {
+      "velocity": 0.23,
+      "distance": 16.57,
+      "instantaneous_velocity": 1.5,
+      "instantaneous_direction": 86.3,
+      "sample_count": 41
+    }
   }
 }
 ```
 
-- `velocity` — rolling average speed (px/s or m/s)
-- `distance` — total distance traveled
-- `sample_count` — number of detection pairs used for calculation
+| Field | Description |
+| --- | --- |
+| `velocity` | Rolling average speed (px/s or m/s) |
+| `distance` | Total distance traveled |
+| `instantaneous_velocity` | Speed between the two most recent detections |
+| `instantaneous_direction` | Direction of travel in degrees (0-360) between the two most recent detections |
+| `sample_count` | Number of detection pairs used for calculation |
+
+<Note>
+Geographic motion fields (`geo`) are only populated when the camera is geo-calibrated. Otherwise they will be `null`.
+</Note>
 
 ## Zones
 
@@ -167,3 +189,84 @@ The `zones.sequence` array records the order in which zones were entered:
 ```
 
 This is used by the zone sequence check to detect wrong-way travel or validate that objects follow expected paths.
+
+### Interactions (batch mode only)
+
+When the trigger is configured for **batch mode**, the state machine calculates interactions between tracks. For each detection, it looks at a 1-second window before and after and identifies other tracks whose bounding boxes were nearby.
+
+```json
+{
+  "interactions": [
+    {
+      "track_id": "other-track-uuid",
+      "tag": "Vehicle",
+      "first_interaction_at": "2026-01-15T10:00:10.000Z",
+      "last_interaction_at": "2026-01-15T10:00:25.000Z",
+      "total_duration": 15.0,
+      "proximity": {
+        "interaction_count": 20,
+        "pix": { "min": 15.0, "avg": 30.5, "min_at": "2026-01-15T10:00:15.000Z" },
+        "geo": { "min": 0.5, "avg": 1.2, "min_at": "2026-01-15T10:00:15.000Z" }
+      },
+      "overlap": {
+        "overlap_count": 5,
+        "max_overlap_percent": 0.35,
+        "max_overlap_at": "2026-01-15T10:00:20.000Z",
+        "total_overlap_duration": 3.0
+      }
+    }
+  ]
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `proximity.pix.min` | Closest pixel distance between bounding box edges |
+| `proximity.geo.min` | Closest geographic distance in meters |
+| `overlap.max_overlap_percent` | Maximum bounding box overlap as a percentage |
+| `overlap.total_overlap_duration` | Total seconds the bounding boxes overlapped |
+| `total_duration` | Total time the two tracks were interacting |
+
+Interactions are used by [Type III checks](/nodes/type-3-track-interaction) for use cases like safety near-miss detection, PPE compliance, and tailgating.
+
+<Note>
+In streaming mode, the `interactions` array is always empty. Interaction calculation requires looking at all detections in a time window, which is only possible after the track has expired in batch processing.
+</Note>
+
+## Zone state
+
+In addition to track-level zone data, the state machine also produces **zone state** — an aggregate view of what's happening in a specific zone. This is available when the trigger is configured with signal type **Zone State**.
+
+```json
+{
+  "zone_state": {
+    "zone_id": "92",
+    "zone_name": "Aisle-Zone-West",
+    "datasource_id": "2ba0f384-...",
+    "datasource_name": "Shortblock_LB1 - West View",
+    "active_tracks": {
+      "track-uuid-1": {
+        "tag": "forklift",
+        "entered_at": "2026-02-19T18:35:59.803Z",
+        "dwell_time": 25.0,
+        "detection_count": 7,
+        "intersection": { "current_percent": 45.3, "avg_percent": 82.3 },
+        "motion": { "pix": { "velocity": 40.8, "instantaneous_velocity": 10.7 } }
+      }
+    },
+    "track_count": 4,
+    "updated_at": "2026-02-19T18:36:40.464Z",
+    "trigger_track_id": "track-uuid-2",
+    "trigger_tag": "tugger"
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `active_tracks` | Map of all tracks currently in the zone, with per-track metrics |
+| `track_count` | Total number of active tracks in the zone |
+| `trigger_track_id` | The track that caused this zone update |
+| `trigger_tag` | Object type of the trigger track |
+
+Zone state is used with the [Zone Activity Check](/nodes/zone-activity-check) for use cases like congestion and congregation where you care about aggregate zone activity rather than individual track behavior.

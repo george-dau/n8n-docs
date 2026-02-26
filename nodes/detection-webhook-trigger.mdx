@@ -3,63 +3,129 @@ title: "Detection Webhook Trigger"
 description: "Receive real-time track and zone state from the Worlds detection pipeline"
 ---
 
-The Detection Webhook Trigger is the entry point for most Worlds workflows. It registers a webhook with the state machine and receives enriched track or zone state data as detections occur.
+The Detection Webhook Trigger is the entry point for every active Worlds workflow. It registers a webhook with the state machine and receives enriched detection data as detections occur.
+
+The Worlds computer vision system produces hundreds of detections per second across your cameras. On its own, that volume of data isn't actionable. The purpose of every workflow is to **distill raw detection data into actionable events** on the Worlds platform — and this trigger is where that process begins.
 
 ## When to use
 
-Use this node as the first node in any workflow that needs to respond to live detection events. Every workflow starts with either this trigger or the [Replay Trigger](/nodes/replay-trigger) for testing.
+Use this node as the first node in any workflow that processes live detection data. Every workflow starts with either this trigger or the [Replay Trigger](/nodes/replay-trigger) for testing.
 
-## Modes
+## Credentials
+
+Select your **GraphQL Subscription API** credentials. These authenticate with the Worlds API and determine which sites and cameras are available to you. Credentials can be obtained from the Worlds platform and are shared across workflows — if you've already configured credentials in another workflow, the same ones will be available here.
+
+See [Prerequisites](/getting-started/prerequisites) for setup details.
+
+## Mode
+
+The first decision is how you want to receive data: **streaming** or **batch**.
 
 <Tabs>
   <Tab title="Streaming">
-    Receives individual signals (`track_created`, `track_updated`, `track_expired`) as they happen. Each workflow execution processes one signal for one track.
+    Receives signals in real time as detections occur. Each workflow execution processes one signal for one track (or one zone update for zone state).
 
-    This is the default and most common mode. Use it for real-time alerting, event creation, and any workflow that needs to react immediately.
+    For example, if a person is detected 300 times over 5 minutes, your workflow executes 300 times — once for each detection. Each execution carries the current state of the track at that moment: position, velocity, zone data, dwell times, and more. The data gets richer over time as detections accumulate.
+
+    **Use streaming when:**
+    - You need real-time alerting or event creation
+    - You're monitoring zone occupancy (zone state is streaming only)
+    - You want to react as conditions develop, not after the fact
   </Tab>
   <Tab title="Batch">
-    Receives periodic summaries of all tracks at a configurable interval. Tracks are emitted only when they expire, with complete interaction data.
+    Receives track summaries **after tracks expire**, bundled at a configurable interval. Instead of getting every intermediate update, you get a single summary with the complete track lifecycle.
 
-    Use batch mode for analytics, reporting, or workflows that need to analyze track-to-track interactions (proximity, overlap).
+    For example, using the same person detected 300 times — in batch mode, you receive **one** execution after they leave the scene, containing their full track history: total dwell time, all zones visited, final velocity, and complete motion data.
+
+    **Use batch when:**
+    - You don't need real-time alerting (a delay of seconds to minutes is acceptable)
+    - You want less processing load in n8n (one execution per track instead of hundreds)
+    - You need **interaction data** — track-to-track proximity and overlap is only available in batch mode
+    - You're running analytics or reporting workflows
+
+    **Batch interval:** Controls the collection window. Every N seconds (default: 30, range: 10–300), all tracks that expired in that window are sent together in a single batch. A longer interval means more tracks per batch but more delay.
   </Tab>
 </Tabs>
 
-## Signal types
+## Signal type
 
-When using streaming mode, you can choose what type of state data to receive:
+When using streaming mode, you choose what type of state data to receive. This is a fundamental decision that determines which check nodes you'll use downstream.
 
-| Signal Type | Description |
+| Signal Type | Question it answers | Downstream checks | Signals |
+| --- | --- | --- | --- |
+| **Track State** | "What is this specific track doing?" | [Track Checks](/nodes/check-types-overview) (Type I, II, III) | `track_created`, `track_updated`, `track_expired` |
+| **Zone State** | "What is happening in this zone?" | [Zone Activity Check](/nodes/zone-activity-check) | `zone_occupied`, `zone_updated`, `zone_empty` |
+
+<Note>
+Zone state is **streaming only**. Batch mode always produces track state signals because batch processes tracks after they expire — zones don't expire, so there's no batch equivalent for zone state.
+</Note>
+
+### Track state signals
+
+| Signal | When it fires | Common use |
+| --- | --- | --- |
+| `track_created` | First detection of a new track | Rarely acted on — not enough data yet |
+| `track_updated` | Every subsequent detection | Where most business logic runs — checks evaluate current state on each update |
+| `track_expired` | Track not seen for TTL window (default ~15s) | Final state summary, used for event closure and batch processing |
+
+Each signal carries a **track state** object with the track's current position, velocity, zone interactions, dwell times, and motion history. See [Tracks & Zones](/concepts/tracks-and-zones) for the full structure.
+
+**Key timestamp fields in track state:**
+
+| Field | Description |
 | --- | --- |
-| **Track State** | Per-track signals with position, velocity, zone data, and dwell times. Most common. |
-| **Zone State** | Per-zone signals with occupancy counts and active track lists. Use for zone-level monitoring. |
+| `track_start` | When the track was first created in the system |
+| `first_seen` | When the state machine first saw this track. Usually the same as `track_start`, but can differ if the system restarted. |
+| `last_seen` | Timestamp of the most recent detection received — this updates with every `track_updated` signal |
 
-## Configuration
+### Zone state signals
 
-### Required parameters
+| Signal | When it fires | Description |
+| --- | --- | --- |
+| `zone_occupied` | First track enters a previously empty zone | Zone transitions from 0 to 1+ tracks |
+| `zone_updated` | A track enters, exits, or continues in the zone | Any change to the zone's active track list |
+| `zone_empty` | Last track leaves the zone | Zone transitions back to 0 tracks |
+
+Each signal carries a **zone state** object listing all active tracks in the zone, their dwell times, and intersection data. See [Signals](/concepts/signals) for details.
+
+Zone state is best for use cases where you care about the **aggregate** activity in a zone (e.g., congestion, congregation, occupancy) rather than individual track behavior.
+
+## Filtering
+
+After selecting your mode and signal type, configure which data to receive:
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| **Mode** | Select | `Streaming` or `Batch` |
-| **Signal Type** | Select | `Track State` or `Zone State` (streaming only) |
-| **Site** | Select | The Worlds site to monitor (dynamically loaded from API) |
+| **Site** | Select | The Worlds site to monitor. Dynamically loaded from your API credentials. Selecting a site pre-populates the available cameras and zones. |
+| **Data Sources** | Multi-select | Cameras to monitor. Select the specific cameras relevant to your use case. |
+| **Zones** | Multi-select | Zones to monitor. Available for zone state — select the zones you want occupancy updates for. |
+| **Object Types** | Multi-select | Object types to filter (e.g., `forklift`, `person`, `AMR`). Leave empty to receive all object types. |
 
-### Filtering parameters
+## Batch options
 
-| Parameter | Type | Description |
-| --- | --- | --- |
-| **Data Sources** | Multi-select | Cameras to monitor. Required for zone state and batch mode. Leave empty for all (track state streaming only). |
-| **Zones** | Multi-select | Specific zones to monitor. Leave empty for all zones. Streaming only. |
-| **Object Types** | Multi-select | Object types to filter (e.g., forklift, person, AMR). Leave empty for all. |
-
-### Batch mode options
+These parameters appear only when mode is set to Batch.
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| **Batch Interval** | Number | 30 | Seconds between batch summaries (10–300) |
-| **Pixel Proximity Threshold** | Number | 50 | Max pixel distance between bounding boxes to count as an interaction |
-| **Geo Proximity Threshold** | Number | 5 | Max geographic distance (meters) for interaction detection |
+| **Batch Interval** | Number | 30 | Seconds between batch summaries (10–300). Lower values give faster results but more frequent processing. |
+| **Pixel Proximity Threshold** | Number | 50 | Maximum pixel distance between bounding box edges for two tracks to count as an interaction |
+| **Geo Proximity Threshold** | Number | 5 | Maximum geographic distance in meters for interaction detection. Requires calibrated cameras. |
 
-### Other options
+### Interactions (batch only)
+
+When processing batch data, the state machine calculates **interactions** between tracks. For each detection, it looks at a 1-second window before and after that detection to identify other tracks that were nearby.
+
+An interaction is recorded when two tracks' bounding boxes are within the configured proximity threshold. The interaction data includes:
+- How long the tracks were near each other
+- Minimum distance between them
+- Bounding box overlap percentage
+- Timestamps of first and last interaction
+
+This interaction data powers [Type III (Track Interaction)](/nodes/type-3-track-interaction) checks — use cases like safety near-misses, PPE compliance, and tailgating detection.
+
+The proximity thresholds in advanced settings control how close tracks must be to register as interacting. Lowering the pixel threshold means tracks must be closer together; raising it captures interactions at greater distances.
+
+## Other options
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -67,33 +133,94 @@ When using streaming mode, you can choose what type of state data to receive:
 
 ## Output
 
-Each execution receives a JSON object with:
+<Tabs>
+  <Tab title="Track State">
+    ```json
+    {
+      "signal": "track_updated",
+      "track_state": {
+        "track_id": "019bb7ea-...",
+        "tag": "forklift",
+        "datasource_id": "507eaeca-...",
+        "datasource_name": "Op 120",
+        "site_id": "3",
+        "site_name": "Mid-Range Engine Plant CMEP",
+        "track_start": "2026-01-13T15:12:52.005Z",
+        "first_seen": "2026-01-13T15:12:52.005Z",
+        "last_seen": "2026-01-13T15:18:52.005Z",
+        "track_age": 360.0,
+        "detection_count": 45,
+        "position": { "pix": { "x": 500, "y": 300 }, "geo": { "lon": -73.985, "lat": 40.748 } },
+        "motion": {
+          "pix": { "velocity": 1.2, "distance": 750.0, "instantaneous_velocity": 0.5, "instantaneous_direction": 45.0 },
+          "geo": { "velocity": null, "distance": null }
+        },
+        "zones": {
+          "active": { "zone-id": { "zone_name": "Aisle A", "dwell_time": 300, "intersection": { "current_percent": 85.0, "avg_percent": 72.0 } } },
+          "history": [],
+          "sequence": ["zone-id"]
+        },
+        "interactions": []
+      },
+      "trigger_config": { "mode": "streaming", "signal_type": "track_state", ... }
+    }
+    ```
 
-```json
-{
-  "signal": "track_updated",
-  "track_state": {
-    "track_id": "019bb7ea-...",
-    "tag": "forklift",
-    "datasource_id": "507eaeca-...",
-    "datasource_name": "Op 120",
-    "site_id": "3",
-    "site_name": "Mid-Range Engine Plant CMEP",
-    "first_seen": "2026-01-13T15:12:52.005Z",
-    "last_seen": "2026-01-13T15:18:52.005Z",
-    "position": { ... },
-    "motion": { ... },
-    "zones": { ... }
-  }
-}
-```
+    <Note>
+    The `interactions` array is only populated in **batch mode** on `track_expired` signals. In streaming mode, it is always empty.
+    </Note>
+  </Tab>
+  <Tab title="Zone State">
+    ```json
+    {
+      "signal": "zone_updated",
+      "zone_state": {
+        "zone_id": "92",
+        "zone_name": "Aisle-Zone-West",
+        "device_id": "39",
+        "datasource_id": "2ba0f384-...",
+        "datasource_name": "Shortblock_LB1 - West View",
+        "site_id": "3",
+        "site_name": "Mid-Range Engine Plant CMEP",
+        "active_tracks": {
+          "track-uuid-1": {
+            "tag": "forklift",
+            "entered_at": "2026-02-19T18:35:59.803Z",
+            "dwell_time": 25.0,
+            "detection_count": 7,
+            "intersection": { "current_percent": 45.3, "avg_percent": 82.3 },
+            "motion": { "pix": { "velocity": 40.8, "instantaneous_velocity": 10.7 } }
+          },
+          "track-uuid-2": {
+            "tag": "tugger",
+            "entered_at": "2026-02-19T18:36:17.045Z",
+            "dwell_time": 5.0,
+            "detection_count": 2,
+            "intersection": { "current_percent": 45.2, "avg_percent": 46.2 }
+          }
+        },
+        "track_count": 2,
+        "updated_at": "2026-02-19T18:36:40.464Z",
+        "trigger_track_id": "track-uuid-2",
+        "trigger_tag": "tugger"
+      },
+      "trigger_config": { "mode": "streaming", "signal_type": "zone_state", ... }
+    }
+    ```
+  </Tab>
+</Tabs>
 
-See [Tracks & Zones](/concepts/tracks-and-zones) for the full track state structure.
+## Choosing your configuration
 
-## Credentials
-
-Requires **GraphQL Subscription API** credentials. See [Prerequisites](/getting-started/prerequisites) for setup.
+| Use case pattern | Mode | Signal Type | Why |
+| --- | --- | --- | --- |
+| Real-time alerting (obstruction, intrusion) | Streaming | Track State | Need to react as conditions develop |
+| Post-hoc analysis (interactions, PPE) | Batch | Track State | Need interaction data, less processing |
+| Zone monitoring (congestion, congregation) | Streaming | Zone State | Care about aggregate zone activity |
+| Batch with known end time (obstruction) | Batch | Track State | Simpler event lifecycle — start and end time known at creation |
 
 ## Example
 
-In the [Track in Zone](/guides/track-in-zone) guide, the trigger is configured to monitor multiple cameras for several vehicle types at a specific site.
+- [Batch Track State Workflow](/guides/batch-track-state) — batch mode, track state, Type I checks (obstruction example)
+- [Streaming Zone State Workflow](/guides/streaming-zone-state) — streaming mode, zone state, Zone Activity Check (congestion example)
+- [Streaming Track State Workflow](/guides/streaming-track-state) — streaming mode, track state, Type I checks (zone intrusion example)

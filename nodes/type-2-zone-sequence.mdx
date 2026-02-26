@@ -105,6 +105,60 @@ This is useful for cases where a specific intermediate zone means the traversal 
 | `sequences` | Per-sequence results with match positions, intermediate zones, and bypass zone details |
 | `reason` | If failed: `no_sequences_configured`, `empty_track_sequence`, `no_sequences_matched`, etc. |
 
+## Business use case examples
+
+<Accordion title="Wrong-way detection — single zone sequence">
+Detect vehicles traveling in the wrong direction through one-way aisles. Each sequence defines an approach zone and a target zone representing the **wrong** direction.
+
+| Parameter | Value |
+| --- | --- |
+| **Sequence** | [Approach Zone, Target Zone] |
+| **Bypass Zones** | None |
+| **Match Mode** | Ordered |
+
+**Mode:** Batch — only need the track summary after the vehicle passes through.
+
+If a vehicle visits the approach zone before the target zone (in the wrong direction), the sequence matches and the check passes. Multiple sequences can be configured for different one-way aisles across the site.
+
+<Tip>
+Define the sequence in the **wrong** direction. The check passing means the violation occurred.
+</Tip>
+</Accordion>
+
+<Accordion title="Failure to stop — directional stop sign enforcement">
+In the failure-to-stop compliance workflow, Type II is composed with Type I to enforce **directional** stop signs — stop signs that only apply when approaching from a specific direction.
+
+| Parameter | Value |
+| --- | --- |
+| **Sequences** | 13 zone pairs — [approach zone, stop zone] for each directional stop sign |
+| **Bypass Zones** | None |
+| **Match Mode** | Ordered |
+
+**Mode:** Batch — composed with a Type I velocity check upstream.
+
+The Type II check answers: "did this vehicle come from the approach direction before reaching the stop zone?" This is combined with the Type I velocity check via a **Check Aggregator** that defines two groups:
+
+| Group | Required Checks |
+| --- | --- |
+| Directional stop signs (12 zones) | Type I + Type II |
+| Non-directional stop signs (4 zones) | Type I only |
+
+This demonstrates how Type II is often a **secondary check** that adds directional context to a primary check, rather than standing alone.
+</Accordion>
+
+<Accordion title="Adapting for other use cases">
+Zone sequences can model any path-based validation:
+
+| Use Case | Sequence Definition | Notes |
+| --- | --- | --- |
+| Wrong-way detection | [Approach, Target] in wrong direction | Passing = violation |
+| Directional compliance | [Approach, Checkpoint] in correct direction | Passing = compliant |
+| Checkpoint validation | [Entry, Checkpoint A, Checkpoint B, Destination] | Multi-step sequence |
+| Restricted access | [Public Area, Restricted Zone] | With bypass zone for authorized paths |
+
+Use **bypass zones** when certain intermediate zones should invalidate the match — for example, passing through a security checkpoint between zones means the traversal was authorized.
+</Accordion>
+
 ## Credentials
 
 Requires **GraphQL Subscription API** credentials (for loading site/zone options).

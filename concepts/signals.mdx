@@ -1,13 +1,20 @@
 ---
 title: "Signals"
-description: "Understanding track_created, track_updated, and track_expired signals"
+description: "Understanding track and zone signals from the state machine"
 ---
 
 ## What are signals?
 
-A **signal** is an event emitted by the state machine when something changes about a track. Every item that arrives at your workflow's trigger node includes a `signal` field indicating what happened.
+A **signal** is an event emitted by the state machine when something changes about a track or a zone. Every item that arrives at your workflow's trigger node includes a `signal` field indicating what happened.
 
-There are three signal types:
+There are two families of signals depending on your [trigger configuration](/nodes/detection-webhook-trigger):
+
+- **Track state signals** — `track_created`, `track_updated`, `track_expired`
+- **Zone state signals** — `zone_occupied`, `zone_updated`, `zone_empty`
+
+## Track state signals
+
+Track state signals fire for individual track lifecycle events. There are three types:
 
 ## track_created
 
@@ -61,3 +68,74 @@ If you only want to process certain signals, you can add an n8n **IF** node afte
 <Note>
 Most workflows process all signals and let the check nodes and Event Orchestrator handle the logic. You typically don't need to manually filter signals.
 </Note>
+
+## Zone state signals
+
+Zone state signals fire when the occupancy of a monitored zone changes. They are available only in **streaming mode** with the signal type set to Zone State.
+
+### zone_occupied
+
+Fired **once** when the first track enters a previously empty zone. The zone transitions from 0 to 1+ active tracks.
+
+**Common use:** Triggers the start of zone monitoring. The [Zone Activity Check](/nodes/zone-activity-check) may not pass yet if only one track is present.
+
+### zone_updated
+
+Fired on **every change** to the zone's active track list — a track enters, a track exits, or an existing track's state updates (new detection, changed position).
+
+This is the most common zone signal. A busy zone can generate many `zone_updated` signals as tracks move in and out.
+
+**Common use:** This is where zone-level business logic runs. The Zone Activity Check evaluates the current track count and thresholds on each update.
+
+### zone_empty
+
+Fired **once** when the last track leaves the zone. The zone transitions back to 0 active tracks.
+
+**Common use:** Used by the Event Orchestrator to close zone-scoped events when the zone clears.
+
+### Zone signal flow example
+
+```
+Time 0s:   First forklift enters zone  → signal: "zone_occupied"  (track_count: 1)
+Time 10s:  Second forklift enters      → signal: "zone_updated"   (track_count: 2)
+Time 25s:  Third forklift enters       → signal: "zone_updated"   (track_count: 3)
+Time 30s:  Fourth forklift enters      → signal: "zone_updated"   (track_count: 4) ← congestion threshold met!
+Time 60s:  First forklift leaves       → signal: "zone_updated"   (track_count: 3) ← below threshold, close event
+Time 90s:  All forklifts leave         → signal: "zone_empty"     (track_count: 0)
+```
+
+### Zone state payload
+
+Each zone signal includes the full list of active tracks in the zone:
+
+```json
+{
+  "signal": "zone_updated",
+  "zone_state": {
+    "zone_id": "92",
+    "zone_name": "Aisle-Zone-West",
+    "datasource_id": "2ba0f384-...",
+    "datasource_name": "Shortblock_LB1 - West View",
+    "active_tracks": {
+      "track-uuid-1": {
+        "tag": "forklift",
+        "entered_at": "2026-02-19T18:35:59.803Z",
+        "dwell_time": 25.0,
+        "detection_count": 7,
+        "intersection": { "current_percent": 45.3, "avg_percent": 82.3 }
+      }
+    },
+    "track_count": 4,
+    "updated_at": "2026-02-19T18:36:40.464Z",
+    "trigger_track_id": "track-uuid-2",
+    "trigger_tag": "tugger"
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `active_tracks` | Map of all tracks currently in the zone, with per-track dwell time, intersection, and motion data |
+| `track_count` | Total number of active tracks |
+| `trigger_track_id` | The specific track that caused this zone update (the one that entered, exited, or updated) |
+| `trigger_tag` | Object type of the trigger track |

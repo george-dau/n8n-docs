@@ -3,9 +3,18 @@ title: "Check Types Overview"
 description: "The three composable check types that form the foundation of every Worlds workflow"
 ---
 
-The Worlds Track Checks node provides three check types that can be composed together to build any detection use case. Each type examines a different aspect of track behavior.
+The Worlds check nodes evaluate detection data against configurable conditions. They are the **business logic layer** between your trigger node and the Event Orchestrator — taking raw detection data and determining whether it matches the criteria for your use case.
 
-## The three types
+Which check node you use depends on the **signal type** from your [trigger node](/nodes/detection-webhook-trigger):
+
+| Signal Type | Check Node | Question it answers |
+| --- | --- | --- |
+| **Track State** | [Track Checks](/nodes/type-1-track-in-zone) (Type I, II, III) | "What is this specific track doing?" |
+| **Zone State** | [Zone Activity Check](/nodes/zone-activity-check) | "What is happening in this zone?" |
+
+## Track Checks
+
+The Track Checks node provides three check types that can be composed together. Each type examines a different aspect of track behavior.
 
 <Columns cols={3}>
   <Card title="Type I" icon="location-dot" href="/nodes/type-1-track-in-zone">
@@ -25,18 +34,28 @@ The Worlds Track Checks node provides three check types that can be composed tog
   </Card>
 </Columns>
 
+## Zone Activity Check
+
+<Card title="Zone Activity" icon="chart-area" href="/nodes/zone-activity-check">
+  **Zone Activity Check**
+
+  Are enough tracks in a zone meeting threshold conditions? Used for congestion, congregation, and occupancy monitoring.
+</Card>
+
 ## Composing use cases
 
-Most real-world detection use cases are compositions of these three types:
+Most real-world detection use cases map to one or more check types:
 
-| Use Case | Types Used | Description |
-| --- | --- | --- |
-| Obstruction / loitering | Type I | Track in zone with high dwell time, low velocity |
-| Wrong-way detection | Type II | Track visits zones in forbidden order |
-| Safety near-miss | Type III | Person track interacts with vehicle track |
-| Congestion monitoring | Type I | Multiple tracks in zone exceeding thresholds |
-| Unauthorized zone entry | Type I + II | Track enters restricted zone after bypassing checkpoint |
-| Person-vehicle proximity in zone | Type I + Type III | Track in specific zone AND interacting with another track type |
+| Use Case | Signal Type | Check Types | Description |
+| --- | --- | --- | --- |
+| Obstruction / loitering | Track State | Type I | Track in zone with high dwell time, low velocity |
+| Wrong-way detection | Track State | Type II | Track visits zones in forbidden order |
+| Safety near-miss | Track State (batch) | Type III | Person track interacts with vehicle track |
+| PPE compliance | Track State (batch) | Type III | Person bbox overlapping with PPE detection |
+| Congestion | Zone State | Zone Activity | Multiple vehicles in an aisle zone |
+| Congregation | Zone State | Zone Activity | Multiple people gathering in an area |
+| Unauthorized zone entry | Track State | Type I + II | Track enters restricted zone after bypassing checkpoint |
+| Person-vehicle proximity in zone | Track State (batch) | Type I + III | Track in specific zone AND interacting with another track type |
 
 ## How checks compose
 

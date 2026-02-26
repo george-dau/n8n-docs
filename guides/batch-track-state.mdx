@@ -1,0 +1,216 @@
+---
+title: "Batch Track State Workflow"
+description: "Build a workflow that processes complete track summaries after tracks expire"
+---
+
+The **batch track state** pattern processes tracks after they expire, giving you the complete picture of what an object did — where it went, how long it stayed, how fast it moved, and what it interacted with. You trade real-time alerting for simplicity: one execution per track, complete zone history, and automatic event closure.
+
+This guide uses **obstruction detection** as the running example (vehicles blocking factory aisles), but the same pattern applies to any batch use case — failure to stop, PPE compliance, wrong-way detection, vehicle near-miss, and more.
+
+## What you'll build
+
+The workflow follows this structure:
+
+```
+Webhook Trigger (batch, vehicles) → Type I Check → Event Orchestrator → Create Still → Event Manager
+                                         ↑                                                  ↓
+Replay Trigger (disabled) ───────────────┘                                        (optional) GIF → Email
+```
+
+- **Trigger** receives batch track summaries for vehicles across the site
+- **Type I Check** evaluates zone thresholds — is the vehicle in an aisle zone long enough, with sufficient overlap, and low velocity?
+- **Event Orchestrator** routes based on check results — create event or no action
+- **Create path** captures a still image, creates the event in Worlds, and optionally generates a GIF and sends an email
+- **Replay Trigger** (disabled) is available for testing with historical data
+
+## Prerequisites
+
+- A Worlds site with aisle zones configured
+- GraphQL Subscription API credentials in n8n
+- The state machine running and connected to your n8n instance
+- SendGrid API credentials (optional, for email alerts)
+
+## Step 1: Detection Webhook Trigger
+
+Configure the trigger to ingest vehicle detections in batch mode.
+
+| Parameter | Value | Why |
+| --- | --- | --- |
+| **Mode** | Batch | We only need the track summary after the vehicle leaves — no need for real-time updates |
+| **Site** | Your site | Loads available cameras and zones |
+| **Data Sources** | Select all relevant cameras | The cameras monitoring your aisles |
+| **Object Types** | `forklift`, `lift`, `tugger`, `golf cart`, `amr`, etc. | Only vehicles that could cause obstructions |
+
+### Why batch mode?
+
+For obstruction detection, you care about the **complete picture** of what a vehicle did — how long it was in the zone, its average velocity, where it entered and exited. You don't need to alert while the vehicle is still sitting there. Batch mode gives you:
+
+- **One execution per track** instead of hundreds — less processing in n8n
+- **Complete zone history** — total dwell time, entry and exit times
+- **Known end time** — the track has already expired, so you can set both start and end time when creating the event, which automatically closes it
+
+<Tip>
+Add a **Replay Trigger** connected to the same downstream node and keep it disabled. This gives you an easy way to test the workflow with a known track ID without modifying the live configuration.
+</Tip>
+
+## Step 2: Type I Check (Track in Zone)
+
+The check node evaluates whether the vehicle was in an aisle zone and meets obstruction criteria.
+
+| Parameter | Value |
+| --- | --- |
+| **Site** | Same site as the trigger |
+| **Zone IDs** | Select all aisle zones you want to monitor for obstructions |
+| **Intersection** | Enabled, `>=` 10% — the vehicle's bounding box must overlap the zone by at least 10% |
+| **Dwell Time** | Enabled, `>=` 300 seconds — the vehicle must have been in the zone for 5+ minutes |
+| **Velocity** | Enabled, `<` threshold — the vehicle must be stationary or near-stationary |
+
+**What happens:** Since this is batch data, the check automatically evaluates **historical zones** (zones the track visited and left). For each aisle zone the vehicle was in, it checks all three thresholds. If any zone passes all thresholds, the check passes.
+
+**Threshold groups:** You can group zones that share the same thresholds. If all your aisle zones have the same obstruction criteria, put them in a single group. If some zones need different dwell time thresholds (e.g., loading docks allow longer stops), create separate groups.
+
+### Adapting for similar use cases
+
+| Use Case | Intersection | Dwell Time | Velocity |
+| --- | --- | --- | --- |
+| Aisle obstruction | `>= 10%` | `>= 300s` (5 min) | `< 5 px/s` |
+| Loading dock overstay | `>= 20%` | `>= 1800s` (30 min) | `< 2 px/s` |
+| No-park zone violation | `>= 10%` | `>= 60s` (1 min) | `< 3 px/s` |
+| Extended vehicle stop | `>= 15%` | `>= 600s` (10 min) | `< 1 px/s` |
+
+## Step 3: Event Orchestrator
+
+The orchestrator reads the Type I check results and decides whether to create an event.
+
+| Parameter | Value | Why |
+| --- | --- | --- |
+| **Scope Type** | Track | One event per vehicle — each obstructing vehicle gets its own event |
+| **Scope Expression** | `={{$json.track_state.track_id}}` (default) | Uses the track ID as the unique scope identifier |
+
+**Routing for batch workflows:**
+
+In batch mode, the orchestrator routing is simpler than streaming because each track only arrives once (after it expires):
+
+| Output | When | Wire to |
+| --- | --- | --- |
+| **Create Event** (0) | Checks pass — this vehicle obstructed an aisle | Image capture → Event Manager |
+| **No Action** (1) | Checks fail — vehicle didn't meet obstruction criteria | Nothing |
+| **Update Event** (2) | N/A in batch (track only arrives once) | Nothing |
+| **Close Event** (3) | N/A in batch (track only arrives once) | Nothing |
+
+<Note>
+In batch mode, you typically only wire the **Create Event** output. Since each track arrives once after expiration, you won't see update or close scenarios for the same track.
+</Note>
+
+## Step 4: Create still image
+
+Capture a visual of the obstruction for the event record.
+
+**Node:** Worlds Actions → Process Detection Image → Create Still
+
+| Parameter | Value | Description |
+| --- | --- | --- |
+| **Track IDs** | `={{$json.track_state.track_id}}` | The obstructing vehicle |
+| **Timestamp** | See below | When to capture the image |
+| **Zone IDs** | `={{$json.checks.type1.matching_zones[0]}}` | Draw the zone overlay on the image |
+
+**Choosing the timestamp:** For obstruction, a good approach is to capture the image a few minutes after the vehicle entered the zone — this shows the vehicle clearly stopped in the aisle rather than just entering it:
+
+```javascript
+={{ new Date(new Date($json.track_state.zones.history.find(
+  z => z.zone_id === $json.checks.type1.matching_zones[0]
+).entered_at).getTime() + 5 * 60 * 1000).toISOString() }}
+```
+
+This expression finds when the vehicle entered the matching zone and adds 5 minutes.
+
+## Step 5: Create event in Worlds
+
+Write the event to the Worlds platform.
+
+**Node:** Event Manager → Create Event
+
+| Parameter | Value |
+| --- | --- |
+| **Event Producer** | Select your event producer |
+| **Event Type** | `Operational` (or your preferred category) |
+| **Event Subtype** | `Obstruction Event` |
+| **Start Time** | Same timestamp expression as the image (entered_at + 5 min) |
+| **End Time** | Zone exit time: `={{$json.track_state.zones.history.find(z => z.zone_id === $json.checks.type1.matching_zones[0]).exited_at}}` |
+| **Track IDs** | `={{$json.track_state.track_id}}` |
+
+**Metadata** — add context for the Worlds UI:
+
+| Key | Value |
+| --- | --- |
+| trackId | `={{$json.track_state.track_id}}` |
+| dataSourceID | `={{$json.track_state.datasource_id}}` |
+| dataSourceName | `={{$json.track_state.datasource_name}}` |
+| tag | `={{$json.track_state.tag}}` |
+| position | `=({{$json.track_state.position.geo.lat ?? 'NaN'}},{{$json.track_state.position.geo.lon ?? 'NaN'}})` |
+| source | `={{$workflow.id}}` |
+| duration | Calculated from zone entry/exit times (seconds) |
+| averageIntersection | `={{$json.track_state.zones.history.find(z => z.zone_id === $json.checks.type1.matching_zones[0]).intersection.avg_percent}}` |
+
+**Uploads** — attach the processed image:
+
+| Field | Value |
+| --- | --- |
+| **Data** | `={{$json.processedImage}}` |
+| **Timestamp** | `={{$json.metadata.timestamp}}` |
+
+**Snapshots** — request a camera video clip:
+
+| Field | Value |
+| --- | --- |
+| **Data Source ID** | `={{$json.track_state.datasource_id}}` |
+| **Timestamp** | `={{$json.metadata.timestamp}}` |
+
+### Why batch simplifies event creation
+
+Because batch data includes the **complete track lifecycle**, you can set both the start time and end time when creating the event. Setting an end time automatically marks the event as closed — there's no need for a separate close event step in the workflow. This is a significant simplification compared to streaming workflows where you must handle event closure separately.
+
+## Step 6: Optional — GIF and email
+
+After creating the event, you can optionally:
+
+1. **Generate a GIF** showing the vehicle's movement sequence using Process Detection Image → Create GIF
+2. **Send an email alert** using Send Worlds Email with the GIF attached as the alert image
+
+These are typically wired after the Event Manager and can be enabled or disabled as needed.
+
+## How it works end-to-end
+
+1. Vehicles are detected by cameras across the factory floor
+2. The state machine tracks each vehicle, monitoring zone interactions and motion
+3. A forklift enters an aisle zone and stops — the state machine records the entry time, dwell time, and velocity
+4. After the forklift leaves (or the track expires), the state machine emits a `track_expired` signal with the complete track summary
+5. The batch interval collects expired tracks — the forklift's data arrives in the next batch window
+6. The Type I check evaluates: was the forklift in an aisle zone for 5+ minutes with low velocity? **Yes** → passes
+7. The orchestrator sees no existing event for this track → routes to **Create Event**
+8. A still image is captured showing the forklift in the aisle
+9. An event is created in Worlds with full metadata, the image, and a video snapshot
+10. The event appears in the Worlds platform with start/end times already set (closed)
+
+## Other use cases for this pattern
+
+The batch track state pattern works for any use case where you don't need real-time alerting and want the simplicity of processing complete track lifecycles:
+
+| Use Case | Check Node(s) | Key Difference |
+| --- | --- | --- |
+| **Failure to stop** | Type I (velocity) + Type II (direction) | Compliance monitoring — creates events for both pass and fail. Uses a Code node to override check results so all valid data flows through. |
+| **PPE compliance** | Type I (zone) + Type III (overlap) | Dual-tag trigger (`person` + `ppe`). VLM fallback when CV model misses PPE detections. |
+| **Wrong-way detection** | Type II (zone sequence) | Sequences defined in the violation direction. Check passing = violation occurred. |
+| **Vehicle near-miss** | Type III (proximity) | Uses `matching_track_pair_ids` for deduplication when both tracks trigger the workflow. |
+| **Loading dock overstay** | Type I (dwell + intersection) | Same as obstruction with longer dwell thresholds. |
+
+The core structure stays the same — Trigger → Check(s) → Orchestrator → Image → Event Manager — only the check configuration and event metadata change.
+
+## Testing with Replay
+
+1. Disable the Detection Webhook Trigger
+2. Enable the Replay Detection Trigger
+3. Set the processing mode to **Batch**
+4. Enter a track ID from a known obstruction event
+5. Run the workflow — the replay processes the historical track through the same logic
+6. Verify the event was created correctly in the Worlds platform

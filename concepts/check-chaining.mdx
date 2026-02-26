@@ -1,31 +1,28 @@
 ---
-title: "Composing Check Types"
-description: "How to combine Type I, II, and III checks to build any detection use case"
+title: "Composing Checks"
+description: "How to combine check types to build any detection use case"
 ---
 
 ## The composable approach
 
-Worlds provides three fundamental check types that can be combined to express any detection use case:
+Worlds provides check nodes that can be combined to express any detection use case. Which check nodes are available depends on the **signal type** from your trigger:
 
-| Type | Question it answers |
-| --- | --- |
-| [**Type I**](/nodes/type-1-track-in-zone) | Is this track in a zone meeting threshold conditions? |
-| [**Type II**](/nodes/type-2-zone-sequence) | Did this track visit zones in a specific order? |
-| [**Type III**](/nodes/type-3-track-interaction) | Did this track interact with another track? |
+| Signal Type | Check Nodes | Question |
+| --- | --- | --- |
+| **Track State** | [Type I](/nodes/type-1-track-in-zone), [Type II](/nodes/type-2-zone-sequence), [Type III](/nodes/type-3-track-interaction) | What is this specific track doing? |
+| **Zone State** | [Zone Activity Check](/nodes/zone-activity-check) | What is happening in this zone? |
 
-Rather than building specialized nodes for each use case, you compose these types together in your workflow.
+Rather than building specialized nodes for each use case, you compose these check types — and optionally add external checks like VLM — to express your business logic.
 
-## How composition works
+## Track state compositions
 
-Each check type writes its results to a separate namespace — `checks.type1`, `checks.type2`, `checks.type3` — and preserves all input data. This means you can chain them in sequence:
+Each track check type writes its results to a separate namespace — `checks.type1`, `checks.type2`, `checks.type3` — and preserves all input data. This means you can chain them in sequence:
 
 ```
 Trigger → Type I Check → Type II Check → Event Orchestrator
 ```
 
 The Event Orchestrator reads the combined `checks` object and evaluates all results using AND or OR logic to decide whether to create, update, or close an event.
-
-## Common compositions
 
 ### Type I alone — track in zone
 
@@ -58,8 +55,12 @@ Combine zone-based conditions with track-to-track interaction:
 - Two vehicles overlapping in a loading bay
 
 ```
-Trigger → Type I → Type III → Event Orchestrator → Event Manager
+Trigger (batch) → Type I → Type III → Event Orchestrator → Event Manager
 ```
+
+<Note>
+Type III requires **batch mode** because interaction data is only available after tracks expire.
+</Note>
 
 ### All three types
 
@@ -68,8 +69,33 @@ For complex safety rules:
 - Person entered restricted zone (Type I), bypassed the checkpoint (Type II), and was near equipment (Type III)
 
 ```
-Trigger → Type I → Type II → Type III → Event Orchestrator → Event Manager
+Trigger (batch) → Type I → Type II → Type III → Event Orchestrator → Event Manager
 ```
+
+## Zone state checks
+
+For zone state workflows, the [Zone Activity Check](/nodes/zone-activity-check) evaluates zone-level conditions. It writes results to `checks.zoneActivity`:
+
+```
+Trigger (zone state) → Zone Activity Check → Event Orchestrator → Event Manager
+```
+
+This is used for congestion, congregation, and occupancy monitoring where you care about the aggregate number of tracks in a zone rather than any specific track.
+
+## Adding VLM (Vision Language Model) checks
+
+For workflows that capture images, you can add a **VLM check** as an additional confirmation layer. This uses n8n's built-in LLM nodes rather than a Worlds custom node:
+
+```
+Trigger → Check → Orchestrator → Capture Image → VLM Chain → IF (boolean) → Event Manager
+```
+
+The VLM analyzes the captured image and returns structured output (e.g., `{ "confirmed": true, "confidence": 0.92, "context": "..." }`). You can use this two ways:
+
+1. **As a check gate** — feed the VLM boolean into an n8n IF node to conditionally create events. This adds AI confirmation to reduce false positives.
+2. **As context metadata** — always create the event but attach the VLM description and confidence as event metadata for human review.
+
+See the [Streaming Zone State Workflow](/guides/streaming-zone-state) for a complete VLM integration example.
 
 ## Output accumulation
 
@@ -110,5 +136,20 @@ Understanding the logic layers:
 | **Across check types** | AND or OR | Configured on the Event Orchestrator |
 
 <Tip>
-Start with a single Type I check for most use cases. Add Type II or Type III only when your use case genuinely requires sequence or interaction detection. Simpler workflows are easier to debug and maintain.
+Start with a single check type for most use cases. Add Type II or Type III only when your use case genuinely requires sequence or interaction detection. Simpler workflows are easier to debug and maintain.
 </Tip>
+
+## Common compositions reference
+
+| Use Case | Signal Type | Mode | Checks | Description |
+| --- | --- | --- | --- | --- |
+| Obstruction / loitering | Track State | Batch or Streaming | Type I | Dwell time + low velocity in zone |
+| Wrong-way detection | Track State | Streaming | Type II | Zone sequence in forbidden order |
+| Safety near-miss | Track State | Batch | Type III | Person/vehicle proximity |
+| PPE compliance | Track State | Batch | Type III | Person/PPE bbox overlap |
+| Congestion | Zone State | Streaming | Zone Activity | Track count threshold in zone |
+| Congregation | Zone State | Streaming | Zone Activity | People gathering in area |
+| Speeding in zone | Track State | Streaming | Type I | High velocity in zone |
+| Unauthorized entry | Track State | Streaming | Type I + II | Zone presence + bypassed checkpoint |
+| Person-vehicle in zone | Track State | Batch | Type I + III | Zone presence + interaction |
+| VLM-confirmed congestion | Zone State | Streaming | Zone Activity + VLM | Zone check + image confirmation |

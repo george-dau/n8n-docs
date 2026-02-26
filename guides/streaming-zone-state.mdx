@@ -1,0 +1,254 @@
+---
+title: "Streaming Zone State Workflow"
+description: "Build a workflow that monitors aggregate zone activity in real time"
+---
+
+The **streaming zone state** pattern monitors what's happening in a zone as a whole — how many objects are in it, how long they've been there — rather than tracking individual objects. You get updates whenever zone occupancy changes, making it ideal for crowd-level and aggregate scenarios.
+
+This guide uses **congestion detection** as the running example (vehicles blocking factory aisles), but the same pattern applies to any zone-level use case — congregation, occupancy limits, loading dock queues, and more.
+
+## What you'll build
+
+The workflow follows this structure:
+
+```
+Webhook Trigger (streaming, zone_state, vehicles)
+    → Zone Activity Check
+    → Event Orchestrator (scope: zone)
+        ├── Create path: Closest Frame → Create Still ──┬── VLM Check ──┐
+        │                                               └── Merge ──────┘
+        │                                                    → Metadata → Event Manager → GIF → Email
+        └── Close path: → Event Manager (close with duration)
+```
+
+- **Trigger** receives zone state updates for vehicle zones across the site
+- **Zone Activity Check** evaluates how many qualifying vehicles are in the zone
+- **Event Orchestrator** routes based on check results — scoped by **zone** to prevent duplicate events per zone
+- **Create path** finds the closest frame, captures a still, runs a VLM confirmation, and creates the event
+- **Close path** closes the event when conditions are no longer met
+- **Replay Trigger** (disabled) is available for testing
+
+## Prerequisites
+
+- A Worlds site with aisle zones configured
+- GraphQL Subscription API credentials in n8n
+- The state machine running and connected to your n8n instance
+- Azure OpenAI or similar LLM credentials (optional, for VLM confirmation)
+- SendGrid API credentials (optional, for email alerts)
+
+## Step 1: Detection Webhook Trigger
+
+Configure the trigger to receive zone state updates for vehicles.
+
+| Parameter | Value | Why |
+| --- | --- | --- |
+| **Mode** | Streaming | Zone state is streaming only |
+| **Signal Type** | Zone State | We care about aggregate zone activity, not individual tracks |
+| **Site** | Your site | Loads available cameras and zones |
+| **Data Sources** | Select all relevant cameras | The cameras monitoring your aisles |
+| **Zones** | Select the aisle zones to monitor | Only zones where congestion is a concern |
+| **Object Types** | `forklift`, `lift`, `tugger`, `golf cart`, `amr`, etc. | Only vehicle types relevant to congestion |
+
+### Why zone state?
+
+For congestion, the question isn't "what is this specific forklift doing?" — it's "are there too many vehicles in this aisle?" Zone state gives you exactly that: updates whenever the occupancy of a zone changes. Each execution tells you how many tracks are in the zone, what types they are, and how long each has been there.
+
+You'll receive three signal types:
+
+| Signal | Meaning |
+| --- | --- |
+| `zone_occupied` | First vehicle entered a previously empty zone |
+| `zone_updated` | A vehicle entered, exited, or continued in the zone — the active track list changed |
+| `zone_empty` | Last vehicle left the zone |
+
+## Step 2: Zone Activity Check
+
+The check node evaluates whether there are enough qualifying vehicles in the zone to constitute congestion.
+
+| Parameter | Value |
+| --- | --- |
+| **Site** | Same site as the trigger |
+| **Zone IDs** | `={{$json.zone_state.zone_id}}` — dynamically matches the incoming zone |
+| **Min Track Count** | 4 (at least 4 vehicles to count as congestion) |
+| **Dwell Time** | Enabled, `>=` 5 seconds |
+| **Intersection** | Enabled, `>=` 10% |
+
+**What happens:** For every zone state update, the node counts how many active tracks in the zone meet the dwell time and intersection thresholds. If 4+ vehicles each have at least 5 seconds dwell time and 10% intersection, the check passes.
+
+**Output:** Adds `checks.zoneActivity.passed` (boolean) and `checks.zoneActivity.qualified_track_ids` (array of track IDs that met thresholds) to the data. The qualified track IDs are used downstream for image capture and event metadata.
+
+### Adapting for similar use cases
+
+| Use Case | Min Track Count | Dwell Time | Intersection |
+| --- | --- | --- | --- |
+| Aisle congestion (vehicles) | 4 | `>= 5s` | `>= 10%` |
+| Congregation (people) | 5 | `>= 30s` | `>= 15%` |
+| Occupancy limit | Site-specific limit | `>= 10s` | `>= 5%` |
+
+## Step 3: Event Orchestrator
+
+The orchestrator reads the Zone Activity Check results and manages the event lifecycle.
+
+| Parameter | Value | Why |
+| --- | --- | --- |
+| **Scope Type** | Zone | One event per zone — prevents duplicate congestion events for the same zone |
+| **Scope Expression** | `={{$json.zone_state.zone_id}}` | Uses the zone ID as the unique scope identifier |
+
+**Routing:**
+
+| Output | When | Wire to |
+| --- | --- | --- |
+| **Create Event** (0) | Checks pass, no active event for this zone | Closest Frame → Image → VLM → Event Manager |
+| **No Action** (1) | Checks fail, no active event | Nothing |
+| **Update Event** (2) | Checks pass, event already exists | Nothing (in this workflow) |
+| **Close Event** (3) | Checks fail, but an event exists for this zone | Event Manager (close) |
+
+### Why the close path matters here
+
+Unlike the [batch track state workflow](/guides/batch-track-state) which uses batch mode (where each track arrives once, already expired), this streaming workflow sees continuous zone updates. When vehicles leave the zone and the track count drops below the threshold, the checks fail — and the orchestrator routes to **Close Event** so you can close the event in Worlds with the end time.
+
+## Step 4: Closest Frame
+
+Before capturing an image, find the optimal timestamp where the qualifying vehicles are closest together in the frame.
+
+**Node:** Worlds Actions → Closest Frame
+
+| Parameter | Value |
+| --- | --- |
+| **Track IDs** | `={{$json.checks.zoneActivity.qualified_track_ids}}` |
+| **Timestamp** | `={{$json.zone_state.updated_at}}` |
+
+**Why this node:** With multiple vehicles involved in congestion, you want an image that shows them all clearly. The Closest Frame node analyzes the bounding box positions across recent detections and finds the timestamp where the tracks are closest together — giving you the best possible single image of the congestion.
+
+**Output:** Adds `closest_frame.optimal_timestamp` to the data, which you pass to the image processor.
+
+<Tip>
+Closest Frame is particularly useful in zone state workflows where you're dealing with multiple tracks. In single-track workflows (like obstruction), you can skip this and use a timestamp directly.
+</Tip>
+
+## Step 5: Create still image
+
+Capture the congestion scene at the optimal timestamp.
+
+**Node:** Worlds Actions → Process Detection Image → Create Still
+
+| Parameter | Value |
+| --- | --- |
+| **Track IDs** | `={{$json.checks.zoneActivity.qualified_track_ids}}` |
+| **Timestamp** | `={{$json.closest_frame.optimal_timestamp}}` |
+| **Zone IDs** | `={{$json.checks.zoneActivity.zone_id}}` |
+
+The image will show all qualifying vehicles with bounding boxes and the zone overlay drawn on the frame.
+
+## Step 6: VLM confirmation (optional)
+
+Pass the captured image through a Vision Language Model to add context or confirm congestion.
+
+This step uses n8n's built-in **Basic LLM Chain** node with an image input. The model analyzes the still image and returns structured data:
+
+```json
+{
+  "congestion_boolean": true,
+  "congestion_confidence": 0.92,
+  "image_context": "Four vehicles visible in the aisle. Two forklifts are positioned side by side blocking the travel path, with a tugger waiting behind and a golf cart approaching from the opposite direction."
+}
+```
+
+**Two ways to use the VLM output:**
+
+1. **As context metadata** (this workflow) — the VLM output is merged back with the detection data and attached as event metadata. The event is always created regardless of VLM output.
+2. **As a check gate** (advanced pattern) — feed the `congestion_boolean` into an n8n **IF** node to gate whether the event is created. This adds AI confirmation to reduce false positives.
+
+After the VLM check, a **Merge** node combines the VLM output with the original image data, and a **Code** node prepares event metadata (computing centroid position from all qualified tracks, formatting track info strings).
+
+## Step 7: Create event in Worlds
+
+Write the congestion event to the Worlds platform.
+
+**Node:** Event Manager → Create Event
+
+| Parameter | Value |
+| --- | --- |
+| **Event Producer** | Select your event producer |
+| **Event Type** | `Safety` |
+| **Event Subtype** | `Congestion Event` |
+| **Start Time** | `={{$json.zone_state.updated_at}}` |
+| **Track IDs** | `={{$json.checks.zoneActivity.qualified_track_ids}}` |
+
+**Metadata:**
+
+| Key | Value |
+| --- | --- |
+| dataSourceName | `={{$json.zone_state.datasource_name}}` |
+| dataSourceID | `={{$json.zone_state.datasource_id}}` |
+| source | `={{$workflow.id}}` |
+| trackInfo | Formatted track summary (tag, dwell time per track) |
+| position | Centroid lat/lon of all qualifying tracks |
+| congestionBoolean | VLM boolean result |
+| congestionConfidence | VLM confidence score |
+| imageContext | VLM description of the scene |
+
+<Note>
+Unlike the batch obstruction workflow, we don't set an **end time** here because the congestion may still be ongoing. The close path handles setting the end time when conditions clear.
+</Note>
+
+## Step 8: Close event path
+
+When vehicles leave the zone and the track count drops below the threshold, the orchestrator routes to Close Event.
+
+**Node:** Event Manager → Close Event
+
+| Parameter | Value |
+| --- | --- |
+| **Event ID** | `={{$json.eventOrchestrator.global_event_id}}` |
+| **End Time** | `={{$json.zone_state.updated_at}}` |
+
+**Metadata:**
+
+| Key | Value |
+| --- | --- |
+| duration | `={{Math.round((new Date($json.zone_state.updated_at) - new Date($json.eventOrchestrator.event_start_time)) / 1000)}}` |
+
+This calculates the congestion duration in seconds from the event start time (stored by the orchestrator) to the current zone update time.
+
+## Step 9: Optional — GIF and email
+
+After creating the event, you can optionally generate a GIF and send an email alert, following the same pattern as the [batch track state workflow](/guides/batch-track-state#step-6-optional--gif-and-email).
+
+## How it works end-to-end
+
+1. Cameras monitor factory aisles, detecting vehicles in predefined zones
+2. The state machine tracks zone occupancy and emits `zone_updated` signals as vehicles enter and leave
+3. Two vehicles enter an aisle zone → `zone_updated` → Zone Activity Check: 2 tracks, threshold is 4 → **fails** → No Action
+4. A third vehicle enters → `zone_updated` → 3 tracks → **fails** → No Action
+5. A fourth vehicle enters → `zone_updated` → 4 tracks, all with 5s+ dwell and 10%+ intersection → **passes**
+6. Orchestrator sees no existing event for this zone → routes to **Create Event**
+7. Closest Frame finds the optimal timestamp with all 4 vehicles visible
+8. A still image is captured with bounding boxes and zone overlay
+9. The VLM analyzes the image and confirms congestion with a context description
+10. An event is created in Worlds with track data, VLM context, and the image
+11. More vehicles enter → checks still pass → orchestrator routes to **Update Event** (unwired)
+12. Vehicles leave, count drops to 3 → checks fail → orchestrator routes to **Close Event** with duration
+
+## Other use cases for this pattern
+
+The streaming zone state pattern works for any use case where you care about aggregate zone activity rather than individual tracks:
+
+| Use Case | Check Differences | Key Difference |
+| --- | --- | --- |
+| **Congregation** | Higher track count, longer dwell | People gathering in restricted areas — adjust thresholds for person-sized objects. |
+| **Occupancy limits** | Site-specific track count | Maximum capacity enforcement — different zones may have different limits. |
+| **Loading dock queue** | Lower track count, longer dwell | Vehicles waiting too long at dock — may use VLM to classify vehicle types. |
+
+The core structure stays the same — Trigger (zone state) → Zone Activity Check → Orchestrator (zone scope) → Actions — only the threshold configuration and event metadata change.
+
+## Comparing batch vs streaming workflows
+
+| Aspect | Batch track state | Streaming zone state |
+| --- | --- | --- |
+| **Alerting** | After the fact | Near real-time |
+| **Event lifecycle** | Create only (end time set at creation) | Create + Close (separate steps) |
+| **Orchestrator scope** | Track | Zone |
+| **Image timing** | Calculated from zone entry | Closest Frame across multiple tracks |
+| **Processing volume** | One execution per track | Many executions per zone update |
+| **Interactions available** | Yes | No (use Closest Frame instead) |

@@ -129,6 +129,58 @@ track-a::track-b  (always this order, never track-b::track-a)
 
 This is useful for deduplication when both tracks in a pair trigger the same workflow.
 
+## Business use case examples
+
+<Accordion title="PPE compliance — person + PPE bounding box overlap">
+Detect whether workers are wearing high-visibility safety vests in designated PPE zones. The CV model detects both `person` and `ppe` objects — if a person's bounding box overlaps with a PPE detection, they're wearing it.
+
+| Parameter | Value |
+| --- | --- |
+| **Primary Tags** | `person` |
+| **Secondary Tags** | `ppe` |
+| **Overlap** | Enabled, `>= 1%` |
+| **Duration** | Not enabled |
+| **Distance** | Not enabled |
+
+**Mode:** Batch — the trigger must include **both** `person` and `ppe` object types so the state machine calculates interactions between them.
+
+The overlap threshold is intentionally low (1%) because any bounding box overlap between a person and a PPE detection indicates the person is wearing the equipment. When the check fails (no PPE overlap found), the workflow routes to a **VLM fallback** — a Vision Language Model analyzes the image for a second opinion before flagging a violation. This reduces false violations when the CV model misses a PPE detection.
+
+<Note>
+The trigger must include all relevant object types for interactions to be calculated. If you only include `person`, the state machine won't track `ppe` objects and no interactions will appear.
+</Note>
+</Accordion>
+
+<Accordion title="Vehicle collision / near-miss — proximity between tracks">
+Detect when vehicles come dangerously close to each other or to pedestrians. This uses the proximity thresholds rather than overlap.
+
+| Parameter | Value |
+| --- | --- |
+| **Primary Tags** | `person` (or vehicle types) |
+| **Secondary Tags** | `forklift`, `vehicle`, `tugger` |
+| **Overlap** | Not enabled (or enabled for actual collisions) |
+| **Duration** | Enabled, `>= 2s` |
+| **Distance** | Enabled, `<= 50 px` |
+
+**Mode:** Batch — the trigger includes all relevant object types.
+
+For near-miss detection, you typically care about **proximity** (how close they got) and **duration** (how long they were close). For actual collision detection, you'd enable **overlap** instead. The `matching_track_pair_ids` output is critical for deduplication — since both tracks in a near-miss may trigger the workflow, the canonical pair ID ensures you only create one event per interaction.
+</Accordion>
+
+<Accordion title="Adapting for other use cases">
+Type III threshold combinations serve different interaction scenarios:
+
+| Use Case | Primary | Secondary | Key Threshold |
+| --- | --- | --- | --- |
+| PPE compliance | `person` | `ppe` | Overlap `>= 1%` |
+| Near-miss | `person` | Vehicle types | Distance `<= 50 px`, Duration `>= 2s` |
+| Vehicle collision | Vehicle types | Vehicle types | Overlap `>= 10%`, Duration `>= 1s` |
+| Escort compliance | `vehicle` | `person` | Distance `<= 100 px`, Duration `>= 30s` |
+| Tailgating | `vehicle` | `vehicle` | Distance `<= 30 px` |
+
+Remember: if no thresholds are enabled, the check passes on **tag match alone**. Always enable at least one threshold to filter meaningful interactions.
+</Accordion>
+
 ## Batch mode requirement
 
 Type III checks require **interaction data** which is only available in **batch mode**. The state machine calculates interactions (bounding box overlap, proximity) when processing batch subscriptions. Streaming mode does not include interaction data.

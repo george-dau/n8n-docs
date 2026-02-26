@@ -1,0 +1,118 @@
+---
+title: "Choosing Your Workflow Pattern"
+description: "A decision guide for selecting the right trigger mode, signal type, and check nodes for your use case"
+---
+
+Every Worlds workflow starts with the same fundamental decisions. This guide walks you through those decisions to help you pick the right configuration.
+
+## Decision 1: What are you monitoring?
+
+The first question determines your **signal type**.
+
+| You care about... | Signal Type | Example |
+| --- | --- | --- |
+| **A specific object's behavior** — where it goes, how long it stays, how fast it moves | Track State | Obstruction, wrong-way, speeding, loitering |
+| **What's happening in a zone** — how many objects are in it, regardless of which specific objects | Zone State | Congestion, congregation, occupancy limits |
+| **How two objects interact** — proximity, overlap, co-location | Track State (batch) | Near-miss, PPE compliance, tailgating |
+
+## Decision 2: Do you need real-time alerting?
+
+This determines your **mode**.
+
+<Tabs>
+  <Tab title="Yes — use Streaming">
+    You need to react while conditions are developing. The workflow executes on every detection update.
+
+    **Trade-offs:**
+    - Higher processing volume (hundreds of executions per track)
+    - Can alert while the event is still happening
+    - Required for zone state monitoring
+    - Must handle event closure separately (close path on the orchestrator)
+
+    **Available signal types:** Track State, Zone State
+  </Tab>
+  <Tab title="No — use Batch">
+    You only need to know after the fact. The workflow executes once per track after it expires.
+
+    **Trade-offs:**
+    - Much lower processing volume (one execution per track)
+    - Delayed by the batch interval (10–300 seconds)
+    - Complete track lifecycle available — can set event start and end time at creation
+    - Interaction data available for Type III checks
+    - Track State only (zone state is not available in batch)
+
+    **Available signal types:** Track State only
+  </Tab>
+</Tabs>
+
+## Decision 3: Which check node?
+
+Based on your signal type, choose the appropriate check node(s):
+
+### For Track State
+
+| Check Type | Use when... | Requires |
+| --- | --- | --- |
+| [**Type I**](/nodes/type-1-track-in-zone) — Track in Zone | You need to check if a track is in a zone meeting threshold conditions (dwell time, intersection, velocity) | Streaming or Batch |
+| [**Type II**](/nodes/type-2-zone-sequence) — Zone Sequence | You need to check if a track visited zones in a specific order | Streaming or Batch |
+| [**Type III**](/nodes/type-3-track-interaction) — Track Interaction | You need to check if two tracks interacted (proximity, overlap) | **Batch only** |
+
+These can be [composed together](/concepts/check-chaining) — chain multiple check types and the Event Orchestrator evaluates them with AND or OR logic.
+
+### For Zone State
+
+| Check Type | Use when... |
+| --- | --- |
+| [**Zone Activity Check**](/nodes/zone-activity-check) | You need to check aggregate zone conditions (track count, per-track dwell time and intersection thresholds) |
+
+## Decision 4: Event scope
+
+The [Event Orchestrator](/nodes/event-orchestrator) prevents duplicate events by scoping them to an entity:
+
+| Scope | Use when... | Example |
+| --- | --- | --- |
+| **Track** | One event per tracked object | Obstruction — each vehicle gets its own event |
+| **Zone** | One event per zone | Congestion — one event per zone regardless of which tracks are in it |
+| **Device** | One event per camera | Camera-level alerting |
+| **Site** | One event per site | Site-wide incident tracking |
+
+## Quick reference: common use cases
+
+| Use Case | Mode | Signal Type | Check | Scope | Guide |
+| --- | --- | --- | --- | --- | --- |
+| Obstruction / loitering | Batch | Track State | Type I | Track | [Guide](/guides/batch-track-state) |
+| Congestion | Streaming | Zone State | Zone Activity | Zone | [Guide](/guides/streaming-zone-state) |
+| Zone intrusion | Streaming | Track State | Type I | Track | [Guide](/guides/streaming-track-state) |
+| Wrong-way detection | Streaming | Track State | Type II | Track | — |
+| Speeding in zone | Streaming | Track State | Type I | Track | — |
+| Safety near-miss | Batch | Track State | Type III | Track | — |
+| PPE compliance | Batch | Track State | Type III | Track | — |
+| Congregation | Streaming | Zone State | Zone Activity | Zone | — |
+| Checkpoint bypass | Streaming | Track State | Type I + II | Track | — |
+
+## Workflow template
+
+Every workflow follows the same core structure:
+
+```
+Trigger → Check(s) → Event Orchestrator → Action(s)
+```
+
+### Minimal workflow
+```
+Trigger → Check → Orchestrator → Event Manager (create)
+```
+
+### Standard workflow
+```
+Trigger → Check → Orchestrator ─┬─ Create: Image → Event Manager → (GIF → Email)
+                                └─ Close: Event Manager (close)
+```
+
+### Advanced workflow (with VLM)
+```
+Trigger → Check → Orchestrator ─┬─ Create: Closest Frame → Image → VLM → Merge → Metadata → Event Manager
+                                └─ Close: Event Manager (close)
+```
+
+Start with the minimal pattern and add complexity only as your use case requires.

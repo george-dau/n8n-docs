@@ -1,0 +1,143 @@
+---
+title: "Zone Activity Check"
+description: "Evaluate zone-level conditions like track count, dwell time, and intersection"
+---
+
+The Zone Activity Check evaluates conditions at the **zone level** — how many tracks are in a zone and whether they meet threshold criteria. Unlike the [Track Checks](/nodes/check-types-overview) which evaluate individual track behavior, this node answers the question "what is happening in this zone right now?"
+
+## When to use
+
+Use the Zone Activity Check when your workflow is triggered by **zone state** signals and you care about aggregate zone activity rather than individual track behavior:
+
+- **Congestion** — too many vehicles in an aisle zone
+- **Congregation** — multiple people gathering in an area
+- **Occupancy limits** — zone exceeds a maximum track count
+- **Zone monitoring** — any scenario where the number of objects in a zone matters
+
+<Note>
+This node is designed for **zone state** data from the [Detection Webhook Trigger](/nodes/detection-webhook-trigger) with signal type set to Zone State. For track-level checks, use the [Track Checks](/nodes/check-types-overview) node instead.
+</Note>
+
+## How it works
+
+1. The node reads the zone state from the input, including the list of active tracks in the zone
+2. For each active track, it evaluates the enabled threshold conditions (dwell time, intersection)
+3. Tracks that meet **all** enabled thresholds are counted as **qualified tracks**
+4. The check passes if the number of qualified tracks meets the **minimum track count**
+
+## Configuration
+
+### Site
+
+Select the Worlds site. This loads available zones for reference.
+
+### Threshold groups
+
+Each group defines the conditions tracks must meet to be counted:
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| **Zone IDs** | Multi-select | Which zones this group applies to. Use `={{$json.zone_state.zone_id}}` to dynamically match the incoming zone. |
+| **Min Track Count** | Number | Minimum number of qualified tracks for the check to pass |
+| **Dwell Time** | Toggle + value | Minimum time (seconds) a track must have been in the zone to be counted |
+| **Intersection** | Toggle + value | Minimum overlap percentage between the track's bounding box and the zone polygon |
+
+<Tip>
+Setting the zone ID dynamically with `={{$json.zone_state.zone_id}}` means the same threshold configuration applies to every zone your trigger is monitoring. This is the most common approach.
+</Tip>
+
+### Example configuration
+
+For a congestion workflow detecting 4+ vehicles lingering in aisle zones:
+
+| Parameter | Value |
+| --- | --- |
+| **Zone IDs** | `={{$json.zone_state.zone_id}}` |
+| **Min Track Count** | 4 |
+| **Dwell Time** | Enabled, >= 5 seconds |
+| **Intersection** | Enabled, >= 10% |
+
+This means: the check passes when 4 or more tracks in the zone each have at least 5 seconds of dwell time and at least 10% intersection with the zone polygon.
+
+## Output
+
+```json
+{
+  "zone_state": { ... },
+  "checks": {
+    "zoneActivity": {
+      "passed": true,
+      "zone_id": "92",
+      "zone_name": "Aisle-Zone-West",
+      "qualified_track_ids": ["track-uuid-1", "track-uuid-2", "track-uuid-3", "track-uuid-4"],
+      "qualified_track_count": 4,
+      "total_active_tracks": 6,
+      "track_details": {
+        "track-uuid-1": {
+          "tag": "forklift",
+          "dwell_time": 25.0,
+          "intersection": 45.3,
+          "qualified": true
+        }
+      }
+    }
+  }
+}
+```
+
+### Key output fields
+
+| Field | Description |
+| --- | --- |
+| `passed` | Whether the qualified track count met the minimum threshold |
+| `zone_id` | The zone that was evaluated |
+| `qualified_track_ids` | Track IDs that met all threshold conditions — use these downstream for image capture and event metadata |
+| `qualified_track_count` | Number of qualifying tracks |
+| `total_active_tracks` | Total tracks in the zone (including those that didn't meet thresholds) |
+| `track_details` | Per-track breakdown showing dwell time, intersection, and whether it qualified |
+
+## Downstream usage
+
+The `qualified_track_ids` output is commonly used by downstream nodes:
+
+- **[Closest Frame](/nodes/actions#closest-frame)** — find the timestamp where qualified tracks are closest together for the best image
+- **[Process Detection Image](/nodes/actions#process-detection-image)** — generate a still or GIF showing the qualified tracks
+- **[Event Manager](/nodes/event-manager)** — attach qualified track IDs to the created event
+
+## Credentials
+
+Requires **GraphQL Subscription API** credentials (for loading site/zone options).
+
+## Business use case examples
+
+<Accordion title="Aisle congestion — 4+ vehicles lingering in a zone">
+Detect when multiple vehicles are lingering in a factory aisle zone, creating traffic congestion that blocks material flow.
+
+| Parameter | Value | Purpose |
+| --- | --- | --- |
+| **Zone IDs** | `={{$json.zone_state.zone_id}}` | Dynamically matches incoming zone |
+| **Min Track Count** | 4 | At least 4 vehicles to constitute congestion |
+| **Dwell Time** | `>=` 5 seconds | Vehicles must be lingering, not just passing through |
+| **Intersection** | `>=` 10% | Vehicles must be meaningfully inside the zone |
+
+**Mode:** Streaming, zone state — receives updates whenever zone occupancy changes.
+
+The workflow uses an Event Orchestrator scoped by **zone** (not track) to prevent duplicate congestion events. The `qualified_track_ids` output feeds downstream into Closest Frame (to find the best multi-track image) and Create Still (to show all qualifying vehicles with bounding boxes and zone overlay).
+
+A VLM analyzes the captured image to add context metadata (e.g., "Four vehicles visible in the aisle. Two forklifts are positioned side by side blocking the travel path..."). When vehicles leave and the count drops below 4, the orchestrator routes to the **Close Event** path with the congestion duration.
+
+See the [Congestion Workflow](/guides/streaming-zone-state) guide for the full end-to-end walkthrough.
+</Accordion>
+
+<Accordion title="Adapting for other use cases">
+Zone Activity Check works for any aggregate zone monitoring scenario:
+
+| Use Case | Min Track Count | Dwell Time | Intersection | Notes |
+| --- | --- | --- | --- | --- |
+| Aisle congestion | `4` | `>= 5s` | `>= 10%` | Vehicles blocking traffic |
+| Congregation | `5` | `>= 30s` | `>= 15%` | People gathering in restricted areas |
+| Occupancy limit | Site-specific | `>= 10s` | `>= 5%` | Maximum capacity enforcement |
+| Loading dock queue | `3` | `>= 60s` | `>= 20%` | Vehicles waiting too long at dock |
+
+Higher dwell time thresholds filter out transient tracks (objects passing through), while higher intersection thresholds ensure the objects are meaningfully inside the zone rather than just at the boundary.
+</Accordion>

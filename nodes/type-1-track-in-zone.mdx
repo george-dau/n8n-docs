@@ -128,6 +128,67 @@ You can create multiple threshold groups to apply different thresholds to differ
 | `zones_not_configured` | Zones the track was in but had no threshold config |
 | `reason` | If failed: `no_zones_configured`, `no_zones_data_in_input`, `no_zones_met_all_thresholds`, etc. |
 
+## Business use case examples
+
+<Accordion title="Obstruction detection — dwell + intersection + velocity">
+Detect vehicles (forklifts, tuggers, AMRs) blocking factory aisles. A vehicle is considered an obstruction when it has been in an aisle zone for an extended period with low velocity.
+
+| Threshold | Operator | Value | Purpose |
+| --- | --- | --- | --- |
+| **Intersection** | `>=` | `10%` | Vehicle bounding box must overlap the zone |
+| **Dwell Time** | `>=` | `300s` (5 min) | Vehicle must have been stopped for at least 5 minutes |
+| **Velocity** | `<` | `5 px/s` | Vehicle must be stationary or near-stationary |
+
+**Mode:** Batch — only need the track summary after the vehicle leaves.
+
+All three thresholds are enabled, so a zone only passes if all three conditions are met simultaneously. Different aisle zones can share a single threshold group if they have the same criteria, or use separate groups for zones with different dwell time requirements (e.g., loading docks allow longer stops).
+
+See the [Obstruction Workflow](/guides/batch-track-state) guide for the full end-to-end walkthrough.
+</Accordion>
+
+<Accordion title="Failure to stop — velocity only, multiple threshold groups">
+Detect vehicles that fail to come to a complete stop at designated stop sign zones. This is a **compliance monitoring** pattern — every vehicle passing through creates an event, either compliant or non-compliant.
+
+| Threshold | Operator | Value | Purpose |
+| --- | --- | --- | --- |
+| **Velocity** | `<=` | `25–120 px/s` (varies) | Vehicle's average velocity must be at or below the zone's speed threshold |
+
+**Mode:** Batch — only need the track summary after the vehicle passes through.
+
+The key detail: **10 separate threshold groups** with different velocity values. Zones near intersections have lower thresholds (stricter stops), while zones in high-traffic corridors have higher thresholds. Each stop zone is assigned to exactly one group.
+
+A code node downstream preserves the original pass/fail result as `threshold_passed`, then overrides `type1.passed = true` so that **both** compliant and non-compliant tracks flow through to event creation. The event subtype is set dynamically based on the saved result.
+</Accordion>
+
+<Accordion title="PPE zone pre-filter — intersection only">
+As a pre-filter in the PPE compliance workflow, Type I determines whether a person is in a designated PPE zone before evaluating whether they're wearing PPE (via a Type III check).
+
+| Threshold | Operator | Value | Purpose |
+| --- | --- | --- | --- |
+| **Intersection** | `>=` | `10%` | Person must be in a PPE-required zone |
+
+**Mode:** Batch — using person and PPE tags together so interactions are calculated.
+
+Only intersection is enabled — no dwell time or velocity requirements. The check simply answers "is this person in a zone that requires PPE?" Tracks that fail are dropped via an early-exit Switch node before running the more expensive Type III interaction check.
+
+This demonstrates how Type I can be used as a **lightweight filter** in a multi-check composition (Type I → Type III → VLM fallback).
+</Accordion>
+
+<Accordion title="Adapting thresholds for other use cases">
+Type I is the most flexible check node — different threshold combinations serve very different use cases:
+
+| Use Case | Intersection | Dwell Time | Velocity |
+| --- | --- | --- | --- |
+| Aisle obstruction | `>= 10%` | `>= 300s` | `< 5 px/s` |
+| Loading dock overstay | `>= 20%` | `>= 1800s` | `< 2 px/s` |
+| No-park zone violation | `>= 10%` | `>= 60s` | `< 3 px/s` |
+| Zone intrusion | `>= 5%` | — | — |
+| Speeding in zone | `>= 10%` | — | `> 200 px/s` |
+| Stop compliance | — | — | `<= 50 px/s` |
+
+The key principle: enable only the thresholds you need for your specific use case. Fewer enabled thresholds means a broader match.
+</Accordion>
+
 ## Active vs. historical zones
 
 | Check Target | Source | When |

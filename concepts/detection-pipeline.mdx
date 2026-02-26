@@ -26,10 +26,16 @@ Detections are published in real time via the Worlds GraphQL API over WebSocket.
 The state machine subscribes to the detection stream and does the heavy lifting:
 
 - **Track correlation** — groups sequential detections of the same object into a **track**
-- **State enrichment** — calculates velocity, zone intersections, and dwell times
-- **Signal generation** — emits `track_created` when a new track starts, `track_updated` on each new detection, and `track_expired` when a track goes stale
+- **State enrichment** — calculates velocity (rolling average and instantaneous), zone intersections, dwell times, and motion history
+- **Zone tracking** — maintains active zones (where the track currently is), zone history (where it was), and zone sequence (order of zones visited)
+- **Signal generation** — emits signals to your workflow based on the subscription's signal type
 
-Each signal includes the complete enriched track state — your workflow never needs to query for additional data.
+The state machine operates in two modes:
+
+- **Streaming** — emits signals in real time as detections occur. Supports both **track state** signals (`track_created`, `track_updated`, `track_expired`) and **zone state** signals (`zone_occupied`, `zone_updated`, `zone_empty`).
+- **Batch** — collects detections and emits track summaries at a configurable interval. Only emits expired tracks, but includes **interaction data** — proximity and overlap between tracks calculated by interpolating bounding boxes across a 1-second window around each detection.
+
+Each signal includes the complete enriched state — your workflow never needs to query for additional data.
 
 ### 4. Webhook delivery
 
@@ -41,7 +47,9 @@ The state machine delivers signals to n8n via HTTP webhooks. Each workflow regis
 
 ### 5. Workflow execution
 
-Your n8n workflow receives the track state and runs your business logic. A single workflow execution handles one signal for one track.
+Your n8n workflow receives the enriched state and runs your business logic. A single workflow execution handles one signal — either one track state update or one zone state update. The purpose of the workflow is to **distill high-volume detection data into actionable events** on the Worlds platform.
+
+The typical workflow pattern is: **Trigger → Check → Event Orchestrator → Action** (image capture, event creation, email alert).
 
 ## Data flow example
 

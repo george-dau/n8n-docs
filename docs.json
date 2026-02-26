@@ -33,7 +33,10 @@
           {
             "group": "Workflow Guides",
             "pages": [
-              "guides/track-in-zone"
+              "guides/choosing-your-workflow",
+              "guides/streaming-track-state",
+              "guides/batch-track-state",
+              "guides/streaming-zone-state"
             ]
           },
           {
@@ -62,7 +65,8 @@
               "nodes/check-types-overview",
               "nodes/type-1-track-in-zone",
               "nodes/type-2-zone-sequence",
-              "nodes/type-3-track-interaction"
+              "nodes/type-3-track-interaction",
+              "nodes/zone-activity-check"
             ]
           },
           {

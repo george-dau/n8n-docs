@@ -28,7 +28,7 @@ Place this node after the [Event Orchestrator](/nodes/event-orchestrator) to exe
 
     | Parameter | Type | Description |
     | --- | --- | --- |
-    | **End Time** | DateTime | If provided, creates the event in a closed state |
+    | **End Time** | DateTime | If provided, creates the event in a closed state. This also closes the event in the orchestrator's local Redis cache, so you don't need a separate close step in your workflow. This is particularly useful for **batch mode** workflows where the track has already expired and you know both the start and end time at creation. |
     | **Track IDs** | String | Track IDs to associate with the event |
     | **Metadata** | Key-Value pairs | Custom metadata (trackId, dataSourceID, tag, position, etc.) |
     | **Snapshots** | Collection | Camera snapshots to attach (dataSourceId + timestamp) |
@@ -100,7 +100,6 @@ Requires **GraphQL Subscription API** credentials.
 
 ## Example
 
-In the [Track in Zone](/guides/track-in-zone) guide, two Event Manager nodes are used:
-
-1. **Create path:** Creates an event with track metadata, position, camera snapshot, and a processed image upload
-2. **Close path:** Closes the event with the end time and calculates duration as metadata: `={{Math.round((new Date($json.track_state.last_seen) - new Date($json.eventOrchestrator.event_start_time)) / 1000)}}`
+- In the [Batch Track State Workflow](/guides/batch-track-state) (batch), a single Event Manager creates the event with both start and end time — no close step needed
+- In the [Streaming Zone State Workflow](/guides/streaming-zone-state) (streaming zone state), two Event Manager nodes are used — one to create and one to close when conditions clear
+- In the [Streaming Track State Workflow](/guides/streaming-track-state) (streaming track state), two Event Manager nodes handle create and close paths

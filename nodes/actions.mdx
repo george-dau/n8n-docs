@@ -85,7 +85,44 @@ Query existing events from the Worlds platform.
 
 ### Closest Frame
 
-Find the detection frame closest to a given timestamp.
+Find the optimal timestamp where multiple tracks are closest together in a single camera frame. This is particularly useful in **zone state** workflows where you're working with multiple tracks and need a single image that shows them all.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| **Track IDs** | Array | Track IDs to analyze |
+| **Timestamp** | DateTime | Reference timestamp to search around |
+
+The node calculates the minimax edge-to-edge bounding box distance across all specified tracks and returns the timestamp where they are closest together.
+
+**Output:**
+```json
+{
+  "closest_frame": {
+    "optimal_timestamp": "2026-02-19T18:36:22.045Z"
+  }
+}
+```
+
+Use the `optimal_timestamp` as the timestamp input for the Process Detection Image node to capture the best possible image of all tracks together.
+
+<Tip>
+Closest Frame serves a similar purpose to batch mode's interaction data, but works with streaming zone state data. In batch workflows where interactions are available, you may not need this node. In zone state workflows, it's the recommended way to find the best image timestamp for multi-track scenarios.
+</Tip>
+
+## Using VLM (Vision Language Model) with images
+
+A common advanced pattern is to pass a captured still image through a Vision Language Model for additional analysis. This uses n8n's built-in **Basic LLM Chain** node with image input:
+
+1. Capture a still image using Process Detection Image
+2. Pass the image binary to a VLM (Azure OpenAI, GPT-4V, etc.) with a structured prompt
+3. Use a **Structured Output Parser** to get typed JSON output (e.g., `{ "boolean": true, "confidence": 0.92, "context": "..." }`)
+4. **Merge** the VLM output back with the original data
+
+The VLM output can be used two ways:
+- **As context metadata** — attach the VLM's description and confidence to the event for human review
+- **As a check gate** — use the boolean output with an n8n IF node to conditionally create events, reducing false positives
+
+See the [Streaming Zone State Workflow](/guides/streaming-zone-state) for a complete example using VLM confirmation.
 
 ## Credentials
 

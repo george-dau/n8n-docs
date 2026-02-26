@@ -1,11 +1,11 @@
 ---
-title: "Type I Workflow: Track in Zone"
-description: "Build a workflow that detects tracks meeting zone threshold conditions and creates events"
+title: "Streaming Track State Workflow"
+description: "Build a workflow that reacts to real-time track updates with check-based event management"
 ---
 
-This guide walks through a complete workflow using a **Type I check** — the most common pattern. It detects when a tracked object is in a configured zone and meets threshold conditions (intersection, dwell time, velocity), then creates an event in the Worlds platform with image capture and email notification.
+The **streaming track state** pattern reacts to tracks in real time — you get an execution on every detection update, letting you alert while conditions are still developing. The trade-off is higher processing volume and the need to manage event closure when conditions clear.
 
-This same pattern applies to any "track in zone" use case — obstruction detection, loitering, zone intrusion, speeding, or any scenario where you need to act on a track's behavior within a zone.
+This guide uses **zone intrusion** as the running example (detecting objects in restricted zones), but the same pattern applies to any streaming track use case — loitering, speeding, dwell-time monitoring, and more.
 
 ## What you'll build
 
@@ -177,6 +177,19 @@ When the orchestrator routes to "Close Event" (the track moved away or expired):
 6. The orchestrator routes to "Create Event" — image captured, event created, GIF generated, email sent
 7. Object continues in zone — orchestrator routes to "Update Event" (unwired, no action)
 8. Object leaves or track expires — checks fail → orchestrator routes to "Close Event" with duration
+
+## Other use cases for this pattern
+
+The streaming track state pattern works for any use case where you need real-time alerting on individual track behavior:
+
+| Use Case | Check Differences | Key Difference |
+| --- | --- | --- |
+| **Loitering** | Type I: higher dwell time threshold | Same as zone intrusion but with stricter dwell requirements. |
+| **Speeding in zone** | Type I: velocity `>` threshold, no dwell time | Inverted velocity check — fires when objects move too fast. |
+| **Dwell time monitoring** | Type I: dwell time only, no velocity | Simpler threshold configuration. |
+| **Extended vehicle stop** | Type I: high dwell + low velocity | Similar to obstruction but with real-time alerting. |
+
+For use cases that require **zone sequences** (wrong-way, checkpoint bypass), add a Type II check between the Type I check and the orchestrator. For use cases that require **interaction data** (near-miss, PPE), switch to the [batch track state pattern](/guides/batch-track-state) instead — interactions are only available in batch mode.
 
 ## Testing with Replay
 

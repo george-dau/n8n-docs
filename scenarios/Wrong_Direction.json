@@ -1,0 +1,2881 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "batch",
+        "site": "3",
+        "dataSourceIds": "={{ [\"77b931b3-5e51-4c38-83f3-ce0bf4f238ef\",\"a2480d6f-daa9-44f0-926d-7bc8224d7e60\",\"04729259-be43-4629-9429-91588cbc4e7f\",\"3fd6accd-628f-41cd-8f92-c0c6be64bdf4\",\"a0a46112-515e-44da-a385-f8e54594a617\",\"be6c7c87-9f49-454e-a19c-321baba37d81\",\"2ba0f384-81e0-4146-b9c4-3ba5dc4fc029\",\"83c275a6-d8ac-4676-90d4-8ff6cfe5da20\"] }}",
+        "objectTypes": "={{ [\"forklift\",\"lift\",\"tugger\",\"golf cart\",\"amr\",\"cmm\",\"sludge king\"] }}",
+        "advancedOptions": {}
+      },
+      "type": "CUSTOM.worldsDetectionWebhookTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1744,
+        432
+      ],
+      "id": "d27612b2-b0ac-4247-8263-6de5dc935fa0",
+      "name": "Worlds Detection Webhook Trigger",
+      "webhookId": "1a826cc6-2c0f-4365-a2ee-30819690a7ff",
+      "credentials": {
+        "graphqlSubscriptionApi": {
+          "id": "QjAiK2zZm8cE52QF",
+          "name": "Cummins API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "type2",
+        "site": "3",
+        "sequences": {
+          "items": [
+            {
+              "zones": [
+                "15",
+                "14"
+              ],
+              "bypassZones": [
+                "28"
+              ]
+            },
+            {
+              "zones": [
+                "17",
+                "16"
+              ]
+            },
+            {
+              "zones": [
+                "36",
+                "35"
+              ]
+            },
+            {
+              "zones": [
+                "137",
+                "35"
+              ]
+            },
+            {
+              "zones": [
+                "56",
+                "55"
+              ]
+            },
+            {
+              "zones": [
+                "88",
+                "87"
+              ]
+            },
+            {
+              "zones": [
+                "91",
+                "90"
+              ]
+            },
+            {
+              "zones": [
+                "94",
+                "93"
+              ]
+            },
+            {
+              "zones": [
+                "97",
+                "96"
+              ]
+            }
+          ]
+        },
+        "advancedSettings": {}
+      },
+      "type": "CUSTOM.worldsTrackChecks",
+      "typeVersion": 1,
+      "position": [
+        -1536,
+        432
+      ],
+      "id": "b512636e-28a3-4352-bab9-f76219ff3d3e",
+      "name": "Check zone sequence patterns",
+      "credentials": {
+        "graphqlSubscriptionApi": {
+          "id": "QjAiK2zZm8cE52QF",
+          "name": "Cummins API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "processingMode": "batch",
+        "trackIds": [
+          "019c7664-005e-75f3-9918-8d580e51f268"
+        ],
+        "site": "3"
+      },
+      "type": "CUSTOM.worldsDetectionReplayTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1744,
+        640
+      ],
+      "id": "4de1793c-6738-4705-be89-b69c81532702",
+      "name": "Worlds Replay Detection Trigger",
+      "webhookId": "d4e0f55d-fa4e-4cdc-8183-7392cad44eac",
+      "credentials": {
+        "graphqlSubscriptionApi": {
+          "id": "QjAiK2zZm8cE52QF",
+          "name": "Cummins API"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "advancedOptions": {}
+      },
+      "type": "CUSTOM.worldsEventOrchestratorV2",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        400
+      ],
+      "id": "47235266-df51-41d2-904c-f36646473ee7",
+      "name": "Worlds Event Orchestrator"
+    },
+    {
+      "parameters": {
+        "eventProducerId": "6b7d1641-ea26-4aab-80e6-498d9e01310b",
+        "eventType": "Safety",
+        "eventSubType": "Wrong Direction Event",
+        "startTime": "={{ $json.checks.type2.matched_sequences[0].path[0].entered_at }}",
+        "endTime": "={{ $json.checks.type2.matched_sequences[0].path[1].entered_at }}",
+        "trackIds": "={{ $json.track_state.track_id }}",
+        "metadata": {
+          "metadataItems": [
+            {
+              "key": "trackId",
+              "value": "={{ $json.track_state.track_id }}"
+            },
+            {
+              "key": "dataSourceID",
+              "value": "={{ $json.track_state.datasource_id }}"
+            },
+            {
+              "key": "dataSourceName",
+              "value": "={{ $json.track_state.datasource_name }}"
+            },
+            {
+              "key": "tag",
+              "value": "={{ $json.track_state.tag }}"
+            },
+            {
+              "key": "position",
+              "value": "=({{ $json.track_state.position.geo.lat ?? 'NaN' }},{{ $json.track_state.position.geo.lon ?? 'NaN' }})"
+            },
+            {
+              "key": "=actualSequence",
+              "value": "={{ $json.checks.type2.matched_sequences[0].sequence[0] }} -> {{ $json.checks.type2.matched_sequences[0].sequence[1] }}"
+            },
+            {
+              "key": "expectedSequence",
+              "value": "={{ $json.checks.type2.matched_sequences[0].sequence[1] }} -> {{ $json.checks.type2.matched_sequences[0].sequence[0] }}"
+            },
+            {
+              "key": "source",
+              "value": "={{ $workflow.id }}"
+            }
+          ]
+        },
+        "snapshots": {
+          "snapshotItems": [
+            {
+              "dataSourceId": "={{ $json.track_state.datasource_id }}",
+              "timestamp": "={{ $json.metadata.timestamp }}"
+            }
+          ]
+        },
+        "uploads": {
+          "uploadItems": [
+            {
+              "data": "={{ $json.processedImage }}",
+              "timestamp": "={{ $json.metadata.timestamp }}"
+            }
+          ]
+        },
+        "advancedSettings": {
+          "siteIds": "3",
+          "dataSourceIds": "={{ $json.track_state.datasource_id }}",
+          "tags": "={{ $json.track_state.tag }}",
+          "position": "={{ $json.track_state.position.geo.lat ?? 'NaN' }},{{ $json.track_state.position.geo.lon ?? 'NaN' }}",
+          "priority": "3"
+        }
+      },
+      "type": "CUSTOM.worldsEventManagerV2",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        384
+      ],
+      "id": "77d45914-14c1-4122-8012-865cdeb46033",
+      "name": "Worlds Event Manager",
+      "credentials": {
+        "graphqlSubscriptionApi": {
+          "id": "QjAiK2zZm8cE52QF",
+          "name": "Cummins API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "processDetectionImage",
+        "trackIds": [
+          "={{ $json.track_state.track_id }}"
+        ],
+        "timestamp": "={{ $json.checks.type2.matched_sequences[0].transition_at }}",
+        "zoneIds": [
+          "={{ $json.checks.type2.matching_zones }}"
+        ],
+        "options": {}
+      },
+      "type": "CUSTOM.worlds",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        384
+      ],
+      "id": "0a288b71-5326-4de8-a670-5ef0b10d306d",
+      "name": "Create still image from detection",
+      "credentials": {
+        "graphqlSubscriptionApi": {
+          "id": "QjAiK2zZm8cE52QF",
+          "name": "Cummins API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "sendWorldsEmail",
+        "emailSubject": "Wrong Direction Event",
+        "alertImage": "={{ $json.gif_base64 }}",
+        "alertTitle": "Wrong Direction Event",
+        "siteName": "={{ $json.track_state.site_name }}",
+        "eventTimestamp": "={{ $json.createdEvent.startTime }}",
+        "cameraName": "={{ $json.track_state.datasource_name }}",
+        "eventId": "={{ $json.createdEvent.id }}",
+        "toRecipients": {
+          "emails": [
+            {
+              "email": "cmi_worlds_cmep_safety_group@cummins.com"
+            },
+            {
+              "email": "cmi_worlds_cmep_admin_group@cummins.com"
+            }
+          ]
+        },
+        "advancedOptions": {
+          "bccRecipients": {
+            "emails": [
+              {
+                "email": "alerts-cummins-internal@worlds.io"
+              }
+            ]
+          }
+        }
+      },
+      "type": "CUSTOM.worlds",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        384
+      ],
+      "id": "4d54d1e0-1d2b-4bba-b6df-a5f322f0713b",
+      "name": "Send email",
+      "credentials": {
+        "sendGridApi": {
+          "id": "OP1WscXBynWbfeCV",
+          "name": "SendGrid account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "processDetectionImage",
+        "operation": "createGIF",
+        "trackIds": [
+          "={{ $json.track_state.track_id }}"
+        ],
+        "timestamp": "={{ $json.metadata.timestamp }}",
+        "zoneIds": [
+          "={{ $json.metadata.zoneIds }}"
+        ],
+        "options": {}
+      },
+      "type": "CUSTOM.worlds",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        384
+      ],
+      "id": "6ba3e488-0163-4bd6-ad66-7d9edb1c9924",
+      "name": "Create GIF from detection sequence",
+      "credentials": {
+        "graphqlSubscriptionApi": {
+          "id": "QjAiK2zZm8cE52QF",
+          "name": "Cummins API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataToSave": {
+          "values": [
+            {
+              "key": "action",
+              "value": "=create_event"
+            },
+            {
+              "key": "={{ $json.createdEvent.id.replaceAll('-', '') }}",
+              "value": "=event_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executionData",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        384
+      ],
+      "id": "fbe100e4-d1ba-4c19-b2b9-2ae701051397",
+      "name": "Execution Data1"
+    },
+    {
+      "parameters": {
+        "dataToSave": {
+          "values": [
+            {
+              "key": "={{ $json.track_state.track_id.replaceAll('-', '') }}",
+              "value": "=track_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executionData",
+      "typeVersion": 1.1,
+      "position": [
+        -1296,
+        432
+      ],
+      "id": "69b6433d-8506-4a50-9807-9f0c59f6ba65",
+      "name": "Execution Data"
+    }
+  ],
+  "connections": {
+    "Worlds Detection Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check zone sequence patterns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check zone sequence patterns": {
+      "main": [
+        [
+          {
+            "node": "Execution Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worlds Replay Detection Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check zone sequence patterns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worlds Event Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Create still image from detection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worlds Event Manager": {
+      "main": [
+        [
+          {
+            "node": "Create GIF from detection sequence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create still image from detection": {
+      "main": [
+        [
+          {
+            "node": "Worlds Event Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [
+          {
+            "node": "Execution Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create GIF from detection sequence": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execution Data": {
+      "main": [
+        [
+          {
+            "node": "Worlds Event Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Worlds Detection Webhook Trigger": [
+      {
+        "signal": "track_expired",
+        "track_state": {
+          "track_id": "019c77a4-27f1-7905-bace-62b4de5c6d5a",
+          "tag": "tugger",
+          "datasource_id": "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+          "datasource_name": "Shortblock Stacker",
+          "device_id": "16",
+          "site_id": "3",
+          "site_name": "Mid-Range Engine Plant CMEP",
+          "track_start": "2026-02-19T20:44:06.241Z",
+          "track_end": "2026-02-19T20:44:30.991Z",
+          "first_seen": "2026-02-19T20:44:06.241Z",
+          "last_seen": "2026-02-19T20:44:15.991Z",
+          "track_age": "9.750",
+          "detection_count": 6,
+          "position": {
+            "pix": {
+              "x": 938.5,
+              "y": 975
+            },
+            "geo": {
+              "lon": null,
+              "lat": null
+            },
+            "polygon": {
+              "coordinates": [
+                [
+                  [
+                    845,
+                    875
+                  ],
+                  [
+                    845,
+                    1075
+                  ],
+                  [
+                    1032,
+                    1075
+                  ],
+                  [
+                    1032,
+                    875
+                  ],
+                  [
+                    845,
+                    875
+                  ]
+                ]
+              ]
+            }
+          },
+          "motion": {
+            "pix": {
+              "velocity": 49.543615159893264,
+              "distance": 550.1386010250031,
+              "sample_count": 5,
+              "instantaneous_velocity": 73.89264621830978,
+              "instantaneous_direction": 175.6347422649721
+            },
+            "geo": {
+              "velocity": 1.124358470944903,
+              "distance": 9.627895266129372,
+              "sample_count": 4,
+              "instantaneous_velocity": 1.2525703063999,
+              "instantaneous_direction": 92.54527077611807
+            }
+          },
+          "zones": {
+            "active": {},
+            "history": [
+              {
+                "zone_id": "1",
+                "zone_name": "Shortblock_Stacker-obstruction-zone",
+                "entered_at": "2026-02-19T20:44:06.241Z",
+                "exited_at": "2026-02-19T20:44:15.991Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 938.5,
+                    "y": 975
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          845,
+                          875
+                        ],
+                        [
+                          845,
+                          1075
+                        ],
+                        [
+                          1032,
+                          1075
+                        ],
+                        [
+                          1032,
+                          875
+                        ],
+                        [
+                          845,
+                          875
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 9.75,
+                "detection_count": 6,
+                "intersection": {
+                  "current_percent": 97.94647841014913,
+                  "avg_percent": 99.65774640169151,
+                  "sample_count": 6
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 49.543615159893264,
+                    "distance": 550.1386010250031,
+                    "sample_count": 5,
+                    "instantaneous_velocity": 73.89264621830978,
+                    "instantaneous_direction": 175.6347422649721
+                  },
+                  "geo": {
+                    "velocity": 1.124358470944903,
+                    "distance": 9.627895266129372,
+                    "sample_count": 4,
+                    "instantaneous_velocity": 1.2525703063999,
+                    "instantaneous_direction": 92.54527077611807
+                  }
+                }
+              },
+              {
+                "zone_id": "17",
+                "zone_name": "C23-EXIT-ZONE",
+                "entered_at": "2026-02-19T20:44:13.324Z",
+                "exited_at": "2026-02-19T20:44:15.991Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 923.5,
+                    "y": 778.5
+                  },
+                  "geo": {
+                    "lon": -85.949599,
+                    "lat": 39.129923
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          850,
+                          695
+                        ],
+                        [
+                          850,
+                          862
+                        ],
+                        [
+                          997,
+                          862
+                        ],
+                        [
+                          997,
+                          695
+                        ],
+                        [
+                          850,
+                          695
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 2.667,
+                "detection_count": 1,
+                "intersection": {
+                  "current_percent": 19.087623014782533,
+                  "avg_percent": 19.087623014782533,
+                  "sample_count": 1
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": null,
+                    "distance": 0,
+                    "sample_count": 0,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              },
+              {
+                "zone_id": "16",
+                "zone_name": "C23-ENTER-ZONE",
+                "entered_at": "2026-02-19T20:44:06.241Z",
+                "exited_at": "2026-02-19T20:44:08.992Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 922,
+                    "y": 429.5
+                  },
+                  "geo": {
+                    "lon": -85.949708,
+                    "lat": 39.129915
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          887,
+                          382
+                        ],
+                        [
+                          887,
+                          477
+                        ],
+                        [
+                          957,
+                          477
+                        ],
+                        [
+                          957,
+                          382
+                        ],
+                        [
+                          887,
+                          382
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 2.751,
+                "detection_count": 2,
+                "intersection": {
+                  "current_percent": 15.27814314016395,
+                  "avg_percent": 11.444527541229569,
+                  "sample_count": 2
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 15.620499351813308,
+                    "distance": 3.905124837953327,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 15.620499351813308,
+                    "instantaneous_direction": 39.80557109226519
+                  },
+                  "geo": {
+                    "velocity": 0.3450231858266422,
+                    "distance": 0.08625579645666055,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 0.3450231858266422,
+                    "instantaneous_direction": 89.99999976507881
+                  }
+                }
+              },
+              {
+                "zone_id": "57",
+                "zone_name": "failure-to-stop-zone",
+                "entered_at": "2026-02-19T20:44:06.241Z",
+                "exited_at": "2026-02-19T20:44:08.992Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 922,
+                    "y": 429.5
+                  },
+                  "geo": {
+                    "lon": -85.949708,
+                    "lat": 39.129915
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          887,
+                          382
+                        ],
+                        [
+                          887,
+                          477
+                        ],
+                        [
+                          957,
+                          477
+                        ],
+                        [
+                          957,
+                          382
+                        ],
+                        [
+                          887,
+                          382
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 2.751,
+                "detection_count": 2,
+                "intersection": {
+                  "current_percent": 10.664391592680651,
+                  "avg_percent": 6.5964055182962555,
+                  "sample_count": 2
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 15.620499351813308,
+                    "distance": 3.905124837953327,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 15.620499351813308,
+                    "instantaneous_direction": 39.80557109226519
+                  },
+                  "geo": {
+                    "velocity": 0.3450231858266422,
+                    "distance": 0.08625579645666055,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 0.3450231858266422,
+                    "instantaneous_direction": 89.99999976507881
+                  }
+                }
+              }
+            ],
+            "sequence": [
+              {
+                "zone_id": "16",
+                "entered_at": "2026-02-19T20:44:06.241Z"
+              },
+              {
+                "zone_id": "1",
+                "entered_at": "2026-02-19T20:44:06.241Z"
+              },
+              {
+                "zone_id": "57",
+                "entered_at": "2026-02-19T20:44:06.241Z"
+              },
+              {
+                "zone_id": "17",
+                "entered_at": "2026-02-19T20:44:13.324Z"
+              }
+            ]
+          },
+          "interactions": []
+        },
+        "trigger_config": {
+          "mode": "batch",
+          "signal_type": "track_state",
+          "batch_interval": 30,
+          "filters": {
+            "site_id": "3",
+            "datasource_ids": [
+              "77b931b3-5e51-4c38-83f3-ce0bf4f238ef",
+              "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+              "04729259-be43-4629-9429-91588cbc4e7f",
+              "3fd6accd-628f-41cd-8f92-c0c6be64bdf4",
+              "a0a46112-515e-44da-a385-f8e54594a617",
+              "be6c7c87-9f49-454e-a19c-321baba37d81",
+              "2ba0f384-81e0-4146-b9c4-3ba5dc4fc029",
+              "83c275a6-d8ac-4676-90d4-8ff6cfe5da20"
+            ],
+            "zone_ids": [],
+            "tags": [
+              "forklift",
+              "lift",
+              "tugger",
+              "golf cart",
+              "amr",
+              "cmm",
+              "sludge king"
+            ]
+          },
+          "workflow": {
+            "id": "B8sRDi1Z02oSAWiiahJFn",
+            "name": "wrong_direction_v3"
+          }
+        }
+      },
+      {
+        "signal": "track_expired",
+        "track_state": {
+          "track_id": "019c77a4-660d-709e-9065-0eaf2038c8c2",
+          "tag": "golf cart",
+          "datasource_id": "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+          "datasource_name": "Shortblock Stacker",
+          "device_id": "16",
+          "site_id": "3",
+          "site_name": "Mid-Range Engine Plant CMEP",
+          "track_start": "2026-02-19T20:44:22.992Z",
+          "track_end": "2026-02-19T20:44:37.992Z",
+          "first_seen": "2026-02-19T20:44:22.992Z",
+          "last_seen": "2026-02-19T20:44:22.992Z",
+          "track_age": "0.000",
+          "detection_count": 1,
+          "position": {
+            "pix": {
+              "x": 930,
+              "y": 628
+            },
+            "geo": {
+              "lon": -85.949636,
+              "lat": 39.129923
+            },
+            "polygon": {
+              "coordinates": [
+                [
+                  [
+                    870,
+                    582
+                  ],
+                  [
+                    870,
+                    674
+                  ],
+                  [
+                    990,
+                    674
+                  ],
+                  [
+                    990,
+                    582
+                  ],
+                  [
+                    870,
+                    582
+                  ]
+                ]
+              ]
+            }
+          },
+          "motion": {
+            "pix": {
+              "velocity": null,
+              "distance": 0,
+              "sample_count": 0,
+              "instantaneous_velocity": null,
+              "instantaneous_direction": null
+            },
+            "geo": {
+              "velocity": null,
+              "distance": null,
+              "sample_count": null,
+              "instantaneous_velocity": null,
+              "instantaneous_direction": null
+            }
+          },
+          "zones": {
+            "active": {},
+            "history": [
+              {
+                "zone_id": "1",
+                "zone_name": "Shortblock_Stacker-obstruction-zone",
+                "entered_at": "2026-02-19T20:44:22.992Z",
+                "exited_at": "2026-02-19T20:44:22.992Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 930,
+                    "y": 628
+                  },
+                  "geo": {
+                    "lon": -85.949636,
+                    "lat": 39.129923
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          870,
+                          582
+                        ],
+                        [
+                          870,
+                          674
+                        ],
+                        [
+                          990,
+                          674
+                        ],
+                        [
+                          990,
+                          582
+                        ],
+                        [
+                          870,
+                          582
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 0,
+                "detection_count": 1,
+                "intersection": {
+                  "current_percent": 100,
+                  "avg_percent": 100,
+                  "sample_count": 1
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": null,
+                    "distance": 0,
+                    "sample_count": 0,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              }
+            ],
+            "sequence": [
+              {
+                "zone_id": "1",
+                "entered_at": "2026-02-19T20:44:22.992Z"
+              }
+            ]
+          },
+          "interactions": []
+        },
+        "trigger_config": {
+          "mode": "batch",
+          "signal_type": "track_state",
+          "batch_interval": 30,
+          "filters": {
+            "site_id": "3",
+            "datasource_ids": [
+              "77b931b3-5e51-4c38-83f3-ce0bf4f238ef",
+              "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+              "04729259-be43-4629-9429-91588cbc4e7f",
+              "3fd6accd-628f-41cd-8f92-c0c6be64bdf4",
+              "a0a46112-515e-44da-a385-f8e54594a617",
+              "be6c7c87-9f49-454e-a19c-321baba37d81",
+              "2ba0f384-81e0-4146-b9c4-3ba5dc4fc029",
+              "83c275a6-d8ac-4676-90d4-8ff6cfe5da20"
+            ],
+            "zone_ids": [],
+            "tags": [
+              "forklift",
+              "lift",
+              "tugger",
+              "golf cart",
+              "amr",
+              "cmm",
+              "sludge king"
+            ]
+          },
+          "workflow": {
+            "id": "B8sRDi1Z02oSAWiiahJFn",
+            "name": "wrong_direction_v3"
+          }
+        }
+      },
+      {
+        "signal": "track_expired",
+        "track_state": {
+          "track_id": "019c77a4-65ec-7bf5-86d8-8d15c9e7af79",
+          "tag": "cmm",
+          "datasource_id": "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+          "datasource_name": "Shortblock Stacker",
+          "device_id": "16",
+          "site_id": "3",
+          "site_name": "Mid-Range Engine Plant CMEP",
+          "track_start": "2026-02-19T20:44:21.241Z",
+          "track_end": "2026-02-19T20:44:40.326Z",
+          "first_seen": "2026-02-19T20:44:21.241Z",
+          "last_seen": "2026-02-19T20:44:25.326Z",
+          "track_age": "4.085",
+          "detection_count": 3,
+          "position": {
+            "pix": {
+              "x": 673.5,
+              "y": 988
+            },
+            "geo": {
+              "lon": null,
+              "lat": null
+            },
+            "polygon": {
+              "coordinates": [
+                [
+                  [
+                    440,
+                    902
+                  ],
+                  [
+                    440,
+                    1074
+                  ],
+                  [
+                    907,
+                    1074
+                  ],
+                  [
+                    907,
+                    902
+                  ],
+                  [
+                    440,
+                    902
+                  ]
+                ]
+              ]
+            }
+          },
+          "motion": {
+            "pix": {
+              "velocity": 116.1978985810035,
+              "distance": 467.470104792352,
+              "sample_count": 2,
+              "instantaneous_velocity": 133.46003505833522,
+              "instantaneous_direction": 245.3720019285223
+            },
+            "geo": {
+              "velocity": null,
+              "distance": null,
+              "sample_count": null,
+              "instantaneous_velocity": null,
+              "instantaneous_direction": null
+            }
+          },
+          "zones": {
+            "active": {},
+            "history": [
+              {
+                "zone_id": "1",
+                "zone_name": "Shortblock_Stacker-obstruction-zone",
+                "entered_at": "2026-02-19T20:44:21.241Z",
+                "exited_at": "2026-02-19T20:44:25.326Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 673.5,
+                    "y": 988
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          440,
+                          902
+                        ],
+                        [
+                          440,
+                          1074
+                        ],
+                        [
+                          907,
+                          1074
+                        ],
+                        [
+                          907,
+                          902
+                        ],
+                        [
+                          440,
+                          902
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 4.085,
+                "detection_count": 3,
+                "intersection": {
+                  "current_percent": 27.142126542321463,
+                  "avg_percent": 68.53637668918914,
+                  "sample_count": 3
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 116.1978985810035,
+                    "distance": 467.470104792352,
+                    "sample_count": 2,
+                    "instantaneous_velocity": 133.46003505833522,
+                    "instantaneous_direction": 245.3720019285223
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              },
+              {
+                "zone_id": "17",
+                "zone_name": "C23-EXIT-ZONE",
+                "entered_at": "2026-02-19T20:44:21.241Z",
+                "exited_at": "2026-02-19T20:44:25.326Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 896,
+                    "y": 886
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          745,
+                          700
+                        ],
+                        [
+                          745,
+                          1072
+                        ],
+                        [
+                          1047,
+                          1072
+                        ],
+                        [
+                          1047,
+                          700
+                        ],
+                        [
+                          745,
+                          700
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 4.085,
+                "detection_count": 2,
+                "intersection": {
+                  "current_percent": 8.657920120063414,
+                  "avg_percent": 9.293780485607144,
+                  "sample_count": 2
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 98.93576210367178,
+                    "distance": 222.70440049536515,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 98.93576210367178,
+                    "instantaneous_direction": 187.09310558666905
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              }
+            ],
+            "sequence": [
+              {
+                "zone_id": "17",
+                "entered_at": "2026-02-19T20:44:21.241Z"
+              },
+              {
+                "zone_id": "1",
+                "entered_at": "2026-02-19T20:44:21.241Z"
+              }
+            ]
+          },
+          "interactions": [
+            {
+              "track_id": "019c77a4-65f6-7db3-ac49-e54800e96376",
+              "tag": "tugger",
+              "first_interaction_at": "2026-02-19T20:44:22.492Z",
+              "last_interaction_at": "2026-02-19T20:44:22.492Z",
+              "total_duration": 0,
+              "proximity": {
+                "interaction_count": 1,
+                "pix": {
+                  "min_distance": 41.035539760106644,
+                  "avg_distance": 41.035539760106644,
+                  "min_distance_at": "2026-02-19T20:44:22.492Z"
+                }
+              }
+            },
+            {
+              "track_id": "019c77a4-660d-709e-9065-0eaf2038c8c2",
+              "tag": "golf cart",
+              "first_interaction_at": "2026-02-19T20:44:22.992Z",
+              "last_interaction_at": "2026-02-19T20:44:22.992Z",
+              "total_duration": 0,
+              "proximity": {
+                "interaction_count": 1,
+                "pix": {
+                  "min_distance": 0,
+                  "avg_distance": 0,
+                  "min_distance_at": "2026-02-19T20:44:22.992Z"
+                }
+              },
+              "overlap": {
+                "overlap_count": 1,
+                "max_overlap_percent": 0.15198076217333406,
+                "max_overlap_at": "2026-02-19T20:44:22.992Z",
+                "total_overlap_duration": 0
+              }
+            }
+          ]
+        },
+        "trigger_config": {
+          "mode": "batch",
+          "signal_type": "track_state",
+          "batch_interval": 30,
+          "filters": {
+            "site_id": "3",
+            "datasource_ids": [
+              "77b931b3-5e51-4c38-83f3-ce0bf4f238ef",
+              "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+              "04729259-be43-4629-9429-91588cbc4e7f",
+              "3fd6accd-628f-41cd-8f92-c0c6be64bdf4",
+              "a0a46112-515e-44da-a385-f8e54594a617",
+              "be6c7c87-9f49-454e-a19c-321baba37d81",
+              "2ba0f384-81e0-4146-b9c4-3ba5dc4fc029",
+              "83c275a6-d8ac-4676-90d4-8ff6cfe5da20"
+            ],
+            "zone_ids": [],
+            "tags": [
+              "forklift",
+              "lift",
+              "tugger",
+              "golf cart",
+              "amr",
+              "cmm",
+              "sludge king"
+            ]
+          },
+          "workflow": {
+            "id": "B8sRDi1Z02oSAWiiahJFn",
+            "name": "wrong_direction_v3"
+          }
+        }
+      },
+      {
+        "signal": "track_expired",
+        "track_state": {
+          "track_id": "019c77a4-65f6-7db3-ac49-e54800e96376",
+          "tag": "tugger",
+          "datasource_id": "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+          "datasource_name": "Shortblock Stacker",
+          "device_id": "16",
+          "site_id": "3",
+          "site_name": "Mid-Range Engine Plant CMEP",
+          "track_start": "2026-02-19T20:44:22.492Z",
+          "track_end": "2026-02-19T20:44:41.242Z",
+          "first_seen": "2026-02-19T20:44:22.492Z",
+          "last_seen": "2026-02-19T20:44:26.242Z",
+          "track_age": "3.750",
+          "detection_count": 3,
+          "position": {
+            "pix": {
+              "x": 852,
+              "y": 690.5
+            },
+            "geo": {
+              "lon": -85.949615,
+              "lat": 39.129919
+            },
+            "polygon": {
+              "coordinates": [
+                [
+                  [
+                    812,
+                    607
+                  ],
+                  [
+                    812,
+                    774
+                  ],
+                  [
+                    892,
+                    774
+                  ],
+                  [
+                    892,
+                    607
+                  ],
+                  [
+                    812,
+                    607
+                  ]
+                ]
+              ]
+            }
+          },
+          "motion": {
+            "pix": {
+              "velocity": 44.994738547283056,
+              "distance": 167.39941135327433,
+              "sample_count": 2,
+              "instantaneous_velocity": 50.31817134343158,
+              "instantaneous_direction": 195.14098383507692
+            },
+            "geo": {
+              "velocity": 0.9606888289805956,
+              "distance": 3.582044963175198,
+              "sample_count": 2,
+              "instantaneous_velocity": 1.0428414109887367,
+              "instantaneous_direction": 83.0005736021045
+            }
+          },
+          "zones": {
+            "active": {},
+            "history": [
+              {
+                "zone_id": "1",
+                "zone_name": "Shortblock_Stacker-obstruction-zone",
+                "entered_at": "2026-02-19T20:44:22.492Z",
+                "exited_at": "2026-02-19T20:44:26.242Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 852,
+                    "y": 690.5
+                  },
+                  "geo": {
+                    "lon": -85.949615,
+                    "lat": 39.129919
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          812,
+                          607
+                        ],
+                        [
+                          812,
+                          774
+                        ],
+                        [
+                          892,
+                          774
+                        ],
+                        [
+                          892,
+                          607
+                        ],
+                        [
+                          812,
+                          607
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 3.75,
+                "detection_count": 3,
+                "intersection": {
+                  "current_percent": 77.96340816234132,
+                  "avg_percent": 89.24269579458796,
+                  "sample_count": 3
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 44.994738547283056,
+                    "distance": 167.39941135327433,
+                    "sample_count": 2,
+                    "instantaneous_velocity": 50.31817134343158,
+                    "instantaneous_direction": 195.14098383507692
+                  },
+                  "geo": {
+                    "velocity": 0.9606888289805956,
+                    "distance": 3.582044963175198,
+                    "sample_count": 2,
+                    "instantaneous_velocity": 1.0428414109887367,
+                    "instantaneous_direction": 83.0005736021045
+                  }
+                }
+              }
+            ],
+            "sequence": [
+              {
+                "zone_id": "1",
+                "entered_at": "2026-02-19T20:44:22.492Z"
+              }
+            ]
+          },
+          "interactions": [
+            {
+              "track_id": "019c77a4-660d-709e-9065-0eaf2038c8c2",
+              "tag": "golf cart",
+              "first_interaction_at": "2026-02-19T20:44:22.992Z",
+              "last_interaction_at": "2026-02-19T20:44:22.992Z",
+              "total_duration": 0,
+              "proximity": {
+                "interaction_count": 1,
+                "pix": {
+                  "min_distance": 0,
+                  "avg_distance": 0,
+                  "min_distance_at": "2026-02-19T20:44:22.992Z"
+                },
+                "geo": {
+                  "min_distance_m": 1.586051649946897,
+                  "avg_distance_m": 1.586051649946897,
+                  "min_distance_at": "2026-02-19T20:44:22.992Z"
+                }
+              },
+              "overlap": {
+                "overlap_count": 1,
+                "max_overlap_percent": 0.14294791405400886,
+                "max_overlap_at": "2026-02-19T20:44:22.992Z",
+                "total_overlap_duration": 0
+              }
+            },
+            {
+              "track_id": "019c77a4-660d-7250-9475-402737f8876f",
+              "tag": "forklift",
+              "first_interaction_at": "2026-02-19T20:44:23.242Z",
+              "last_interaction_at": "2026-02-19T20:44:23.242Z",
+              "total_duration": 0,
+              "proximity": {
+                "interaction_count": 1,
+                "pix": {
+                  "min_distance": 0,
+                  "avg_distance": 0,
+                  "min_distance_at": "2026-02-19T20:44:23.242Z"
+                },
+                "geo": {
+                  "min_distance_m": 0.3856152908807594,
+                  "avg_distance_m": 0.3856152908807594,
+                  "min_distance_at": "2026-02-19T20:44:23.242Z"
+                }
+              },
+              "overlap": {
+                "overlap_count": 1,
+                "max_overlap_percent": 0.9622641509433962,
+                "max_overlap_at": "2026-02-19T20:44:23.242Z",
+                "total_overlap_duration": 0
+              }
+            }
+          ]
+        },
+        "trigger_config": {
+          "mode": "batch",
+          "signal_type": "track_state",
+          "batch_interval": 30,
+          "filters": {
+            "site_id": "3",
+            "datasource_ids": [
+              "77b931b3-5e51-4c38-83f3-ce0bf4f238ef",
+              "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+              "04729259-be43-4629-9429-91588cbc4e7f",
+              "3fd6accd-628f-41cd-8f92-c0c6be64bdf4",
+              "a0a46112-515e-44da-a385-f8e54594a617",
+              "be6c7c87-9f49-454e-a19c-321baba37d81",
+              "2ba0f384-81e0-4146-b9c4-3ba5dc4fc029",
+              "83c275a6-d8ac-4676-90d4-8ff6cfe5da20"
+            ],
+            "zone_ids": [],
+            "tags": [
+              "forklift",
+              "lift",
+              "tugger",
+              "golf cart",
+              "amr",
+              "cmm",
+              "sludge king"
+            ]
+          },
+          "workflow": {
+            "id": "B8sRDi1Z02oSAWiiahJFn",
+            "name": "wrong_direction_v3"
+          }
+        }
+      },
+      {
+        "signal": "track_expired",
+        "track_state": {
+          "track_id": "019c77a4-660d-7250-9475-402737f8876f",
+          "tag": "forklift",
+          "datasource_id": "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+          "datasource_name": "Shortblock Stacker",
+          "device_id": "16",
+          "site_id": "3",
+          "site_name": "Mid-Range Engine Plant CMEP",
+          "track_start": "2026-02-19T20:44:23.242Z",
+          "track_end": "2026-02-19T20:44:47.491Z",
+          "first_seen": "2026-02-19T20:44:23.242Z",
+          "last_seen": "2026-02-19T20:44:32.491Z",
+          "track_age": "9.249",
+          "detection_count": 3,
+          "position": {
+            "pix": {
+              "x": 915,
+              "y": 832.5
+            },
+            "geo": {
+              "lon": -85.949562,
+              "lat": 39.129921
+            },
+            "polygon": {
+              "coordinates": [
+                [
+                  [
+                    790,
+                    615
+                  ],
+                  [
+                    790,
+                    1050
+                  ],
+                  [
+                    1040,
+                    1050
+                  ],
+                  [
+                    1040,
+                    615
+                  ],
+                  [
+                    790,
+                    615
+                  ]
+                ]
+              ]
+            }
+          },
+          "motion": {
+            "pix": {
+              "velocity": 39.229726624533185,
+              "distance": 340.1221507046031,
+              "sample_count": 2,
+              "instantaneous_velocity": 18.29554151328495,
+              "instantaneous_direction": 168.09573428450827
+            },
+            "geo": {
+              "velocity": 0.8245879811382554,
+              "distance": 7.257200146976927,
+              "sample_count": 2,
+              "instantaneous_velocity": 0.48411416494397286,
+              "instantaneous_direction": 89.99999084617377
+            }
+          },
+          "zones": {
+            "active": {},
+            "history": [
+              {
+                "zone_id": "1",
+                "zone_name": "Shortblock_Stacker-obstruction-zone",
+                "entered_at": "2026-02-19T20:44:23.242Z",
+                "exited_at": "2026-02-19T20:44:32.491Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 915,
+                    "y": 832.5
+                  },
+                  "geo": {
+                    "lon": -85.949562,
+                    "lat": 39.129921
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          790,
+                          615
+                        ],
+                        [
+                          790,
+                          1050
+                        ],
+                        [
+                          1040,
+                          1050
+                        ],
+                        [
+                          1040,
+                          615
+                        ],
+                        [
+                          790,
+                          615
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 9.249,
+                "detection_count": 3,
+                "intersection": {
+                  "current_percent": 92.7956043587153,
+                  "avg_percent": 91.15311341913753,
+                  "sample_count": 3
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 39.229726624533185,
+                    "distance": 340.1221507046031,
+                    "sample_count": 2,
+                    "instantaneous_velocity": 18.29554151328495,
+                    "instantaneous_direction": 168.09573428450827
+                  },
+                  "geo": {
+                    "velocity": 0.8245879811382554,
+                    "distance": 7.257200146976927,
+                    "sample_count": 2,
+                    "instantaneous_velocity": 0.48411416494397286,
+                    "instantaneous_direction": 89.99999084617377
+                  }
+                }
+              },
+              {
+                "zone_id": "17",
+                "zone_name": "C23-EXIT-ZONE",
+                "entered_at": "2026-02-19T20:44:27.324Z",
+                "exited_at": "2026-02-19T20:44:32.491Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 915,
+                    "y": 832.5
+                  },
+                  "geo": {
+                    "lon": -85.949562,
+                    "lat": 39.129921
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          790,
+                          615
+                        ],
+                        [
+                          790,
+                          1050
+                        ],
+                        [
+                          1040,
+                          1050
+                        ],
+                        [
+                          1040,
+                          615
+                        ],
+                        [
+                          790,
+                          615
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 5.167,
+                "detection_count": 2,
+                "intersection": {
+                  "current_percent": 7.351420793776005,
+                  "avg_percent": 8.709067183754202,
+                  "sample_count": 2
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 18.29554151328495,
+                    "distance": 94.53306299914333,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 18.29554151328495,
+                    "instantaneous_direction": 168.09573428450827
+                  },
+                  "geo": {
+                    "velocity": 0.48411416494397286,
+                    "distance": 2.5014178902655075,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 0.48411416494397286,
+                    "instantaneous_direction": 89.99999084617377
+                  }
+                }
+              },
+              {
+                "zone_id": "57",
+                "zone_name": "failure-to-stop-zone",
+                "entered_at": "2026-02-19T20:44:23.242Z",
+                "exited_at": "2026-02-19T20:44:27.324Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 912.5,
+                    "y": 495
+                  },
+                  "geo": {
+                    "lon": -85.949646,
+                    "lat": 39.129918
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          855,
+                          365
+                        ],
+                        [
+                          855,
+                          625
+                        ],
+                        [
+                          970,
+                          625
+                        ],
+                        [
+                          970,
+                          365
+                        ],
+                        [
+                          855,
+                          365
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 4.082,
+                "detection_count": 1,
+                "intersection": {
+                  "current_percent": 10.461351218193876,
+                  "avg_percent": 10.461351218193876,
+                  "sample_count": 1
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": null,
+                    "distance": 0,
+                    "sample_count": 0,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              },
+              {
+                "zone_id": "16",
+                "zone_name": "C23-ENTER-ZONE",
+                "entered_at": "2026-02-19T20:44:23.242Z",
+                "exited_at": "2026-02-19T20:44:27.324Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 912.5,
+                    "y": 495
+                  },
+                  "geo": {
+                    "lon": -85.949646,
+                    "lat": 39.129918
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          855,
+                          365
+                        ],
+                        [
+                          855,
+                          625
+                        ],
+                        [
+                          970,
+                          625
+                        ],
+                        [
+                          970,
+                          365
+                        ],
+                        [
+                          855,
+                          365
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 4.082,
+                "detection_count": 1,
+                "intersection": {
+                  "current_percent": 8.866678504179754,
+                  "avg_percent": 8.866678504179754,
+                  "sample_count": 1
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": null,
+                    "distance": 0,
+                    "sample_count": 0,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              }
+            ],
+            "sequence": [
+              {
+                "zone_id": "16",
+                "entered_at": "2026-02-19T20:44:23.242Z"
+              },
+              {
+                "zone_id": "1",
+                "entered_at": "2026-02-19T20:44:23.242Z"
+              },
+              {
+                "zone_id": "57",
+                "entered_at": "2026-02-19T20:44:23.242Z"
+              },
+              {
+                "zone_id": "17",
+                "entered_at": "2026-02-19T20:44:27.324Z"
+              }
+            ]
+          },
+          "interactions": [
+            {
+              "track_id": "019c77a4-65f6-7db3-ac49-e54800e96376",
+              "tag": "tugger",
+              "first_interaction_at": "2026-02-19T20:44:23.242Z",
+              "last_interaction_at": "2026-02-19T20:44:26.242Z",
+              "total_duration": 3,
+              "proximity": {
+                "interaction_count": 3,
+                "pix": {
+                  "min_distance": 0,
+                  "avg_distance": 0,
+                  "min_distance_at": "2026-02-19T20:44:23.242Z"
+                },
+                "geo": {
+                  "min_distance_m": 0.3856152908807594,
+                  "avg_distance_m": 0.6122636651087568,
+                  "min_distance_at": "2026-02-19T20:44:23.242Z"
+                }
+              },
+              "overlap": {
+                "overlap_count": 3,
+                "max_overlap_percent": 1,
+                "max_overlap_at": "2026-02-19T20:44:24.492Z",
+                "total_overlap_duration": 3
+              }
+            }
+          ]
+        },
+        "trigger_config": {
+          "mode": "batch",
+          "signal_type": "track_state",
+          "batch_interval": 30,
+          "filters": {
+            "site_id": "3",
+            "datasource_ids": [
+              "77b931b3-5e51-4c38-83f3-ce0bf4f238ef",
+              "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+              "04729259-be43-4629-9429-91588cbc4e7f",
+              "3fd6accd-628f-41cd-8f92-c0c6be64bdf4",
+              "a0a46112-515e-44da-a385-f8e54594a617",
+              "be6c7c87-9f49-454e-a19c-321baba37d81",
+              "2ba0f384-81e0-4146-b9c4-3ba5dc4fc029",
+              "83c275a6-d8ac-4676-90d4-8ff6cfe5da20"
+            ],
+            "zone_ids": [],
+            "tags": [
+              "forklift",
+              "lift",
+              "tugger",
+              "golf cart",
+              "amr",
+              "cmm",
+              "sludge king"
+            ]
+          },
+          "workflow": {
+            "id": "B8sRDi1Z02oSAWiiahJFn",
+            "name": "wrong_direction_v3"
+          }
+        }
+      },
+      {
+        "signal": "track_expired",
+        "track_state": {
+          "track_id": "019c77a4-149c-745c-87ff-03eac8a34c25",
+          "tag": "forklift",
+          "datasource_id": "3fd6accd-628f-41cd-8f92-c0c6be64bdf4",
+          "datasource_name": "FIFO",
+          "device_id": "10",
+          "site_id": "3",
+          "site_name": "Mid-Range Engine Plant CMEP",
+          "track_start": "2026-02-19T20:44:02.707Z",
+          "track_end": "2026-02-19T20:44:34.707Z",
+          "first_seen": "2026-02-19T20:44:02.707Z",
+          "last_seen": "2026-02-19T20:44:19.707Z",
+          "track_age": "17.000",
+          "detection_count": 6,
+          "position": {
+            "pix": {
+              "x": 979.5,
+              "y": 479.5
+            },
+            "geo": {
+              "lon": null,
+              "lat": null
+            },
+            "polygon": {
+              "coordinates": [
+                [
+                  [
+                    962,
+                    447
+                  ],
+                  [
+                    962,
+                    512
+                  ],
+                  [
+                    997,
+                    512
+                  ],
+                  [
+                    997,
+                    447
+                  ],
+                  [
+                    962,
+                    447
+                  ]
+                ]
+              ]
+            }
+          },
+          "motion": {
+            "pix": {
+              "velocity": 41.16560677785407,
+              "distance": 455.2160228158942,
+              "sample_count": 5,
+              "instantaneous_velocity": 5.322593352868505,
+              "instantaneous_direction": 334.3978124485582
+            },
+            "geo": {
+              "velocity": 2.1323543633633766,
+              "distance": 19.51279328763109,
+              "sample_count": 4,
+              "instantaneous_velocity": 0.811250130332464,
+              "instantaneous_direction": 279.97022745438966
+            }
+          },
+          "zones": {
+            "active": {},
+            "history": [
+              {
+                "zone_id": "56",
+                "zone_name": "fifo-wd-zone2",
+                "entered_at": "2026-02-19T20:44:14.707Z",
+                "exited_at": "2026-02-19T20:44:19.707Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 979.5,
+                    "y": 479.5
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          962,
+                          447
+                        ],
+                        [
+                          962,
+                          512
+                        ],
+                        [
+                          997,
+                          512
+                        ],
+                        [
+                          997,
+                          447
+                        ],
+                        [
+                          962,
+                          447
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 5,
+                "detection_count": 2,
+                "intersection": {
+                  "current_percent": 18.354046288186908,
+                  "avg_percent": 15.939912156474378,
+                  "sample_count": 2
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 5.322593352868505,
+                    "distance": 26.612966764342527,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 5.322593352868505,
+                    "instantaneous_direction": 334.3978124485582
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              },
+              {
+                "zone_id": "2",
+                "zone_name": "FIFO-obstruction-zone",
+                "entered_at": "2026-02-19T20:44:02.707Z",
+                "exited_at": "2026-02-19T20:44:19.707Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 979.5,
+                    "y": 479.5
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          962,
+                          447
+                        ],
+                        [
+                          962,
+                          512
+                        ],
+                        [
+                          997,
+                          512
+                        ],
+                        [
+                          997,
+                          447
+                        ],
+                        [
+                          962,
+                          447
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 17,
+                "detection_count": 6,
+                "intersection": {
+                  "current_percent": 44.87496526291783,
+                  "avg_percent": 42.172163376900606,
+                  "sample_count": 6
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 41.16560677785407,
+                    "distance": 455.2160228158942,
+                    "sample_count": 5,
+                    "instantaneous_velocity": 5.322593352868505,
+                    "instantaneous_direction": 334.3978124485582
+                  },
+                  "geo": {
+                    "velocity": 2.1323543633633766,
+                    "distance": 19.51279328763109,
+                    "sample_count": 4,
+                    "instantaneous_velocity": 0.811250130332464,
+                    "instantaneous_direction": 279.97022745438966
+                  }
+                }
+              },
+              {
+                "zone_id": "55",
+                "zone_name": "fifo-wd-zone1",
+                "entered_at": "2026-02-19T20:44:04.210Z",
+                "exited_at": "2026-02-19T20:44:14.707Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 1018,
+                    "y": 551
+                  },
+                  "geo": {
+                    "lon": -85.95007,
+                    "lat": 39.130134
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          982,
+                          490
+                        ],
+                        [
+                          982,
+                          612
+                        ],
+                        [
+                          1054,
+                          612
+                        ],
+                        [
+                          1054,
+                          490
+                        ],
+                        [
+                          982,
+                          490
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 10.497,
+                "detection_count": 3,
+                "intersection": {
+                  "current_percent": 10.497214817593482,
+                  "avg_percent": 6.813000740978231,
+                  "sample_count": 3
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 36.84682186042102,
+                    "distance": 200.65592077577998,
+                    "sample_count": 2,
+                    "instantaneous_velocity": 21.983683365026632,
+                    "instantaneous_direction": 320.39997342332504
+                  },
+                  "geo": {
+                    "velocity": 1.8731065162005753,
+                    "distance": 9.689507869599888,
+                    "sample_count": 2,
+                    "instantaneous_velocity": 0.43370185889827484,
+                    "instantaneous_direction": 293.25374744154897
+                  }
+                }
+              },
+              {
+                "zone_id": "76",
+                "zone_name": "failure-to-stop-zone-2",
+                "entered_at": "2026-02-19T20:44:02.707Z",
+                "exited_at": "2026-02-19T20:44:06.710Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 1169.5,
+                    "y": 680
+                  },
+                  "geo": {
+                    "lon": -85.950151,
+                    "lat": 39.130128
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          1072,
+                          550
+                        ],
+                        [
+                          1072,
+                          810
+                        ],
+                        [
+                          1267,
+                          810
+                        ],
+                        [
+                          1267,
+                          550
+                        ],
+                        [
+                          1072,
+                          550
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 4.003,
+                "detection_count": 2,
+                "intersection": {
+                  "current_percent": 7.058580507202275,
+                  "avg_percent": 3.5765748307209897,
+                  "sample_count": 2
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 115.30917757873036,
+                    "distance": 173.30969390083175,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 115.30917757873036,
+                    "instantaneous_direction": 297.30431053248583
+                  },
+                  "geo": {
+                    "velocity": 3.9719542907198924,
+                    "distance": 5.969847298951999,
+                    "sample_count": 1,
+                    "instantaneous_velocity": 3.9719542907198924,
+                    "instantaneous_direction": 79.26532272648072
+                  }
+                }
+              },
+              {
+                "zone_id": "103",
+                "zone_name": "FIFO-FTS-1",
+                "entered_at": "2026-02-19T20:44:02.707Z",
+                "exited_at": "2026-02-19T20:44:04.210Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 1323.5,
+                    "y": 759.5
+                  },
+                  "geo": {
+                    "lon": -85.950219,
+                    "lat": 39.130118
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          1205,
+                          597
+                        ],
+                        [
+                          1205,
+                          922
+                        ],
+                        [
+                          1442,
+                          922
+                        ],
+                        [
+                          1442,
+                          597
+                        ],
+                        [
+                          1205,
+                          597
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 1.5030000000000001,
+                "detection_count": 1,
+                "intersection": {
+                  "current_percent": 0.21316815027181168,
+                  "avg_percent": 0.21316815027181168,
+                  "sample_count": 1
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": null,
+                    "distance": 0,
+                    "sample_count": 0,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              }
+            ],
+            "sequence": [
+              {
+                "zone_id": "2",
+                "entered_at": "2026-02-19T20:44:02.707Z"
+              },
+              {
+                "zone_id": "103",
+                "entered_at": "2026-02-19T20:44:02.707Z"
+              },
+              {
+                "zone_id": "76",
+                "entered_at": "2026-02-19T20:44:02.707Z"
+              },
+              {
+                "zone_id": "55",
+                "entered_at": "2026-02-19T20:44:04.210Z"
+              },
+              {
+                "zone_id": "56",
+                "entered_at": "2026-02-19T20:44:14.707Z"
+              }
+            ]
+          },
+          "interactions": []
+        },
+        "trigger_config": {
+          "mode": "batch",
+          "signal_type": "track_state",
+          "batch_interval": 30,
+          "filters": {
+            "site_id": "3",
+            "datasource_ids": [
+              "77b931b3-5e51-4c38-83f3-ce0bf4f238ef",
+              "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+              "04729259-be43-4629-9429-91588cbc4e7f",
+              "3fd6accd-628f-41cd-8f92-c0c6be64bdf4",
+              "a0a46112-515e-44da-a385-f8e54594a617",
+              "be6c7c87-9f49-454e-a19c-321baba37d81",
+              "2ba0f384-81e0-4146-b9c4-3ba5dc4fc029",
+              "83c275a6-d8ac-4676-90d4-8ff6cfe5da20"
+            ],
+            "zone_ids": [],
+            "tags": [
+              "forklift",
+              "lift",
+              "tugger",
+              "golf cart",
+              "amr",
+              "cmm",
+              "sludge king"
+            ]
+          },
+          "workflow": {
+            "id": "B8sRDi1Z02oSAWiiahJFn",
+            "name": "wrong_direction_v3"
+          }
+        }
+      },
+      {
+        "signal": "track_expired",
+        "track_state": {
+          "track_id": "019c77a2-384f-7ab3-b871-b4b03b68c453",
+          "tag": "forklift",
+          "datasource_id": "2ba0f384-81e0-4146-b9c4-3ba5dc4fc029",
+          "datasource_name": "Shortblock_LB1 - West View",
+          "device_id": "39",
+          "site_id": "3",
+          "site_name": "Mid-Range Engine Plant CMEP",
+          "track_start": "2026-02-19T20:40:34.959Z",
+          "track_end": "2026-02-19T20:43:12.173Z",
+          "first_seen": "2026-02-19T20:40:34.959Z",
+          "last_seen": "2026-02-19T20:42:57.173Z",
+          "track_age": "142.214",
+          "detection_count": 30,
+          "position": {
+            "pix": {
+              "x": 884.5,
+              "y": 161
+            },
+            "geo": {
+              "lon": null,
+              "lat": null
+            },
+            "polygon": {
+              "coordinates": [
+                [
+                  [
+                    832,
+                    95
+                  ],
+                  [
+                    832,
+                    227
+                  ],
+                  [
+                    937,
+                    227
+                  ],
+                  [
+                    937,
+                    95
+                  ],
+                  [
+                    832,
+                    95
+                  ]
+                ]
+              ]
+            }
+          },
+          "motion": {
+            "pix": {
+              "velocity": 9.028561546070872,
+              "distance": 1067.9145605507283,
+              "sample_count": 29,
+              "instantaneous_velocity": 6.699240150502466,
+              "instantaneous_direction": 75.17352002964432
+            },
+            "geo": {
+              "velocity": null,
+              "distance": null,
+              "sample_count": null,
+              "instantaneous_velocity": null,
+              "instantaneous_direction": null
+            }
+          },
+          "zones": {
+            "active": {},
+            "history": [
+              {
+                "zone_id": "92",
+                "zone_name": "Shortblock_LB1 - West View-Obstruction-congestion-zone",
+                "entered_at": "2026-02-19T20:40:34.959Z",
+                "exited_at": "2026-02-19T20:42:57.173Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 884.5,
+                    "y": 161
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          832,
+                          95
+                        ],
+                        [
+                          832,
+                          227
+                        ],
+                        [
+                          937,
+                          227
+                        ],
+                        [
+                          937,
+                          95
+                        ],
+                        [
+                          832,
+                          95
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 142.214,
+                "detection_count": 30,
+                "intersection": {
+                  "current_percent": 82.53297957074558,
+                  "avg_percent": 73.36219437338465,
+                  "sample_count": 30
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 9.028561546070872,
+                    "distance": 1067.9145605507283,
+                    "sample_count": 29,
+                    "instantaneous_velocity": 6.699240150502466,
+                    "instantaneous_direction": 75.17352002964432
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              },
+              {
+                "zone_id": "93",
+                "zone_name": "Shortblock_LB1 - West View-WD-1",
+                "entered_at": "2026-02-19T20:42:51.923Z",
+                "exited_at": "2026-02-19T20:42:57.173Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 850.5,
+                    "y": 170
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          807,
+                          105
+                        ],
+                        [
+                          807,
+                          235
+                        ],
+                        [
+                          894,
+                          235
+                        ],
+                        [
+                          894,
+                          105
+                        ],
+                        [
+                          807,
+                          105
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 5.25,
+                "detection_count": 1,
+                "intersection": {
+                  "current_percent": 0.04271683778121176,
+                  "avg_percent": 0.04271683778121176,
+                  "sample_count": 1
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": null,
+                    "distance": 0,
+                    "sample_count": 0,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              },
+              {
+                "zone_id": "93",
+                "zone_name": "Shortblock_LB1 - West View-WD-1",
+                "entered_at": "2026-02-19T20:41:21.538Z",
+                "exited_at": "2026-02-19T20:41:26.539Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 927.5,
+                    "y": 167
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          885,
+                          97
+                        ],
+                        [
+                          885,
+                          237
+                        ],
+                        [
+                          970,
+                          237
+                        ],
+                        [
+                          970,
+                          97
+                        ],
+                        [
+                          885,
+                          97
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 5.001,
+                "detection_count": 1,
+                "intersection": {
+                  "current_percent": 1.5766467392404746,
+                  "avg_percent": 1.5766467392404746,
+                  "sample_count": 1
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": null,
+                    "distance": 0,
+                    "sample_count": 0,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              },
+              {
+                "zone_id": "93",
+                "zone_name": "Shortblock_LB1 - West View-WD-1",
+                "entered_at": "2026-02-19T20:40:42.459Z",
+                "exited_at": "2026-02-19T20:41:11.373Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 868,
+                    "y": 172
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          827,
+                          107
+                        ],
+                        [
+                          827,
+                          237
+                        ],
+                        [
+                          909,
+                          237
+                        ],
+                        [
+                          909,
+                          107
+                        ],
+                        [
+                          827,
+                          107
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 28.914,
+                "detection_count": 6,
+                "intersection": {
+                  "current_percent": 1.4579280020281034,
+                  "avg_percent": 3.9765571554759993,
+                  "sample_count": 6
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": 12.454464055221008,
+                    "distance": 248.33918755023822,
+                    "sample_count": 5,
+                    "instantaneous_velocity": 0.3868471953578337,
+                    "instantaneous_direction": 270
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              },
+              {
+                "zone_id": "94",
+                "zone_name": "Shortblock_LB1 - West View-WD-2",
+                "entered_at": "2026-02-19T20:40:34.959Z",
+                "exited_at": "2026-02-19T20:40:38.459Z",
+                "exit_position": {
+                  "pix": {
+                    "x": 737,
+                    "y": 915
+                  },
+                  "geo": {
+                    "lon": null,
+                    "lat": null
+                  },
+                  "polygon": {
+                    "coordinates": [
+                      [
+                        [
+                          567,
+                          755
+                        ],
+                        [
+                          567,
+                          1075
+                        ],
+                        [
+                          907,
+                          1075
+                        ],
+                        [
+                          907,
+                          755
+                        ],
+                        [
+                          567,
+                          755
+                        ]
+                      ]
+                    ]
+                  }
+                },
+                "dwell_time": 3.5,
+                "detection_count": 1,
+                "intersection": {
+                  "current_percent": 22.88925789682729,
+                  "avg_percent": 22.88925789682729,
+                  "sample_count": 1
+                },
+                "motion": {
+                  "pix": {
+                    "velocity": null,
+                    "distance": 0,
+                    "sample_count": 0,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  },
+                  "geo": {
+                    "velocity": null,
+                    "distance": null,
+                    "sample_count": null,
+                    "instantaneous_velocity": null,
+                    "instantaneous_direction": null
+                  }
+                }
+              }
+            ],
+            "sequence": [
+              {
+                "zone_id": "92",
+                "entered_at": "2026-02-19T20:40:34.959Z"
+              },
+              {
+                "zone_id": "94",
+                "entered_at": "2026-02-19T20:40:34.959Z"
+              },
+              {
+                "zone_id": "93",
+                "entered_at": "2026-02-19T20:40:42.459Z"
+              }
+            ]
+          },
+          "interactions": []
+        },
+        "trigger_config": {
+          "mode": "batch",
+          "signal_type": "track_state",
+          "batch_interval": 30,
+          "filters": {
+            "site_id": "3",
+            "datasource_ids": [
+              "77b931b3-5e51-4c38-83f3-ce0bf4f238ef",
+              "a2480d6f-daa9-44f0-926d-7bc8224d7e60",
+              "04729259-be43-4629-9429-91588cbc4e7f",
+              "3fd6accd-628f-41cd-8f92-c0c6be64bdf4",
+              "a0a46112-515e-44da-a385-f8e54594a617",
+              "be6c7c87-9f49-454e-a19c-321baba37d81",
+              "2ba0f384-81e0-4146-b9c4-3ba5dc4fc029",
+              "83c275a6-d8ac-4676-90d4-8ff6cfe5da20"
+            ],
+            "zone_ids": [],
+            "tags": [
+              "forklift",
+              "lift",
+              "tugger",
+              "golf cart",
+              "amr",
+              "cmm",
+              "sludge king"
+            ]
+          },
+          "workflow": {
+            "id": "B8sRDi1Z02oSAWiiahJFn",
+            "name": "wrong_direction_v3"
+          }
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "afc57cea94586d47a972425b813f2173127dc80106089282778d1f7937f321df"
+  }
+}
