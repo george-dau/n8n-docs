@@ -83,6 +83,74 @@ Query available event producers for your organization.
 
 Query existing events from the Worlds platform.
 
+### Get Track Snapshot
+
+Compute a track's position, velocity, and zone membership at a specific historical timestamp. Unlike Get Track State which returns the latest or final state, this resource analyzes raw detections within a time window around the requested timestamp to reconstruct what the track was doing at that moment.
+
+This is particularly useful in **batch workflows** after a Type III check, where you need to know what a track was doing at the moment of an interaction — for example, its velocity when two tracks were closest, or which zone it occupied at the time of a near-miss.
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Track IDs** | Array | — | One or more track UUIDs to query |
+| **Timestamps** | Array | — | ISO 8601 timestamp per track, or a single shared timestamp for all tracks |
+| **Window Seconds** | Number | 10 | Seconds before and after the timestamp to include in computation |
+
+**Output:**
+
+```json
+{
+  "track_snapshots": {
+    "019bb7ea-4050-7e9b-8761-f8df773fd3e5": {
+      "track_id": "019bb7ea-4050-7e9b-8761-f8df773fd3e5",
+      "tag": "Person",
+      "timestamp": "2026-01-13T15:12:52.000Z",
+      "window_seconds": 10,
+      "detections_in_window": 14,
+      "position": {
+        "method": "linear",
+        "offset_ms": 82,
+        "pix": { "x": 512, "y": 347 },
+        "geo": { "lon": -73.9857, "lat": 40.7484 },
+        "polygon": [[480, 290], [544, 290], [544, 404], [480, 404]]
+      },
+      "motion": {
+        "pix": {
+          "avg_velocity": 22.4,
+          "max_velocity": 38.1,
+          "direction": 135.0,
+          "sample_count": 13
+        },
+        "geo": {
+          "avg_velocity": 1.1,
+          "max_velocity": 1.9,
+          "direction": 135.0,
+          "sample_count": 13
+        }
+      },
+      "zones": {
+        "active_at_timestamp": {
+          "a3f1c2d4-8899-4b6e-b012-567890abcdef": {
+            "zone_id": "a3f1c2d4-8899-4b6e-b012-567890abcdef",
+            "zone_name": "Loading Dock",
+            "intersection_percent": 0.78,
+            "dwell_at_timestamp": 14.5
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+<Tip>
+The `method` field tells you how the position was determined:
+- `real` — an exact detection exists at the requested timestamp
+- `linear` — interpolated between two bracketing detections
+- `forward_extrapolation` / `backward_extrapolation` — the timestamp is outside the detection range, so the nearest detection was used
+</Tip>
+
+**Credentials:** Requires **GraphQL Subscription API** credentials when querying tracks not already cached by the state machine.
+
 ### Closest Frame
 
 Find the optimal timestamp where multiple tracks are closest together in a single camera frame. This is particularly useful in **zone state** workflows where you're working with multiple tracks and need a single image that shows them all.

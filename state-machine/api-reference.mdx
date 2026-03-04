@@ -105,6 +105,60 @@ Find the detection frame closest to a given timestamp.
 curl "http://n8n-state-machine:8080/api/tracks/closest-frame?track_id=019bb7ea&timestamp=2026-01-13T15:12:52Z"
 ```
 
+### POST /api/tracks/snapshot
+
+Compute position, velocity, and zone membership for one or more tracks at specific historical timestamps. The endpoint analyzes raw detections within a configurable time window around each requested timestamp.
+
+```bash
+curl -X POST http://n8n-state-machine:8080/api/tracks/snapshot \
+  -H "Content-Type: application/json" \
+  -H "x-token-id: your-token-id" \
+  -H "x-token-value: your-token-value" \
+  -H "x-graphql-url: https://your-instance.worlds.io/graphql" \
+  -d '{
+    "tracks": [
+      {
+        "track_id": "019bb7ea-4050-7e9b-8761-f8df773fd3e5",
+        "timestamp": "2026-01-13T15:12:52.000Z"
+      }
+    ],
+    "window_seconds": 10
+  }'
+```
+
+**Request body:**
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `tracks` | Array | Yes | One or more track queries |
+| `tracks[].track_id` | String | Yes | Track UUID to query |
+| `tracks[].timestamp` | String | Yes | ISO 8601 timestamp to compute the snapshot at |
+| `window_seconds` | Number | No | Seconds before and after the timestamp to include (default: 10) |
+
+**Headers:** `x-token-id`, `x-token-value`, and `x-graphql-url` are required when the track's detections are not already cached in Redis (DB 3). The endpoint will fall back to the Worlds GraphQL API to fetch detections.
+
+**Response body:**
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `snapshots` | Object | Map of track ID to snapshot (null if the track could not be resolved) |
+| `snapshots[].track_id` | String | Track UUID |
+| `snapshots[].tag` | String | Object type tag (e.g., `Person`, `Vehicle`) |
+| `snapshots[].timestamp` | String | The requested timestamp |
+| `snapshots[].window_seconds` | Number | The window used for computation |
+| `snapshots[].detections_in_window` | Number | Number of raw detections found in the window |
+| `snapshots[].position` | Object | Interpolated position at the timestamp |
+| `snapshots[].position.method` | String | `real`, `linear`, `forward_extrapolation`, or `backward_extrapolation` |
+| `snapshots[].position.offset_ms` | Number | Milliseconds between the requested timestamp and the nearest real detection |
+| `snapshots[].position.pix` | Object | Pixel coordinates (`x`, `y`) |
+| `snapshots[].position.geo` | Object | Geographic coordinates (`lon`, `lat`), if available |
+| `snapshots[].position.polygon` | Array | Interpolated bounding box as a 4-point polygon |
+| `snapshots[].motion` | Object | Velocity and direction computed from detections in the window |
+| `snapshots[].motion.pix` | Object | Pixel-space motion (`avg_velocity`, `max_velocity`, `direction`, `sample_count`) |
+| `snapshots[].motion.geo` | Object | Geographic motion (same fields), if available |
+| `snapshots[].zones` | Object | Zone membership at the timestamp |
+| `snapshots[].zones.active_at_timestamp` | Object | Map of zone ID to zone data for zones the track intersected at the timestamp |
+
 ## Zone State
 
 ### GET /api/zones/{zone_id}
