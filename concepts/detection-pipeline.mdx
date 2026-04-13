@@ -7,6 +7,10 @@ description: "How detection data flows from cameras through the state machine to
 
 A single detection starts as pixels in a camera frame and ends as structured data in your workflow. Here's what happens at each stage.
 
+<Frame caption="A single person walking through a camera's field of view produces multiple detections, all stitched into one track with progressively richer data.">
+  <img src="/images/detection-tracking-infographic.png" alt="Infographic showing how 4 detections of the same person are correlated into a single track, with data enrichment at each step — position, velocity, zone intersection, and dwell time" />
+</Frame>
+
 ### 1. Camera detection
 
 The Worlds platform processes camera feeds using computer vision models. Each frame produces zero or more **detections** — identified objects with:

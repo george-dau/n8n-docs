@@ -7,12 +7,6 @@ description: "Understanding the core data structures in Worlds detection workflo
 
 A **track** represents a single detected object moving through a camera's field of view over time. The state machine creates a track when an object is first detected and maintains it as new detections arrive.
 
-The camera samples at a fixed frame rate (e.g., 10 fps), producing individual **detections** — each with a bounding box, position, and timestamp. The state machine correlates these detections into a single track and enriches the data over time: velocity is calculated after the second detection, zone intersections appear when the object enters a zone, and dwell time accumulates as it stays.
-
-<Frame caption="A single person walking through a camera's field of view produces multiple detections, all stitched into one track with progressively richer data.">
-  <img src="/images/detection-tracking-infographic.png" alt="Infographic showing how 4 detections of the same person are correlated into a single track, with data enrichment at each step — position, velocity, zone intersection, and dwell time" />
-</Frame>
-
 ### Track state object
 
 Every signal delivered to your workflow includes a `track_state` object with the full current state of the track:
