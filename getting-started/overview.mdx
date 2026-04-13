@@ -1,11 +1,11 @@
 ---
 title: "Architecture Overview"
-description: "How the Worlds detection pipeline connects to n8n workflows"
+description: "How the Worlds detection pipeline connects to your workflows"
 ---
 
 ## The detection pipeline
 
-The Worlds platform uses computer vision to detect and track objects (people, vehicles, equipment) across camera feeds in real time. The n8n integration turns those raw detections into automated business logic.
+The Worlds platform uses computer vision to detect and track objects (people, vehicles, equipment) across camera feeds in real time. The Workflow Builder integration turns those raw detections into automated business logic.
 
 Here's how data flows from camera to action:
 
@@ -20,7 +20,7 @@ State Machine (Go service)
     │  maintains track state, zone intersections, velocity, dwell time
     │  emits signals: track_created, track_updated, track_expired
     ▼
-n8n Workflow (via webhook)
+Workflow Builder (via webhook)
     │
     ├─ Trigger Node ─── receives track/zone state per signal
     ├─ Check Nodes ──── apply business logic (zones, dwell, velocity)
@@ -36,16 +36,16 @@ The Worlds platform processes camera feeds and produces detections — each dete
 
 ### State Machine
 
-The state machine is a Go service that sits between the Worlds API and n8n. It solves a critical problem: raw detection streams arrive at high frequency and out of order. The state machine:
+The state machine is a Go service that sits between the Worlds API and the Workflow Builder. It solves a critical problem: raw detection streams arrive at high frequency and out of order. The state machine:
 
 - **Maintains track state** — aggregates individual detections into coherent tracks with position, velocity, and zone data
 - **Calculates zone intersections** — determines which zones a track is in and how much it overlaps
 - **Tracks dwell time** — measures how long an object has been in each zone
 - **Calculates velocity** — both pixel-based and geo-referenced
-- **Emits signals** — sends `track_created`, `track_updated`, and `track_expired` events to n8n via webhooks
+- **Emits signals** — sends `track_created`, `track_updated`, and `track_expired` events to your workflows via webhooks
 - **Ensures ordering** — processes detections sequentially per data source to prevent race conditions
 
-### n8n Workflow
+### Workflow
 
 Your workflow receives fully enriched track state data and applies business logic using Worlds custom nodes:
 
@@ -57,7 +57,7 @@ Your workflow receives fully enriched track state data and applies business logi
 
 ## The three-step workflow pattern
 
-Every Worlds n8n workflow follows the same fundamental pattern:
+Every Worlds workflow follows the same fundamental pattern:
 
 <Steps>
   <Step title="Inject raw data">

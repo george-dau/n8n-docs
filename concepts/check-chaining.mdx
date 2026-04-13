@@ -84,7 +84,7 @@ This is used for congestion, congregation, and occupancy monitoring where you ca
 
 ## Adding VLM (Vision Language Model) checks
 
-For workflows that capture images, you can add a **VLM check** as an additional confirmation layer. This uses n8n's built-in LLM nodes rather than a Worlds custom node:
+For workflows that capture images, you can add a **VLM check** as an additional confirmation layer. This uses the built-in LLM nodes rather than a Worlds custom node:
 
 ```
 Trigger → Check → Orchestrator → Capture Image → VLM Chain → IF (boolean) → Event Manager
@@ -92,7 +92,7 @@ Trigger → Check → Orchestrator → Capture Image → VLM Chain → IF (boole
 
 The VLM analyzes the captured image and returns structured output (e.g., `{ "confirmed": true, "confidence": 0.92, "context": "..." }`). You can use this two ways:
 
-1. **As a check gate** — feed the VLM boolean into an n8n IF node to conditionally create events. This adds AI confirmation to reduce false positives.
+1. **As a check gate** — feed the VLM boolean into an IF node to conditionally create events. This adds AI confirmation to reduce false positives.
 2. **As context metadata** — always create the event but attach the VLM description and confidence as event metadata for human review.
 
 See the [Streaming Zone State Workflow](/guides/streaming-zone-state) for a complete VLM integration example.

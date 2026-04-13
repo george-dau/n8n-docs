@@ -1,17 +1,17 @@
 ---
 title: "State Machine Overview"
-description: "The Go service that bridges the Worlds detection stream and n8n workflows"
+description: "The Go service that bridges the Worlds detection stream and your workflows"
 ---
 
-The state machine is a Go service that sits between the Worlds detection API and your n8n workflows. It subscribes to live detection streams, maintains track and zone state, and delivers enriched signals to n8n via webhooks.
+The state machine is a Go service that sits between the Worlds detection API and your workflows. It subscribes to live detection streams, maintains track and zone state, and delivers enriched signals to your workflows via webhooks.
 
 ## Why it exists
 
-Raw detection streams from the Worlds API arrive at high frequency — potentially hundreds of detections per second across multiple cameras. Processing these directly in n8n would cause:
+Raw detection streams from the Worlds API arrive at high frequency — potentially hundreds of detections per second across multiple cameras. Processing these directly in the Workflow Builder would cause:
 
 - **Race conditions** — multiple detections for the same track arriving simultaneously
 - **Incomplete data** — individual detections lack context like velocity, dwell time, and zone intersection
-- **Resource exhaustion** — n8n would need a WebSocket connection per workflow per camera
+- **Resource exhaustion** — the Workflow Builder would need a WebSocket connection per workflow per camera
 
 The state machine solves all three problems.
 
@@ -30,7 +30,7 @@ The state machine aggregates individual detections into coherent **tracks**. Eac
 
 ### Signal generation
 
-The state machine emits three signal types to n8n:
+The state machine emits three signal types to your workflows:
 
 | Signal | When | Contains |
 | --- | --- | --- |
@@ -73,7 +73,7 @@ Datasource Router (pre-filter, fan-out)
          ├── Track Store (Redis DB2)
          ├── Zone State Store (Redis DB2)
          ├── Zone Cache (Redis DB1)
-         └── Webhook Emitter → n8n workflows
+         └── Webhook Emitter → workflows
 ```
 
 ## Redis database layout

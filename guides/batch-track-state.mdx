@@ -26,8 +26,8 @@ Replay Trigger (disabled) ───────────────┘      
 ## Prerequisites
 
 - A Worlds site with aisle zones configured
-- GraphQL Subscription API credentials in n8n
-- The state machine running and connected to your n8n instance
+- GraphQL Subscription API credentials in the Workflow Builder
+- The state machine running and connected to your Workflow Builder instance
 - SendGrid API credentials (optional, for email alerts)
 
 ## Step 1: Detection Webhook Trigger
@@ -45,7 +45,7 @@ Configure the trigger to ingest vehicle detections in batch mode.
 
 For obstruction detection, you care about the **complete picture** of what a vehicle did — how long it was in the zone, its average velocity, where it entered and exited. You don't need to alert while the vehicle is still sitting there. Batch mode gives you:
 
-- **One execution per track** instead of hundreds — less processing in n8n
+- **One execution per track** instead of hundreds — less processing in the Workflow Builder
 - **Complete zone history** — total dwell time, entry and exit times
 - **Known end time** — the track has already expired, so you can set both start and end time when creating the event, which automatically closes it
 
