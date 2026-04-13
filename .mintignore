@@ -8,3 +8,6 @@ drafts/
 
 # Reference workflow JSONs (for AI agents and developers, not published)
 scenarios/
+
+# Brand assets (source files, not published)
+worlds-branding/
