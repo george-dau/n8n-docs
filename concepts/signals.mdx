@@ -58,7 +58,7 @@ Time 515s: TTL expires          → signal: "track_expired"  (final state)
 
 The Detection Webhook Trigger delivers all three signal types by default. You can use the signal type in your workflow logic — for example, the Event Orchestrator uses `track_expired` to know when to close events.
 
-If you only want to process certain signals, you can add an n8n **IF** node after the trigger to filter:
+If you only want to process certain signals, you can add an **IF** node after the trigger to filter:
 
 ```javascript
 // Only process updates (skip created and expired)

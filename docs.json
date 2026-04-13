@@ -1,13 +1,16 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Worlds n8n Documentation",
+  "name": "Worlds Workflow Builder",
   "colors": {
     "primary": "#1170E3",
     "light": "#4D9BF7",
     "dark": "#0E58B9"
   },
   "favicon": "/favicon.svg",
+  "metadata": {
+    "og:image": "/images/og-image.png"
+  },
   "navigation": {
     "tabs": [
       {

@@ -1,11 +1,11 @@
 ---
 title: "Detection Pipeline"
-description: "How detection data flows from cameras through the state machine to your n8n workflows"
+description: "How detection data flows from cameras through the state machine to your workflows"
 ---
 
 ## From camera to workflow
 
-A single detection starts as pixels in a camera frame and ends as structured data in your n8n workflow. Here's what happens at each stage.
+A single detection starts as pixels in a camera frame and ends as structured data in your workflow. Here's what happens at each stage.
 
 ### 1. Camera detection
 
@@ -39,7 +39,7 @@ Each signal includes the complete enriched state — your workflow never needs t
 
 ### 4. Webhook delivery
 
-The state machine delivers signals to n8n via HTTP webhooks. Each workflow registers a webhook URL through its trigger node. The state machine:
+The state machine delivers signals to your workflows via HTTP webhooks. Each workflow registers a webhook URL through its trigger node. The state machine:
 
 - Matches each detection against registered subscriptions (by data source, object type, etc.)
 - Delivers matching signals to the appropriate webhook URLs
@@ -47,7 +47,7 @@ The state machine delivers signals to n8n via HTTP webhooks. Each workflow regis
 
 ### 5. Workflow execution
 
-Your n8n workflow receives the enriched state and runs your business logic. A single workflow execution handles one signal — either one track state update or one zone state update. The purpose of the workflow is to **distill high-volume detection data into actionable events** on the Worlds platform.
+Your workflow receives the enriched state and runs your business logic. A single workflow execution handles one signal — either one track state update or one zone state update. The purpose of the workflow is to **distill high-volume detection data into actionable events** on the Worlds platform.
 
 The typical workflow pattern is: **Trigger → Check → Event Orchestrator → Action** (image capture, event creation, email alert).
 

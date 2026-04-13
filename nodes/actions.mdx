@@ -179,7 +179,7 @@ Closest Frame serves a similar purpose to batch mode's interaction data, but wor
 
 ## Using VLM (Vision Language Model) with images
 
-A common advanced pattern is to pass a captured still image through a Vision Language Model for additional analysis. This uses n8n's built-in **Basic LLM Chain** node with image input:
+A common advanced pattern is to pass a captured still image through a Vision Language Model for additional analysis. This uses the built-in **Basic LLM Chain** node with image input:
 
 1. Capture a still image using Process Detection Image
 2. Pass the image binary to a VLM (Azure OpenAI, GPT-4V, etc.) with a structured prompt
@@ -188,7 +188,7 @@ A common advanced pattern is to pass a captured still image through a Vision Lan
 
 The VLM output can be used two ways:
 - **As context metadata** — attach the VLM's description and confidence to the event for human review
-- **As a check gate** — use the boolean output with an n8n IF node to conditionally create events, reducing false positives
+- **As a check gate** — use the boolean output with an IF node to conditionally create events, reducing false positives
 
 See the [Streaming Zone State Workflow](/guides/streaming-zone-state) for a complete example using VLM confirmation.
 

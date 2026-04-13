@@ -31,8 +31,8 @@ Webhook Trigger (streaming, zone_state, vehicles)
 ## Prerequisites
 
 - A Worlds site with aisle zones configured
-- GraphQL Subscription API credentials in n8n
-- The state machine running and connected to your n8n instance
+- GraphQL Subscription API credentials in the Workflow Builder
+- The state machine running and connected to your Workflow Builder instance
 - Azure OpenAI or similar LLM credentials (optional, for VLM confirmation)
 - SendGrid API credentials (optional, for email alerts)
 
@@ -144,7 +144,7 @@ The image will show all qualifying vehicles with bounding boxes and the zone ove
 
 Pass the captured image through a Vision Language Model to add context or confirm congestion.
 
-This step uses n8n's built-in **Basic LLM Chain** node with an image input. The model analyzes the still image and returns structured data:
+This step uses the built-in **Basic LLM Chain** node with an image input. The model analyzes the still image and returns structured data:
 
 ```json
 {
@@ -157,7 +157,7 @@ This step uses n8n's built-in **Basic LLM Chain** node with an image input. The 
 **Two ways to use the VLM output:**
 
 1. **As context metadata** (this workflow) — the VLM output is merged back with the detection data and attached as event metadata. The event is always created regardless of VLM output.
-2. **As a check gate** (advanced pattern) — feed the `congestion_boolean` into an n8n **IF** node to gate whether the event is created. This adds AI confirmation to reduce false positives.
+2. **As a check gate** (advanced pattern) — feed the `congestion_boolean` into an **IF** node to gate whether the event is created. This adds AI confirmation to reduce false positives.
 
 After the VLM check, a **Merge** node combines the VLM output with the original image data, and a **Code** node prepares event metadata (computing centroid position from all qualified tracks, formatting track info strings).
 

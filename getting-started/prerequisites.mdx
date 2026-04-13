@@ -1,6 +1,6 @@
 ---
 title: "Prerequisites"
-description: "What you need before building Worlds n8n workflows"
+description: "What you need before building Worlds workflows"
 ---
 
 ## Requirements
@@ -13,15 +13,15 @@ Before building workflows with Worlds custom nodes, you need:
 - **GraphQL API credentials** — a Token ID and Token Value pair for authenticating with the Worlds API
 - At least one site with configured zones and active camera feeds
 
-### n8n Instance
+### Workflow Builder Instance
 
-- A running n8n instance (self-hosted or Docker) with the Worlds custom nodes installed
-- The **n8n state machine** service running and connected to your Redis instance
-- Network connectivity between n8n, the state machine, and the Worlds API
+- A running Workflow Builder instance (self-hosted or Docker) with the Worlds custom nodes installed
+- The **state machine** service running and connected to your Redis instance
+- Network connectivity between the Workflow Builder, the state machine, and the Worlds API
 
-### Credentials configured in n8n
+### Credentials configured in the Workflow Builder
 
-You need to set up these credential types in your n8n instance:
+You need to set up these credential types in your Workflow Builder instance:
 
 | Credential | Required for | Fields |
 | --- | --- | --- |
@@ -31,7 +31,7 @@ You need to set up these credential types in your n8n instance:
 
 ### Setting up GraphQL credentials
 
-1. In n8n, go to **Credentials** → **Add Credential**
+1. In the Workflow Builder, go to **Credentials** → **Add Credential**
 2. Search for **GraphQL Subscription API**
 3. Fill in:
    - **GraphQL URL**: Your Worlds API endpoint (e.g., `https://your-instance.worlds.io/graphql`)
