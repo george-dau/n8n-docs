@@ -1,0 +1,53 @@
+---
+title: "3.3.0"
+---
+
+May 15, 2026
+
+---
+
+#### **Dashboards**
+
+Several new enhancements enable deeper insights from user-created dashboards and configured visualizations:
+
+- **Stacked Widgets** — Data visualizations can now be grouped in configuration, for faster and easier setup and improved visual clarity in dashboard layouts.
+- **Time Groupings** — Dashboards now support 30-minute breakpoints for custom time groupings, giving teams more granular control over shift changes and other categorical time comparisons.
+- **Complete Tooltips on Hover** — Bar and column widgets now display all fields in the hover tooltip rather than a sample, making it easier to interpret complex data without leaving the dashboard.
+- **Heatmap Enhancements** — Event durations can now be visualized in the heatmap widget, for when duration of activity drives more insight than volume.
+- **Time Formatting** — Users can now choose from additional display format options for time fields across dashboard widgets.
+
+---
+
+#### **Agentic Analysis**
+
+We continued expanding our agentic capabilities with improvements to transparency, discoverability, and interactivity:
+
+- **Real-Time Agent Progress** — AI now surfaces live progress and skill results as analysis runs, giving users visibility into what the agent is doing and why.
+- **New Conversation Button** — When you're ready to stop digging deeper and start fresh on a new inquiry, easily begin new AI sessions with fresh context.
+
+---
+
+#### **Storage Management**
+
+We expanded storage configuration to better support multi-site deployments:
+
+- **Per-Site Storage** — Storage credentials can now be configured and managed independently per site, giving administrators more flexibility in how footage is stored across locations.
+
+---
+
+#### **Usability**
+
+- **Personal Access Tokens** — Users can now create and manage personal access tokens that match their permissions, enabling self-serve API authentication without requiring an admin.
+- **Video Upload Limit** — The frontend video upload limit has been increased to 5 GiB, aligning with backend capacity and supporting larger file uploads.
+
+---
+
+#### **Bug Fixes & Performance Improvements**
+
+The following issues have been resolved in this release:
+
+- **Tracking Performance** — Tracker now performs significantly better for stationary objects and long-running detections, allowing for more stable and reliable downstream workflows.
+- **Tagging UI Performance** — Resolved a significant performance degradation affecting tag and video load times in the Tagging UI.
+- **Camera Editing** — Resolved a "Resource Not Found" error that occurred when editing a camera from Builder.
+- **Change Latency** — Fixed issues in tagging, indexing, and agent management that could cause committed changes to not display until a page refresh.
+- **Video Timestamps** — Fixed an issue where uploaded images rendered with an incorrect Unix epoch 0 timestamp.
