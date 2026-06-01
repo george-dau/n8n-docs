@@ -1,0 +1,46 @@
+---
+title: "3.4.0"
+---
+
+May 29, 2026
+
+---
+
+#### **Dashboards**
+
+We shipped some helpful improvements to dashboarding capabilities:
+
+- **Time Bucket Configuration** — Event activity charts now support configurable time buckets, giving teams more granular control over how timeseries data is displayed.
+- **Filter Fix** — Resolved an issue where the "Not In List" filter operator was not returning correct results.
+- **Widget Tooltips** — Widget titles now include a configurable helper tooltip for the option of added context.
+
+---
+
+#### **Agentic Analysis**
+
+We continued expanding our agentic capabilities with improvements to the user-experience and on-prem support:
+
+- **Redesigned Interface** — The agentic interface has been rebuilt to enable a more conversational and flexible experience.
+- **Activity Steps** — The agent now surfaces live progress through an activity steps framework, giving users visibility into what's running and why.
+- **On-Prem Support** — Agentic Analysis can now be deployed on-prem, with support for local LLM sessions and agentic output.
+
+---
+
+#### **Roles & Permissions**
+
+We overhauled the user invitation flow and updated authentication branding:
+
+- **User Invite Flows** — SSO and non-SSO users are now handled more appropriately, with unique email templates and login experiences.
+- **Branded Auth Pages** — Login pages and email templates have been updated to match Worlds branding, with SSO enforcement built in.
+- **Duplicate Email Handling** — The UI now surfaces a clear error when inviting a user with an email that already exists in the system.
+
+---
+
+#### **Bug Fixes & Usability Enhancements**
+
+The following issues have been resolved in this release:
+
+- **Event Snapshot Playback** — Corrected the event video player loading from current time instead of the detection timestamp.
+- **Agent Change Latency** — Agent configuration changes now reflect immediately without requiring a manual page refresh.
+- **Foundation Model Configuration** — Resolved a data-quality issue that allowed users to  configure foundation models, leading to an error.
+- **Facility Upload File Limits** — Increased file-size limits to 5MB for floor plan image uploads, and improved messaging to reflect.
