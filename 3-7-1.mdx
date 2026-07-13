@@ -36,14 +36,19 @@ We took steps to make it easier to review cameras and statuses at a glance, as w
 
 We made some minor improvements and fixes to our Event Activity detail view:
 
-- **Video Playback** - Fixed Chronicle assets appearing as static images instead of playable video.
+- **No Location, No Problem** - Events no longer display a map if no location data exists (usually caused by uncalibrated cameras), keeping the UI cleaner and more focused on the right data.
+- **Video Playback** - Fixed an issue causing assets to appear as static images instead of playable video, so it's easier to review the context of any captured events.
 
 ---
 
 #### Platform Performance
 
-We addressed uncommon cases that could lead to temporary service disruptions:
+We dug deep into addressing issues with image-generation that caused intermittent failures in event assets:
 
-- **Transcoder Recovery** - Edge transcoders now auto-recover after brief network interruptions instead of requiring manual intervention.
+- **Faster clip handling - Video clips are now processed using stream copy instead of re-encoding, for quicker, more efficient generation**
+- **Reliability improvement - Stopped retrying clip generation after a timeout, avoiding wasted processing..**
+
+**Reliability improvement - Stopped retrying clip generation after a timeout, avoiding wasted processing.**
+
 - **Startup Stability** - Fixed an issue affecting availability in new environments when a dependent workflow service was unreachable**.**
 - **Authorization & Usability** - Addressed rare but widespread UI issues that could lead to stale data displaying until browser refresh and/or users being unexpectedly logged out.
