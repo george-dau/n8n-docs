@@ -37,6 +37,6 @@ We know from experience it takes iteration to get to ideal models, workflows, an
 
 We addressed some rare cases that could cause temporary disruptions:
 
-- **Track Stability** - Major rework to our tracker improves unstable detection boxes, fragmented tracks, and track switching issues in complex & high-traffic environments.
-- **Job Progress** - Improved system visibility with updated process tracking to accurately reflect true job progress states.
+- •	Transcoder recovery - Edge transcoders now auto-recover after brief network interruptions instead of requiring a manual restart.
+- **•	Service stability - Fixed a startup crash affecting service availability when a dependent workflow service was unreachable.**
 - **Imported Models** - Resolved an issue with class-ordering affecting imported models, improving the scalability and portability of Worlds vision models.
