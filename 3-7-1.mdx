@@ -2,48 +2,41 @@
 title: "3.7.1"
 ---
 
-June 12, 2026
+July 10, 2026
 
 ---
 
 #### **Agentic Analysis**
 
-We continued expanding our agentic consultant (for now, lovingly dubbed "Iris") with new UX improvements, skills, and organization-level customization:
+Our smart assistant continues to get smarter. Iris is now more deeply integrated with our dashboarding framework, adding capabilities for configuring data-visualizations and providing more visual responses:
 
-- **Focused Interaction** - Introduced an improved text-based conversational interface for AI-powered analysis.
-- **Sample Prompt Suggestions** - Iris now surfaces organization-specific prompt suggestions to help teams get started faster.
-- **Anomaly Alerting** - New chat-based capability to configure and dispatch email alerts when anomalous situations occur, powered by autonomous monitoring (_Alpha testing_).
-
----
-
-#### **Dashboards**
-
-We shipped a major new feature to enable boundless data-visualization:
-
-- **Custom Widget Framework** - New built-in code editor allows users to upload and preview code to craft custom visualizations for any specific need, in a framework that provides flexibility without risking performance.
-
----
-
-#### **Events & Activity**
-
-We continued the rollout of our new Chronicles system for enhanced time-based data capture:
-
-- **Event Activity** - Replacing the legacy events list, the new activity feed includes advanced and persistent filtering now supporting all dimensions of captured events and activity, for faster and more focused discovery.
+- **Widget Support** - A new entry point in the widget editor lets you chat with Iris directly for configuration, with context from the widget you're working on.
+- **Dashboarding Sync** - Dashboards and Iris skills now stay in sync automatically, no manual updates needed.
 
 ---
 
 #### Overwatch
 
-We are shifting focus back to the Overwatch view to improve our live-monitoring capabilities:
+We are continuing to put effort into our live spatial view, to better and more quickly answer the question "what's where when?":
 
-- **Camera Panels** - Live-monitoring in Overwatch is now just a click away from actual video - when priority events occur, investigate exactly what happened before taking action.
+- **View Tracked Objects** - Live-monitoring is now more informative and detailed, with expanded capability for plotting tracks from integrated GPS devices and real-world locations of visual detections.
+- **Track Playback** - Object tracks are controlled from the shared histogram and date-selector, rewind and replay tracks to review movement over time, not just live position.
+
+---
+
+#### **System Management**
+
+We know from experience it takes iteration to get to ideal models, workflows, and insights – focus on the good data without mixing in the bad with new and simpler features to remove cameras, models, and logged activities through both our UI and API:
+
+- **Tidy up Data** - We made it simpler to delete and remove cameras and models from the UI, and added API functionality to clean up agents and sites with additional UI support to follow.
+- **Customize your Worlds** - For our partners and other environment super-administrators, we’re giving you the ability to try new features and customize your environment with a new Feature Flags page in the settings menu.
 
 ---
 
 #### Platform Performance
 
-We tackled several stability and accuracy improvements in our core tracking, detection, and training pipelines:
+We addressed uncommon cases that could lead to temporary service disruptions:
 
-- **Track Stability** - Major rework to our tracker improves unstable detection boxes, fragmented tracks, and track switching issues in complex & high-traffic environments.
-- **Job Progress** - Improved system visibility with updated process tracking to accurately reflect true job progress states.
-- **Imported Models** - Resolved an issue with class-ordering affecting imported models, improving the scalability and portability of Worlds vision models.
+- **Transcoder Recovery** - Edge transcoders now auto-recover after brief network interruptions instead of requiring manual intervention.
+- **Startup Stability** - Fixed an issue affecting availability in new environments when a dependent workflow service was unreachable**.**
+- **Authorization & Usability** - Addressed rare but widespread UI issues that could lead to stale data displaying until browser refresh and/or users being unexpectedly logged out.
