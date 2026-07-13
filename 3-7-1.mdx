@@ -45,6 +45,5 @@ We made some minor improvements and fixes to our Event Activity detail view:
 
 We dug deep into addressing issues with image-generation that caused intermittent failures in event assets:
 
-- **Faster clip handling - Video clips are now processed using stream copy instead of re-encoding, for quicker, more efficient generation**
-- **Reliability improvement - Stopped retrying clip generation after a timeout, avoiding wasted processing..**
-- **Data Security Enforcement -** 
+- **Reliable Clip Handling** - Video clips and image requests are now processed quicker and more efficiently, reducing failures and extending the duration of videos and GIFs that can be attached to events.
+- **Data Security Enforcement** - We updated several of our less-common API endpoints to ensure that all returned data matches appropriate user permissions.
