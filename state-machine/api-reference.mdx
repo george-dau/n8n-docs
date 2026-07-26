@@ -48,6 +48,15 @@ curl -X POST http://n8n-state-machine:8080/api/subscriptions/my-workflow \
   }'
 ```
 
+**Zone emit mode (optional, zone state only):**
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `zone_emit_mode` | String | `"all"` | `"all"` emits `zone_updated` on every detection in an occupied zone. `"composition"` emits only when the subscription's filtered tag → count composition changes, plus a periodic heartbeat. Composition mode requires `signal_type: "zone_state"` and `mode: "streaming"` — other combinations are rejected with `400`. |
+| `heartbeat_seconds` | Number | `30` | Maximum seconds between emissions for an unchanged composition. Only meaningful when `zone_emit_mode` is `"composition"`. Must be `>= 0`. |
+
+See [Composition emit mode](/state-machine/overview#composition-emit-mode) for the full suppression and heartbeat behavior.
+
 ### GET /api/subscriptions
 
 List all active subscriptions.
