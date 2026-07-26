@@ -59,9 +59,10 @@ By default (`zone_emit_mode: "all"`), a subscription receives `zone_updated` on 
 - **Composition** is a tag → count map of the subscription's *filtered* view of the zone — a subscription filtered to `[person, dock door]` isn't woken when a forklift enters. Composition is compared by tag counts, not track IDs, so re-identification churn (the same physical object briefly reassigned a new track ID) stays suppressed, while a real change like person 2 → 1 always emits.
 - `zone_occupied` and `zone_empty` always emit regardless of mode — only `zone_updated` is subject to comparison.
 - **Lazy heartbeat**: if a `zone_updated` would otherwise be suppressed but `heartbeat_seconds` (default 30) has elapsed since the last emit for that zone, the state machine emits anyway. There are no background timers — the heartbeat piggybacks on the incoming detection stream, so it only fires while the zone remains occupied.
+- **Emit reason**: composition-mode `zone_updated` payloads carry a top-level `emit_reason` field — `"composition_changed"` for a real change (or the first emit after a restart), `"heartbeat"` for a periodic re-emit — so workflows can distinguish a change from a retry tick. The field is absent in `"all"` mode and on `zone_occupied`/`zone_empty`.
 - Suppression state is held in memory. A state machine restart causes one unconditional `zone_updated` emit per occupied zone — a harmless "no change" execution downstream. Streaming auto replay uses an isolated emitter; manual replay routes through the production emitter.
 
-Configure this via the `zone_emit_mode` and `heartbeat_seconds` fields on [`POST /api/subscriptions/{id}`](/state-machine/api-reference#post-apisubscriptionsid), or via the **Zone Emit Mode** / **Heartbeat (Seconds)** parameters on the [Detection Webhook Trigger](/nodes/detection-webhook-trigger).
+Configure this via the `zone_emit_mode` and `heartbeat_seconds` fields on [`POST /api/subscriptions/{id}`](/state-machine/api-reference#post-apisubscriptionsid), or via the **Zone Emit Mode** / **Heartbeat (Seconds)** options under **Advanced Options** on the [Detection Webhook Trigger](/nodes/detection-webhook-trigger).
 
 ### Per-datasource ordering
 
