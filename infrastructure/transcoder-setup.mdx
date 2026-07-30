@@ -1,13 +1,11 @@
 ---
-title: "Setting Up Transcoding with Worlds"
+title: "Transcoders"
 description: "Deploy Worlds' video transcoder service to consolidate streams and feed video and metadata to the platform."
 ---
 
-# Setting Up Transcoding with Worlds
-
 Worlds offers a custom video transcoder service designed to consolidate video streams and present the necessary video and metadata to the Worlds platform for AI/ML processing. The service architecture is adaptable, with deployment options to meet a range of customer needs.
 
-This guide covers, in order: choosing a deployment option, the network requirements every deployment needs, and the two customer-managed deployment paths (Docker + systemd, or K3s) in full technical detail. Worlds-managed hardware is pre-configured and doesn't require you to run the deployment steps yourself, if that's your setup, you'll mainly need the Network Requirements section.
+This guide covers, in order: choosing a deployment option, the network requirements every deployment needs, and the two customer-managed deployment paths (Docker \+ systemd, or K3s) in full technical detail. Worlds-managed hardware is pre-configured and doesn't require you to run the deployment steps yourself, if that's your setup, you'll mainly need the Network Requirements section.
 
 Once connected, your transcoder appears (read-only) under [Settings](/settings/overview).
 
@@ -45,7 +43,7 @@ Full control over resources, scaling, and hardware or cloud VM choice. Video nev
 
 **Compute options:**
 
-- Edge hardware (see Deploying with Docker + systemd, below)
+- Edge hardware (see Deploying with Docker \+ systemd, below)
 - Cloud-based transcoder VM (see Deploying with K3s, below, or a systemd install on a cloud VM)
   - If using a cloud VM, you'll want a private link between your edge/site (where the cameras are) and the cloud VM, so the transcoder can reach cameras on private IPs. Examples: AWS Direct Connect, PrivateLink, or Site-to-Site VPN; Azure ExpressRoute, Private Link, or Site-to-Site VPN.
   - You'll also need a cloud-based secure storage solution (AWS S3 or Azure Blob Storage). Worlds needs secure access to this storage for AI processing, but does not store your video in a Worlds-hosted environment, you retain full control over access, backup, and retention.
@@ -55,8 +53,8 @@ Worlds provides a Docker image for the transcoder application to run on your edg
 **Scalability guidance:**
 
 | Site Size | Recommended Compute |
-|---|---|
-| Small (< 5 cameras) | 12-core Intel i7, 32GB RAM |
+| --- | --- |
+| Small (\< 5 cameras) | 12-core Intel i7, 32GB RAM |
 | Medium (up to 12 cameras) | 12-core Intel Xeon, 32GB RAM, or a 12 vCPU / 32GB RAM general-purpose cloud VM with auto-scaling |
 | Large (up to 24 cameras) | 24-core Intel Xeon, 64GB RAM |
 | X-Large | Deploy multiple instances for horizontal scaling |
@@ -64,16 +62,16 @@ Worlds provides a Docker image for the transcoder application to run on your edg
 **Application security baseline:**
 
 | Layer | Detail |
-|---|---|
+| --- | --- |
 | Operating System | Ubuntu Linux 24.04 LTS minimal install, latest updates, with UFW, Docker, and vnstat |
 | Application isolation | Docker |
 | Optional firewall | UFW can be scoped to allow SSH only from the Tailscale interface or your administration network |
-| Secure storage access | AWS Access Key ID + Secret Access Key (S3), or SAS/Shared Access Signature (Azure Blob) |
+| Secure storage access | AWS Access Key ID \+ Secret Access Key (S3), or SAS/Shared Access Signature (Azure Blob) |
 
 **Network configuration summary** (see Network Requirements below for full detail):
 
 | Connection | Requirement |
-|---|---|
+| --- | --- |
 | Transcoder to cameras/VMS | RTSP, port 554/tcp |
 | Transcoder to Worlds-hosted cloud platform | HTTPS/TLS, port 443/tcp, for video and location metadata |
 | Optional: Worlds remote administration VPN | Outbound 41641/udp (Tailscale Tailnet), 443/tcp (Tailscale control plane) |
@@ -82,7 +80,7 @@ Worlds provides a Docker image for the transcoder application to run on your edg
 **Installation:**
 
 - **Worlds-provided hardware:** ships pre-configured with minimal Ubuntu 24.04 LTS and the transcoder running in Docker. Needs standard 120VAC power and a non-PoE network connection; a mounting shelf and cables are included. Complete the Network Requirements section before the hardware arrives.
-- **Customer-managed:** review hardware, network, storage, and security options with your Worlds Account Team first. Worlds provides a secure download link and installation instructions (see Deploying with Docker + systemd or Deploying with K3s below). Complete networking access before installing the transcoder server so you can fully verify functionality once it's deployed.
+- **Customer-managed:** review hardware, network, storage, and security options with your Worlds Account Team first. Worlds provides a secure download link and installation instructions (see Deploying with Docker \+ systemd or Deploying with K3s below). Complete networking access before installing the transcoder server so you can fully verify functionality once it's deployed.
 
 ## Network Requirements
 
@@ -102,7 +100,7 @@ All connections are **outbound-initiated from the transcoder**. No inbound firew
 
 **FQDN allowlist** (for proxy / URL-filter allowlists):
 
-```
+```text
 *.blob.core.windows.net
 api.<DOMAIN>
 coordinator.<DOMAIN>
@@ -113,7 +111,7 @@ worldsedgecr.azurecr.io
 **Values to gather** before you start (which are yours, and which to request from Worlds):
 
 | Placeholder | Example | Provided by |
-|---|---|---|
+| --- | --- | --- |
 | `<Transcoder_IP>` (host IP) | 10.20.30.50 | Customer |
 | `<Camera_IP>` (or DNS) | 10.20.30.41 | Customer |
 | `<io-adapter_IP>` | 10.20.30.60 | Customer (special use case) |
@@ -124,7 +122,7 @@ worldsedgecr.azurecr.io
 **Outbound Internet (Transcoder → Cloud).** All endpoints below are required; all are outbound TCP:
 
 | Endpoint | Port | Protocol | Purpose |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `<Storage_NAME>.blob.core.windows.net` | 443 | HTTPS (HTTP/1.1) | Upload video clips for cloud processing and inference |
 | `api.<DOMAIN>` | 443 | HTTPS (HTTP/1.1) | Coordinator REST API (device registration, heartbeats) |
 | `coordinator.<DOMAIN>` † | 443 | gRPC (HTTP/2 over TLS) | Transcoder coordination with the Worlds app |
@@ -138,7 +136,7 @@ worldsedgecr.azurecr.io
 **Local Network (Transcoder → LAN devices):**
 
 | Endpoint | Port | Protocol | Purpose | Required |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `<Camera_IP>` | 554 | RTSP (TCP) | Video stream ingestion | Yes |
 | `<Camera_IP>` | 80 | HTTP | Camera health check, status, and management | Optional |
 | `<io-adapter_IP>` | 502 | Modbus TCP | IO communication (gate/relay signals, IoT) | Optional |
@@ -201,14 +199,14 @@ echo | openssl s_client -alpn h2 -connect tracks-service.<DOMAIN>:443 2>/dev/nul
 - Apply IP filtering per-device where possible, using `<Transcoder_IP>` as the source.
 - If the transcoder runs on a cloud VM rather than the local network, routing must still grant it full access to the cameras' network.
 - All cloud service endpoints are hosted in Azure.
-- For additional verification scripts or support, contact Worlds Support: support@worlds.io
+- For additional verification scripts or support, contact Worlds Support: [support@worlds.io](mailto:support@worlds.io)
 
 ### Appendix: Optional Remote Support Access (Tailscale VPN)
 
 Required only where management access is granted to the Worlds Support team via Tailscale VPN. All connections are outbound.
 
 | Endpoint | Port | Protocol | Purpose |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | ANY (WireGuard peer connections) | 41641 (UDP, outbound) | WireGuard | Direct encrypted tunnel for remote access by Worlds support |
 | `controlplane.tailscale.com` | 443 | HTTPS | Tailscale coordination and authentication |
 | `*.tailscale.com` (DERP relay FQDNs, fallback when direct UDP is blocked) | 443 (TCP); 3478 (UDP, STUN) | HTTPS / STUN | Relayed connectivity and NAT traversal |
@@ -216,7 +214,7 @@ Required only where management access is granted to the Worlds Support team via 
 
 Verify Tailscale with `tailscale status` and `tailscale netcheck` from the Tailnet.
 
-## Deploying with Docker + systemd
+## Deploying with Docker \+ systemd
 
 This path deploys the Worlds Edge Transcoder on a host using Docker (or Podman) and systemd. The deployment scripts will:
 
@@ -230,15 +228,15 @@ This path deploys the Worlds Edge Transcoder on a host using Docker (or Podman) 
 
 **Hardware:**
 
-- CPU: 8+ cores, Memory: 8 GB+, Disk: 30 GB+ free
+- CPU: 8\+ cores, Memory: 8 GB\+, Disk: 30 GB\+ free
 - GPU (optional): NVIDIA Tesla T4, RTX, or any NVIDIA card with encoder support
 - Recommended instance: Azure Standard NC16as T4 v3 (16 vCPUs, 110 GiB memory) for up to 10 cameras at 1080p/30fps when running Face Blurring
 
 **Software:**
 
-- Ubuntu Server 24.04 LTS+ (fresh install recommended); RHEL 10+
+- Ubuntu Server 24.04 LTS\+ (fresh install recommended); RHEL 10\+
 - Internet access for package downloads; sudo privileges for the install user
-- The scripts detect the OS and install or update the correct runtime: Ubuntu uses Docker, RHEL 10+ uses Podman
+- The scripts detect the OS and install or update the correct runtime: Ubuntu uses Docker, RHEL 10\+ uses Podman
 
 **Credentials and other values** (Worlds will securely provide these; the script prompts for each during deployment):
 
@@ -251,7 +249,7 @@ This path deploys the Worlds Edge Transcoder on a host using Docker (or Podman) 
 
 The deployment creates the following on the host:
 
-```
+```text
 /etc/default/transcoder                       # Runtime configuration (env vars)
 /usr/local/bin/edge-transcoder-start.sh       # Container start wrapper
 /etc/systemd/system/edge-transcoder.service   # systemd service unit
@@ -335,7 +333,7 @@ Healthy = pod Running, the deployment shows Available=True, and there are no err
 
 **Environment file**, location `/etc/default/transcoder`, owned by `root:docker`, mode `640`:
 
-```
+```text
 COMPANY_ID=<value>
 COORDINATOR_GRPC_URL=https://coordinator.<domain>
 DB_CREATE_TRANSCODER_RECORD=true
@@ -533,7 +531,7 @@ docker logs -f edge-transcoder
 ./deploy-transcoder.sh --reset    # Remove service and config
 ```
 
-### Support (Docker + systemd path)
+### Support (Docker \+ systemd path)
 
 Before contacting support, collect:
 
@@ -544,7 +542,7 @@ Before contacting support, collect:
 5. `/etc/default/transcoder` (redact `WORLDS_API_KEY`)
 6. OS version: `cat /etc/os-release`
 
-Contact: support@worlds.io
+Contact: [support@worlds.io](mailto:support@worlds.io)
 
 ## Deploying with K3s
 
@@ -554,13 +552,13 @@ This path deploys the Worlds Transcoder on a K3s cluster at the edge (cloud or o
 
 **Hardware:**
 
-- CPU: 8+ cores, Memory: 8 GB+, Disk: 30 GB+ free
+- CPU: 8\+ cores, Memory: 8 GB\+, Disk: 30 GB\+ free
 - GPU (optional): NVIDIA Tesla T4, RTX, or any NVIDIA card with encoder support
 - Recommended instance: Azure Standard NC16as T4 v3 (16 vCPUs, 110 GiB memory) for up to 10 cameras at 1080p/30fps when running Face Blurring (face blur requires a supported NVIDIA GPU)
 
 **Software:**
 
-- Ubuntu Server 22.04 LTS+ (fresh install recommended); RHEL 10+
+- Ubuntu Server 22.04 LTS\+ (fresh install recommended); RHEL 10\+
 - Internet access for package downloads; sudo privileges for the install user
 
 **Credentials and other values** (Worlds will securely provide these; the script prompts for each during deployment):
@@ -626,7 +624,7 @@ kubectl exec -n worlds-ns deployment/worlds-transcoder -- nvidia-smi
 
 Healthy = pod Running, deployment shows Available=True, and there are no errors in the logs.
 
-**5. Optional, if pulls are slow:** the transcoder image is 5GB+, and the kubelet's parallel blob fetches can overwhelm DNS resolvers on low-bandwidth or rate-limited networks, producing `dial tcp: lookup ...: Try again` errors and long `ImagePullBackOff` cycles. Pre-pull via `k3s ctr` (one persistent connection, single DNS lookup) before running `deploy-transcoder.sh`:
+**5. Optional, if pulls are slow:** the transcoder image is 5GB\+, and the kubelet's parallel blob fetches can overwhelm DNS resolvers on low-bandwidth or rate-limited networks, producing `dial tcp: lookup ...: Try again` errors and long `ImagePullBackOff` cycles. Pre-pull via `k3s ctr` (one persistent connection, single DNS lookup) before running `deploy-transcoder.sh`:
 
 ```bash
 USER=$(kubectl get secret acr-secret -n worlds-ns -o json | jq -r '.data | to_entries[].value' | base64 -d | jq -r '.auths["http://worldsedgecr.azurecr.io"].username')
@@ -675,7 +673,7 @@ kubectl rollout restart deployment/worlds-transcoder -n worlds-ns
 ### Troubleshooting
 
 | Symptom | First check |
-|---|---|
+| --- | --- |
 | Pod Pending / ContainerCreating / CrashLoopBackOff | `kubectl describe pod -n worlds-ns -l app.kubernetes.io/name=worlds-transcoder` |
 | ImagePullBackOff / ErrImagePull | `kubectl get secret acr-secret -n worlds-ns`, re-run `deploy-transcoder.sh` to recreate if missing |
 | `nvidia-smi` fails inside the pod | `kubectl get pods -n gpu-operator`, `kubectl get runtimeclass nvidia` |
@@ -706,7 +704,7 @@ kubectl delete secret worlds-secret worlds-transcoder-custom -n worlds-ns
 ### Reference
 
 | Resource | Name / Path |
-|---|---|
+| --- | --- |
 | Namespace | `worlds-ns` (hardcoded) |
 | ConfigMap | `worlds-config` |
 | Secret (API key) | `worlds-secret` |
@@ -729,4 +727,4 @@ Before contacting support, gather:
 5. Pod logs: `kubectl logs -n worlds-ns -l app.kubernetes.io/name=worlds-transcoder --tail=100`
 6. Full error messages
 
-Contact: support@worlds.io
+Contact: [support@worlds.io](mailto:support@worlds.io)

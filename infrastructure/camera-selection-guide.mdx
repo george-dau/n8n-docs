@@ -1,9 +1,7 @@
 ---
-title: "Camera Selection Guide"
+title: "Camera Selection"
 description: "Choose the right camera, lens, and position for reliable computer vision detection and tracking."
 ---
-
-# Camera Selection Guide
 
 The success of any computer vision AI system starts with clear, well-targeted imagery. Camera selection and positioning affect analytics accuracy just as much as cost, storage, and performance. Choosing the right camera, lens, and position ensures Worlds can reliably detect, track, and analyze people, vehicles, or equipment across a range of environments.
 
@@ -20,7 +18,7 @@ The success of any computer vision AI system starts with clear, well-targeted im
 - **PTZ** - remote pan, tilt, and zoom control from a single device, covering multiple areas. Best for dynamic camera views, or where PTZ hardware is already deployed for other operational purposes. Consult a Worlds Solutions Architect before selecting this type.
 - **Thermal** - detects temperature variation rather than visible light, giving visibility in total darkness or through smoke. Best for specialized cases: liquid leak detection, defect identification, or monitoring materials with distinct thermal properties.
 
-[DIAGRAM: Camera type illustration]
+\[DIAGRAM: Camera type illustration\]
 
 ## The Core Relationship: Distance, Resolution, and Object Size
 
@@ -28,18 +26,18 @@ Worlds' ability to recognize and track an object depends on pixel density, the n
 
 **Example**, using a 1080p camera (1920 px wide):
 
-- 20 ft scene width -> 96 px/ft (fine detail)
-- 40 ft -> 48 px/ft (people tracking)
-- 80 ft -> 24 px/ft (vehicle detection)
-- 160 ft -> 12 px/ft (motion only)
+- 20 ft scene width -\> 96 px/ft (fine detail)
+- 40 ft -\> 48 px/ft (people tracking)
+- 80 ft -\> 24 px/ft (vehicle detection)
+- 160 ft -\> 12 px/ft (motion only)
 
 **Rule of thumb:**
 
 - Large objects (vehicles, equipment): 20-40 px/ft
 - People or medium-sized objects: 40-80 px/ft
-- Small or detailed objects (hands, labels, tools): 100+ px/ft
+- Small or detailed objects (hands, labels, tools): 100\+ px/ft
 
-[DIAGRAM: Detection confidence vs. distance chart]
+\[DIAGRAM: Detection confidence vs. distance chart\]
 
 **Resolution guide:**
 
@@ -59,15 +57,15 @@ A camera's field of view, how wide or narrow the scene appears, is driven by sen
 
 A wide-angle lens shows more area with less detail per object; a narrow lens covers less area but with greater clarity.
 
-[DIAGRAM: FOV cones at different focal lengths]
+\[DIAGRAM: FOV cones at different focal lengths\]
 
 ## Tracking Small or Highly Detailed Objects
 
 Verifying small parts, like on an assembly line, calls for more deliberate camera selection and placement:
 
-- Use longer focal lengths (12-25mm+) or macro-capable lenses
+- Use longer focal lengths (12-25mm\+) or macro-capable lenses
 - Mount the camera close to the area of interest to maximize pixel density
-- Use high resolution (8MP/4K+) for detailed inspection
+- Use high resolution (8MP/4K\+) for detailed inspection
 - Ensure uniform, shadow-free lighting
 - Use rigid mounting to prevent vibration or misalignment
 
@@ -84,7 +82,7 @@ Verifying small parts, like on an assembly line, calls for more deliberate camer
 **Rules of thumb:**
 
 - Distance matters: the farther your target, the higher the resolution or longer the focal length needed
-- Pixel density drives detection: ~20-40 px/ft for large objects, ~40-80 px/ft for people, 100+ px/ft for small parts or fine detail
+- Pixel density drives detection: ~20-40 px/ft for large objects, ~40-80 px/ft for people, 100\+ px/ft for small parts or fine detail
 - Lens choice defines clarity: wide (2.8-4mm) covers more area with less detail; narrow (8-25mm) covers less area with higher detail
 - Resolution impacts AI confidence: 1080p for general tracking, 4-8MP for detailed analytics or distant views
 
@@ -92,7 +90,7 @@ Verifying small parts, like on an assembly line, calls for more deliberate camer
 
 - People tracking: 1080p or 4MP, 4-6mm lens, mounted 10-12 ft high
 - Vehicle identification: 4MP or 8MP, 8-12mm lens, mounted 12-18 ft high
-- Small tools/parts: 8MP+, 12-25mm lens, close-range, fixed position
+- Small tools/parts: 8MP\+, 12-25mm lens, close-range, fixed position
 - Large open spaces: 2.8mm wide-angle or fisheye lens
 
 The Worlds team can help evaluate your environment and recommend the right camera and lens combination for your specific use case.

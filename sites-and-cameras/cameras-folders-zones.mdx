@@ -1,9 +1,7 @@
 ---
-title: "Cameras, Folders & Uploaded Video"
+title: "Cameras & Uploaded Video"
 description: "Manage cameras and folders, upload offline video, and configure zones from the Cameras page."
 ---
-
-# Cameras, Folders & Uploaded Video
 
 Besides [Sites & Builder](/sites-and-cameras/builder), the Cameras page (under Sites & Cameras in the navigation) is another way to view and manage cameras, plus upload offline video for training or development. This is also where you configure zones on individual cameras.
 
@@ -12,7 +10,7 @@ Besides [Sites & Builder](/sites-and-cameras/builder), the Cameras page (under S
 - This page is a faster, simpler alternative to [Builder](/sites-and-cameras/builder) for two specific situations: uploading unrelated historic or offline video for model training or testing (folders), which Builder can't do at all, or quickly spinning up a camera feed for testing without placing it in physical space.
 - Leave Advanced Settings (thresholds, sensitivity, frames per second) at their defaults unless you have a specific reason to tune them. You can always adjust later.
 
-[SCREENSHOT: Cameras page - Cameras/Folders/All tabs]
+\[SCREENSHOT: Cameras page - Cameras/Folders/All tabs\]
 
 ## Step 1: Choose a View
 
@@ -26,7 +24,7 @@ Use the filters menu on the right to search by name or associated site, or toggl
 
 **Tip:** Cameras can be enabled or disabled for management or development purposes, but only enable a camera once it has a valid live stream.
 
-[SCREENSHOT: Filters menu - search and enabled-only toggle]
+\[SCREENSHOT: Filters menu - search and enabled-only toggle\]
 
 ## Step 2: Create a New Source
 
@@ -35,7 +33,7 @@ Click **New Source** in the top right, then name it and choose **Camera** or **F
 - **Folder** - just needs a name, nothing else required.
 - **Camera** - continue on to Advanced Settings and, optionally, streaming and location info.
 
-[SCREENSHOT: New Source dialog - name and type selection]
+\[SCREENSHOT: New Source dialog - name and type selection\]
 
 ## Step 3: Configure Advanced Settings
 
@@ -46,7 +44,7 @@ Applies to both cameras and folders:
 
 **Tip:** Leave these at their defaults to start. Cameras with a wide field of view and small objects of interest in frame may benefit from higher sensitivity to properly segment those smaller objects, but that's not guaranteed, and you can always adjust later.
 
-[SCREENSHOT: Advanced Settings panel]
+\[SCREENSHOT: Advanced Settings panel\]
 
 ## Step 4: Add Streaming and Location (Cameras Only)
 
@@ -54,7 +52,7 @@ If you're creating a camera, you can optionally add an RTSP URL and enable locat
 
 **Note:** A camera created without a streaming URL behaves like a folder, except you can upload multiple videos to it from the same source and keep them together as one continuous data source, which a folder alone doesn't guarantee if the footage comes from different cameras.
 
-[SCREENSHOT: Streaming URL and location fields]
+\[SCREENSHOT: Streaming URL and location fields\]
 
 ## Step 5: Manage the Data Source
 
@@ -64,7 +62,7 @@ Opening any camera or folder you've created shows:
 - Which collection(s) it's connected to, or a selection box in the bottom right to connect it to one
 - An upload dialog (top right) to add new videos
 
-[SCREENSHOT: Data source detail page - files, collection selector, upload button]
+\[SCREENSHOT: Data source detail page - files, collection selector, upload button\]
 
 ## Step 6: Configure Zones (Cameras Only)
 
@@ -78,7 +76,7 @@ To add a new zone: click points to draw vertices directly on the video, then cli
 
 Zones are primarily used in workflow logic, to detect when an object is or isn't present in a zone, or to track a sequence of objects moving through multiple zones. See the [Agents & Workflows](/agents-and-workflows/overview) documentation for more on how zones get used there.
 
-[SCREENSHOT: Zone editor with polygon drawn on video frame]
+\[SCREENSHOT: Zone editor with polygon drawn on video frame\]
 
 ## Quick Reference
 

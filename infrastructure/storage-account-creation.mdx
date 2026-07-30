@@ -1,9 +1,7 @@
 ---
-title: "Storage Account Creation"
+title: "Storage Accounts"
 description: "Set up a secure cloud storage volume that Worlds can access to store and analyze your video and content."
 ---
-
-# Storage Account Creation
 
 Worlds recommends that customers set up a secure cloud storage volume to manage access and retention needs for storing content. Worlds only requires secure access to this storage to provide our AI services, primarily object detections and analysis of video and other stored data.
 
@@ -25,7 +23,7 @@ For additional details, contact your Worlds Project Manager.
 
 - An active Azure Subscription with sufficient permissions (Owner or Contributor)
 - Compliance with your internal naming conventions and governance policies
-- Network connectivity to the storage endpoint(s) from the server(s) running the Worlds Transcoder service, as well as from the Worlds-hosted AI platform (AKS Cluster). All communications use encrypted TLS 1.2+ on port tcp/443.
+- Network connectivity to the storage endpoint(s) from the server(s) running the Worlds Transcoder service, as well as from the Worlds-hosted AI platform (AKS Cluster). All communications use encrypted TLS 1.2\+ on port tcp/443.
 
 ## Step 1: Create the Storage Account
 
@@ -106,7 +104,7 @@ Worlds requires SAS token-based access to interact with the storage containers. 
 Once setup is complete, securely provide the following to Worlds:
 
 | Required Information | Example / Notes |
-|---|---|
+| --- | --- |
 | Storage Account Name | e.g., `prodeusworldsiosa` |
 | SAS Token | e.g., `?sv=...&ss=b&srt=sco&sp=rwdlacupfti...` |
 | Storage Account Region | e.g., East US |
@@ -126,7 +124,7 @@ Before sharing with Worlds:
 ## Quick Reference
 
 - **Region:** provision in a different region than Worlds' East US (East US 2 suggested), or use a Private Endpoint, same-region IP whitelisting silently fails per Azure's own network security rules
-- **Config baseline:** Standard performance, LRS replication, StorageV2, Hot tier, encryption at rest, TLS 1.2+, HTTPS only, public blob access enabled and scoped to selected networks
+- **Config baseline:** Standard performance, LRS replication, StorageV2, Hot tier, encryption at rest, TLS 1.2\+, HTTPS only, public blob access enabled and scoped to selected networks
 - **Containers:** 14 required, listed above
 - **Access:** account-wide SAS token, full permissions, HTTPS only, up to 1-year expiry
 - **Handoff:** storage account name, SAS token, and region, shared through a secure channel, then validated before confirming readiness to your Worlds Project Manager

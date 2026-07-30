@@ -1,9 +1,7 @@
 ---
-title: "Model Training & Deployment: Step-by-Step Guide"
+title: "Model Training & Deployment"
 description: "Walk through the full flow from raw camera feeds to a trained model and automated workflow."
 ---
-
-# Model Training & Deployment: Step-by-Step Guide
 
 This guide walks through how to go from raw camera feeds to a working vision model and automated workflow. The process is iterative by design, expect to circle back and refine as you learn what your model does and doesn't catch.
 
@@ -15,7 +13,7 @@ This guide walks through how to go from raw camera feeds to a working vision mod
 
 ## Step 1: Organize Cameras into Collections
 
-A **[collection](/collections-and-models/overview)** is a folder that groups cameras which will share the same vision model.
+A [**collection**](/collections-and-models/overview) is a folder that groups cameras which will share the same vision model.
 
 **How to decide what goes together:**
 
@@ -27,10 +25,10 @@ A **[collection](/collections-and-models/overview)** is a folder that groups cam
 
 ## Step 2: Configure Zones
 
-Once cameras are organized into a collection, configure **[zones](/sites-and-cameras/cameras-folders-zones)** within each camera view.
+Once cameras are organized into a collection, configure [**zones**](/sites-and-cameras/cameras-folders-zones) within each camera view.
 
 - Zones define specific areas of interest inside the frame (a storage area, a dock door, etc).
-- This is the information that later feeds into the [workflow builder's](/agents-and-workflows/overview) evaluation logic, it's how the system knows *where* to look for an event, not just *what* to look for.
+- This is the information that later feeds into the [workflow builder's](/agents-and-workflows/overview) evaluation logic, it's how the system knows _where_ to look for an event, not just _what_ to look for.
 
 **Tip:** Set up zones with your end goal in mind. If you want to know when inventory is picked up and moved, or when a pallet jack leaves its storage spot, that's exactly the kind of zone to configure here.
 
@@ -42,7 +40,7 @@ This is where you move into the **tagging interface** and its companion, the **i
 - Each object type (forklift, inventory, pallet jack, person, etc) is a label you've trained into the model, shown as its own track on the timeline.
 - A solid, continuous block on the timeline means the object was tracked without interruption. A broken-up track means detection was lost and picked back up.
 
-**Warning:** Broken tracks aren't necessarily a sign of a bad model. Occlusion is a common cause, if a forklift drives in front of a tracked object, the system may drop that detection and pick it up as a *new* track once it's visible again. This is expected behavior to watch for, not automatically a flaw to fix.
+**Warning:** Broken tracks aren't necessarily a sign of a bad model. Occlusion is a common cause, if a forklift drives in front of a tracked object, the system may drop that detection and pick it up as a _new_ track once it's visible again. This is expected behavior to watch for, not automatically a flaw to fix.
 
 ## Step 4: Train and Iterate the Model
 
@@ -63,4 +61,4 @@ With collections, zones, and a trained model in place, the final step is buildin
 2. **Zones** - define the specific areas that matter within each camera
 3. **Tagging / Inference Review** - label objects, review detection tracks
 4. **Model Training** - train, evaluate, iterate
-5. **[Workflow Builder](/agents-and-workflows/overview)** - automate based on zones and tags
+5. [**Workflow Builder**](/agents-and-workflows/overview) - automate based on zones and tags
