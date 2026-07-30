@@ -101,6 +101,19 @@ After selecting your mode and signal type, configure which data to receive:
 | **Zones** | Multi-select | Zones to monitor. Available for zone state — select the zones you want occupancy updates for. |
 | **Object Types** | Multi-select | Object types to filter (e.g., `forklift`, `person`, `AMR`). Leave empty to receive all object types. |
 
+## Zone state advanced options
+
+An **Advanced Options** collection appears when mode is set to Streaming and signal type is set to Zone State. Click **Add Option** to configure either setting; leaving the collection untouched keeps the default behavior.
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Zone Emit Mode** | Options | All Updates | *All Updates* emits `zone_updated` on every detection in an occupied zone. *Composition Changes Only* emits `zone_updated` only when the zone's filtered object composition (tag → count, e.g. person 1→2) changes, plus a periodic heartbeat. `zone_occupied` and `zone_empty` always emit regardless of mode. Use composition mode to avoid triggering overlapping workflow executions from dense detection streams. |
+| **Heartbeat (Seconds)** | Number | 30 | Maximum seconds between emissions while a zone stays occupied with an unchanged composition (range: 5–3600). Only used when **Zone Emit Mode** is *Composition Changes Only*. Doubles as the retry cadence for workflows that dropped or refuted a previous message. |
+
+In composition mode, each `zone_updated` payload includes a top-level `emit_reason` field — `"composition_changed"` when the filtered composition actually changed, or `"heartbeat"` when it is a periodic re-emit — so downstream nodes can distinguish a real change from a retry tick.
+
+See [Composition emit mode](/state-machine/overview#composition-emit-mode) for how the state machine decides when to suppress and re-emit `zone_updated`.
+
 ## Batch options
 
 These parameters appear only when mode is set to Batch.

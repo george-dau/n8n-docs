@@ -30,13 +30,39 @@ The state machine aggregates individual detections into coherent **tracks**. Eac
 
 ### Signal generation
 
-The state machine emits three signal types to your workflows:
+The state machine emits three track signal types to your workflows:
 
 | Signal | When | Contains |
 | --- | --- | --- |
 | `track_created` | New object first detected | Initial track state (minimal data) |
 | `track_updated` | Each subsequent detection | Full enriched track state |
 | `track_expired` | No detection for TTL period (default 15s) | Final track state with complete history |
+
+### Zone state management
+
+The state machine also tracks **zone state** — aggregate occupancy for the zones you're monitoring, independent of any single track. Zone state is available only in streaming mode; zones don't expire the way tracks do, so there's no batch equivalent. Each zone maintains:
+
+- Active tracks, with per-track dwell time and zone intersection percentage
+- Total active track count
+- The filtered object composition (tag → count) for each subscription watching the zone
+
+| Signal | When | Contains |
+| --- | --- | --- |
+| `zone_occupied` | First track enters a previously empty zone | Initial zone state |
+| `zone_updated` | A track enters, exits, or continues in the zone | Current zone state — emit frequency depends on the subscription's zone emit mode (see below) |
+| `zone_empty` | Last track leaves the zone | Final zone state |
+
+#### Composition emit mode
+
+By default (`zone_emit_mode: "all"`), a subscription receives `zone_updated` on every detection in an occupied zone. Opt in per subscription with `zone_emit_mode: "composition"` to instead emit `zone_updated` only when the zone's composition changes:
+
+- **Composition** is a tag → count map of the subscription's *filtered* view of the zone — a subscription filtered to `[person, dock door]` isn't woken when a forklift enters. Composition is compared by tag counts, not track IDs, so re-identification churn (the same physical object briefly reassigned a new track ID) stays suppressed, while a real change like person 2 → 1 always emits.
+- `zone_occupied` and `zone_empty` always emit regardless of mode — only `zone_updated` is subject to comparison.
+- **Lazy heartbeat**: if a `zone_updated` would otherwise be suppressed but `heartbeat_seconds` (default 30) has elapsed since the last emit for that zone, the state machine emits anyway. There are no background timers — the heartbeat piggybacks on the incoming detection stream, so it only fires while the zone remains occupied.
+- **Emit reason**: composition-mode `zone_updated` payloads carry a top-level `emit_reason` field — `"composition_changed"` for a real change (or the first emit after a restart), `"heartbeat"` for a periodic re-emit — so workflows can distinguish a change from a retry tick. The field is absent in `"all"` mode and on `zone_occupied`/`zone_empty`.
+- Suppression state is held in memory. A state machine restart causes one unconditional `zone_updated` emit per occupied zone — a harmless "no change" execution downstream. Streaming auto replay uses an isolated emitter; manual replay routes through the production emitter.
+
+Configure this via the `zone_emit_mode` and `heartbeat_seconds` fields on [`POST /api/subscriptions/{id}`](/state-machine/api-reference#post-apisubscriptionsid), or via the **Zone Emit Mode** / **Heartbeat (Seconds)** options under **Advanced Options** on the [Detection Webhook Trigger](/nodes/detection-webhook-trigger).
 
 ### Per-datasource ordering
 
@@ -83,7 +109,7 @@ The state machine uses multiple Redis databases for isolation:
 | Database | Purpose |
 | --- | --- |
 | DB0 | n8n BullMQ job queue (not used by state machine) |
-| DB1 | Configuration — subscriptions, zone polygon cache |
+| DB1 | Configuration — subscriptions, zone polygon cache, event state |
 | DB2 | Streaming state — track state, zone state |
 | DB3 | Batch data — raw detections for batch processing |
 | DB4 | Replay isolation — replay session state |
