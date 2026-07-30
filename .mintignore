@@ -11,3 +11,6 @@ scenarios/
 
 # Brand assets (source files, not published)
 worlds-branding/
+
+# Training doc authoring template (for writers, not published)
+worlds-training-docs/

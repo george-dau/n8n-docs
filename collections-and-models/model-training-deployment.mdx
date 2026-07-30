@@ -1,0 +1,66 @@
+---
+title: "Model Training & Deployment: Step-by-Step Guide"
+description: "Walk through the full flow from raw camera feeds to a trained model and automated workflow."
+---
+
+# Model Training & Deployment: Step-by-Step Guide
+
+This guide walks through how to go from raw camera feeds to a working vision model and automated workflow. The process is iterative by design, expect to circle back and refine as you learn what your model does and doesn't catch.
+
+## Before You Start
+
+**Tip:** Define your use case before you touch anything. Know what events or objects you actually need to detect (a forklift entering a zone, inventory leaving storage, a pallet jack in use, etc). That goal shapes every decision below, from how you group cameras to what you tag.
+
+**Warning:** If you're new to the platform, build and test in a non-production or demo environment first. Making changes directly in a live/production environment risks breaking real workflows other teams depend on.
+
+## Step 1: Organize Cameras into Collections
+
+A **[collection](/collections-and-models/overview)** is a folder that groups cameras which will share the same vision model.
+
+**How to decide what goes together:**
+
+- Group cameras that share visual context, similar environments, looking for similar things.
+- Keep visually distinct feeds separate. An exterior camera and an interior camera will generally perform better as separate collections with separate models rather than one shared model.
+- A camera isn't locked into one collection. The same camera can belong to multiple collections, for example, running a specialized model in one collection while also contributing to a general "people detection" collection.
+
+**Example:** A two-camera collection covering a loading dock area, where both cameras track people, a forklift, inventory, and a pallet jack, just from different angles. Because both cameras are watching the same kind of activity in the same environment, they share one model.
+
+## Step 2: Configure Zones
+
+Once cameras are organized into a collection, configure **[zones](/sites-and-cameras/cameras-folders-zones)** within each camera view.
+
+- Zones define specific areas of interest inside the frame (a storage area, a dock door, etc).
+- This is the information that later feeds into the [workflow builder's](/agents-and-workflows/overview) evaluation logic, it's how the system knows *where* to look for an event, not just *what* to look for.
+
+**Tip:** Set up zones with your end goal in mind. If you want to know when inventory is picked up and moved, or when a pallet jack leaves its storage spot, that's exactly the kind of zone to configure here.
+
+## Step 3: Tag and Review Detections
+
+This is where you move into the **tagging interface** and its companion, the **inference viewer**.
+
+- The inference viewer shows your video feed alongside a timeline of every object detected and tracked during that period.
+- Each object type (forklift, inventory, pallet jack, person, etc) is a label you've trained into the model, shown as its own track on the timeline.
+- A solid, continuous block on the timeline means the object was tracked without interruption. A broken-up track means detection was lost and picked back up.
+
+**Warning:** Broken tracks aren't necessarily a sign of a bad model. Occlusion is a common cause, if a forklift drives in front of a tracked object, the system may drop that detection and pick it up as a *new* track once it's visible again. This is expected behavior to watch for, not automatically a flaw to fix.
+
+## Step 4: Train and Iterate the Model
+
+- Train a model version, then review its performance using the inference viewer.
+- This process is intentionally iterative. Expect to be on v2, v3, and beyond as you refine things, it's normal, not a sign something went wrong the first time.
+
+**Tip:** If you notice false positives or missed detections, the fix is often to add a new object class so the model has better context for what it's looking at, rather than assuming the model itself is broken.
+
+## Step 5: Move to the Workflow Builder
+
+With collections, zones, and a trained model in place, the final step is building automated workflows (in the [workflow builder](/agents-and-workflows/overview)) that act on the zone and tag data established in Steps 1-4.
+
+**Tip:** Look at existing workflows and models your team has already built. They're a useful reference point for structure and strategy before you build your own from scratch.
+
+## Quick Reference: The Flow
+
+1. **Collections** - group cameras by shared visual context and goal
+2. **Zones** - define the specific areas that matter within each camera
+3. **Tagging / Inference Review** - label objects, review detection tracks
+4. **Model Training** - train, evaluate, iterate
+5. **[Workflow Builder](/agents-and-workflows/overview)** - automate based on zones and tags
