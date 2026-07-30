@@ -1,0 +1,72 @@
+---
+title: "Event Activity"
+description: "Browse, filter, and drill into every captured event and activity in the Event Activity list view."
+---
+
+# Event Activity
+
+Event Activity, under Monitoring in the navigation, is the basic list view of all captured events and activity.
+
+## Before You Start
+
+- **Design note:** This list view is due for a visual refresh in an upcoming release. The basic functionality described here will stay the same, but the layout will look different.
+- **Naming note:** Worlds is partway through migrating from a legacy "event" system to a new Chronicle system, which will eventually distinguish between Activity, Event, and Summary type records. Right now, all captured data is mirrored across both systems, and this page (despite being named Event Activity) is currently displaying Activity-type Chronicles, the same underlying data as the legacy event system. Expect this to evolve as that distinction becomes more visible in the UI.
+- Available to every role, but Users and Managers only see data for sites they have permission to.
+- **Key concept:** an "activity" is the output of a workflow. A workflow evaluates Worlds' inference data, decides what and when to log, then publishes that activity back into Worlds, where it shows up here and elsewhere in Monitoring.
+
+[SCREENSHOT: Event Activity list view]
+
+## Working the List
+
+- **Auto Refresh** (toggle, top of screen) - when on, new activity appears at the top of the list live, as it's published, similar to Overwatch.
+- **Page size** - choose how many records load per page.
+- **Sort** - toggle ascending/descending, and change which field you're sorting by. By default, it's sorted by start time descending (newest first), but you can sort alphabetically by name or by other fields instead.
+
+[SCREENSHOT: Auto refresh, page size, and sort controls]
+
+## Filtering
+
+A filtering menu on the right lets you narrow the list down:
+
+- **Name** - search by activity name
+- **Filter by Activity** - a multi-select dropdown to choose multiple activity types by name
+- **Label** - called "subtype" in the legacy event system
+- **Start date/time** - a specific range
+
+Below that, expandable sections let you filter by:
+
+- **Agent** - the agent that produced the activity
+- **Site** - which site it's associated with
+- **Camera** - which camera detected it
+- **Priority** - 1 (Critical), 2 (High), 3 (Medium); anything else shows as No Priority
+- **Validation status** - whether a human has marked it Valid or Invalid
+
+[SCREENSHOT: Filtering panel expanded]
+
+## The Detail Page
+
+Click any row to open that record's detail page.
+
+- If the activity has GPS data (from a calibrated camera plus a workflow that attaches that location), a map appears at the top showing where it happened. Otherwise, the map is hidden.
+- At the top: the activity's name and description, its start and end time, and the agent that produced it, along with the agent's description.
+- The right panel lists everything associated with the activity: tags, sites, locations, labels, points of interest, data sources (cameras), tracks, and any captured metadata fields.
+- At the bottom, you can Validate or Invalidate the event, same as in [Overwatch](/monitoring/overwatch).
+
+**Assets:** Any still images, GIFs, snapshots, or video clips a workflow created and attached to the event appear here. Click one to expand it into a modal with a larger view, its metadata, and the raw JSON behind the event. If a snapshot is included, it also links out to the Inference Viewer, where you can see every detected object, track, and zone together, useful for confirming why an event fired and whether it actually met the workflow's criteria.
+
+**Surrounding activities:** The left panel shows nearby activity in time order. Any filters you applied on the list page carry over here too.
+
+[SCREENSHOT: Event detail page with map, assets, and surrounding activities panel]
+
+## Common Use
+
+Event Activity is mainly a tool for reviewing work in progress: workflows, models, zones, and so on, still being tuned. It makes it easier to validate events, troubleshoot accuracy issues, redraw a camera-based or geofence zone, or adjust workflow logic to improve how well your captured activity matches what's actually happening.
+
+## Quick Reference
+
+- **Access** - every role; Users and Managers limited to sites they have permission to
+- **Auto Refresh** - live updates at the top of the list
+- **Sort & Page Size** - customize order, field, and records per page
+- **Filters** - name, activity type, label, date range, agent, site, camera, priority, validation status
+- **Detail page** - full activity data, GPS map (if available), assets, and a link to the Inference Viewer
+- **Surrounding activities** - nearby events in time order, respecting your list-page filters

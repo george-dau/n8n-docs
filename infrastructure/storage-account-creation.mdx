@@ -1,0 +1,132 @@
+---
+title: "Storage Account Creation"
+description: "Set up a secure cloud storage volume that Worlds can access to store and analyze your video and content."
+---
+
+# Storage Account Creation
+
+Worlds recommends that customers set up a secure cloud storage volume to manage access and retention needs for storing content. Worlds only requires secure access to this storage to provide our AI services, primarily object detections and analysis of video and other stored data.
+
+This guide outlines the steps to create an **Azure Storage Account** for secure integration with the Worlds Platform. Worlds requires multiple blob containers set up within this account, and access must be granted to the Worlds Application using a **Shared Access Signature (SAS) token**.
+
+All provisioning should align with your organization's security, compliance, and governance policies. The Worlds Application includes a utility to automatically delete stored video after a defined retention period (e.g., 30, 90, or 365 days) to optimize storage usage.
+
+For additional details, contact your Worlds Project Manager.
+
+## Before You Start
+
+**Objectives.** This process should result in a secure Azure Blob Storage configuration where:
+
+- Data is properly isolated in a dedicated storage account
+- Required blob containers are created with proper access controls
+- Secure access is granted to Worlds using a time-bound SAS token and Public network access scope
+
+**Prerequisites:**
+
+- An active Azure Subscription with sufficient permissions (Owner or Contributor)
+- Compliance with your internal naming conventions and governance policies
+- Network connectivity to the storage endpoint(s) from the server(s) running the Worlds Transcoder service, as well as from the Worlds-hosted AI platform (AKS Cluster). All communications use encrypted TLS 1.2+ on port tcp/443.
+
+## Step 1: Create the Storage Account
+
+Create a new Azure Storage Account in the appropriate subscription and resource group.
+
+**Warning:** Per [Microsoft's Azure Storage network security limitations](https://learn.microsoft.com/en-us/azure/storage/common/storage-network-security-limitations?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&bc=%2Fazure%2Fstorage%2Fblobs%2Fbreadcrumb%2Ftoc.json), IP network rules aren't enforced for requests originating from the same region as the storage account. In practice, this means even correctly whitelisted IPs get blocked if the request originates from the same Azure region: Microsoft's own guidance is that "you cannot use IP network rules to restrict access to clients in the same Azure region as the storage account," virtual network rules are required for same-region requests instead. Since Worlds runs in East US, we recommend provisioning this storage account in a separate region (East US 2).
+
+Two ways to address this:
+
+- **Option One (preferred): create the storage account in a different region**
+  - Suggested region: East US 2
+  - Public Network Access: Enabled (Selected Networks)
+  - Whitelist the following IP addresses:
+    1. Worlds AKS Egress IP: `74.179.193.137`
+    2. Edge Transcoder Device IP: the public-facing IP your transcoder service will use to reach this storage account
+  - This sidesteps the same-region limitation and allows continued access via SAS-based integration.
+- **Option Two: set up a Private Endpoint**
+  - Establish a Private Endpoint between the existing storage account and Worlds' AKS subnet in East US.
+  - Enables secure, private communication and bypasses the regional firewall constraint entirely.
+
+## Step 2: Apply the Recommended Configuration
+
+These are minimum requirements; all other settings can stay at their defaults unless your internal policy requires additional controls (CMK encryption, Private Endpoints, firewall restrictions, etc.):
+
+- **Performance:** Standard
+- **Replication:** Locally-Redundant Storage (LRS)
+- **Account Kind:** StorageV2 (General Purpose v2)
+- **Default Access Tier:** Hot
+- **Encryption at rest:** Enabled (Azure-managed keys)
+- **Minimum TLS version:** 1.2
+- Allow access via **HTTPS only**
+- **Public Blob Access:** Enabled
+  - **Public network access scope:** Enable from selected networks
+    - AKS Cluster Egress IP (from Worlds)
+    - Public IP for the server running the transcoder service (from your local network team)
+- **Large File Share (File Service):** Enabled
+- **File Share Soft Delete:** Enabled (7 days)
+- Deny anonymous or unauthenticated access
+
+## Step 3: Create the Required Blob Containers
+
+The Worlds Platform requires, at minimum, the following blob containers. Create each one in the newly created storage account:
+
+- datasource-clips
+- datasource-snapshots
+- device-static-image
+- device-thumbnails
+- device-video
+- http-static
+- http-static-secure
+- ml-modelstore
+- segment-jobs
+- spatial-data-store
+- structures
+- synthetic-background
+- worlds-company-logos
+- worlds-geometry
+
+## Step 4: Configure Secure Access
+
+Worlds requires SAS token-based access to interact with the storage containers. Generate a SAS token scoped to the **entire storage account**, with:
+
+- **Resource types:** Service, Container, and Object (sco)
+- **Permissions:** Full (rwdlacupfti)
+- **Services:** b (Blob)
+- **Expiry:** up to 1 year
+- **Protocol:** HTTPS only
+- **IP restriction:** optional, add if your internal security requires it
+
+## Step 5: Set Up Backup, Retention, and Monitoring
+
+- Configure data retention and lifecycle policies according to your internal standards
+- Enable Azure Backup or replication if required
+- Use Azure Monitor or Defender for Storage for access tracking, anomaly detection, and alerts on suspicious activity
+
+## Step 6: Share Credentials with Worlds
+
+Once setup is complete, securely provide the following to Worlds:
+
+| Required Information | Example / Notes |
+|---|---|
+| Storage Account Name | e.g., `prodeusworldsiosa` |
+| SAS Token | e.g., `?sv=...&ss=b&srt=sco&sp=rwdlacupfti...` |
+| Storage Account Region | e.g., East US |
+
+**Important:** Transmit credentials only through secure channels approved by your organization (e.g., encrypted email or a secure file exchange portal).
+
+These are the same values entered when connecting the account under [Settings](/settings/overview).
+
+## Step 7: Validate and Hand Off
+
+Before sharing with Worlds:
+
+- Verify SAS token access works for all required containers
+- Confirm HTTPS access and correct permission scope
+- Provide confirmation of readiness via your Worlds Project Manager
+
+## Quick Reference
+
+- **Region:** provision in a different region than Worlds' East US (East US 2 suggested), or use a Private Endpoint, same-region IP whitelisting silently fails per Azure's own network security rules
+- **Config baseline:** Standard performance, LRS replication, StorageV2, Hot tier, encryption at rest, TLS 1.2+, HTTPS only, public blob access enabled and scoped to selected networks
+- **Containers:** 14 required, listed above
+- **Access:** account-wide SAS token, full permissions, HTTPS only, up to 1-year expiry
+- **Handoff:** storage account name, SAS token, and region, shared through a secure channel, then validated before confirming readiness to your Worlds Project Manager
