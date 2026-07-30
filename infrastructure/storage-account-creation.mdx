@@ -29,19 +29,19 @@ For additional details, contact your Worlds Project Manager.
 
 Create a new Azure Storage Account in the appropriate subscription and resource group.
 
-**Warning:** Per [Microsoft's Azure Storage network security limitations](https://learn.microsoft.com/en-us/azure/storage/common/storage-network-security-limitations?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&bc=%2Fazure%2Fstorage%2Fblobs%2Fbreadcrumb%2Ftoc.json), IP network rules aren't enforced for requests originating from the same region as the storage account. In practice, this means even correctly whitelisted IPs get blocked if the request originates from the same Azure region: Microsoft's own guidance is that "you cannot use IP network rules to restrict access to clients in the same Azure region as the storage account," virtual network rules are required for same-region requests instead. Since Worlds runs in East US, we recommend provisioning this storage account in a separate region (East US 2).
+**Warning:** Per [Microsoft's Azure Storage network security limitations](https://learn.microsoft.com/en-us/azure/storage/common/storage-network-security-limitations?toc=%2Fazure%2Fstorage%2Fblobs%2Ftoc.json&bc=%2Fazure%2Fstorage%2Fblobs%2Fbreadcrumb%2Ftoc.json), IP network rules aren't enforced for requests originating from the same region as the storage account. In practice, this means even correctly whitelisted IPs get blocked if the request originates from the same Azure region: Microsoft's own guidance is that "you cannot use IP network rules to restrict access to clients in the same Azure region as the storage account," virtual network rules are required for same-region requests instead. Confirm your hosted region with Worlds - we recommend provisioning this storage account in a separate region.
 
 Two ways to address this:
 
 - **Option One (preferred): create the storage account in a different region**
-  - Suggested region: East US 2
+  - Suggested region: `Separate Region - Verify with Worlds`
   - Public Network Access: Enabled (Selected Networks)
   - Whitelist the following IP addresses:
-    1. Worlds AKS Egress IP: `74.179.193.137`
+    1. Worlds AKS Egress IP: `Varies - Provided by Worlds`
     2. Edge Transcoder Device IP: the public-facing IP your transcoder service will use to reach this storage account
   - This sidesteps the same-region limitation and allows continued access via SAS-based integration.
 - **Option Two: set up a Private Endpoint**
-  - Establish a Private Endpoint between the existing storage account and Worlds' AKS subnet in East US.
+  - Establish a Private Endpoint between the existing storage account and Worlds' AKS subnet.
   - Enables secure, private communication and bypasses the regional firewall constraint entirely.
 
 ## Step 2: Apply the Recommended Configuration
