@@ -10,8 +10,6 @@ Agents & Workflows is where you turn detection and track data from your computer
 - Not available to Users. Managers, Administrators, and Super Administrators only.
 - You must create an agent before you can create a workflow, every workflow needs to belong to one.
 
-\[SCREENSHOT: Agents & Workflows nav section\]
-
 ## Agents
 
 Agents are also referred to as "Chronicle producers" in the UI and API documentation, both terms mean the same thing. An agent is really just a bucket: a category one or more workflows belong to, and where the events those workflows generate get written.
@@ -25,11 +23,15 @@ There's no single right structure, and you can reorganize agents later.
 
 **Note:** The Agents page is intentionally simple today. Worlds is actively building toward agentic-first capabilities, and this page will get more functional over time as independent coding agents get introduced to address more use cases.
 
+![Worlds Agents](/images/Worlds_Agents.png "Worlds Agents")
+
 ### Step 1: Create an Agent
 
 Click **New Chronicle Producer** in the top right. Only a name is required; description, time zone, and active/inactive status are optional. Click into any existing agent to edit that information later.
 
-\[SCREENSHOT: New Chronicle Producer dialog\]
+<Frame>
+  ![Worlds Agent Create](/images/Worlds_AgentCreate.png "Worlds Agent Create")
+</Frame>
 
 There's no other functionality on this page. Once you're in the Workflow Builder, creating a new workflow includes a setting for which agent it belongs to.
 
@@ -41,9 +43,9 @@ Custom Worlds nodes handle evaluating trigger conditions, creating and posting e
 
 **Note:** SSO is enabled for n8n across all production environments, so you should land there already logged in. n8n permissions are managed independently from Worlds, though, so you may need an n8n administrator to grant you access to specific workflows you want to edit, clone, or reference.
 
-For general n8n platform basics, see n8n's own website. For how to use Worlds' custom nodes within your n8n instance, see the [Workflows documentation](/getting-started/overview).
+For general n8n platform basics, see [n8n's website](https://n8n.io/). For how to use Worlds' custom nodes within your n8n instance, see the [Workflows documentation](/getting-started/overview).
 
-\[SCREENSHOT: n8n canvas with a Worlds workflow open\]
+![Worlds Workflows](/images/Worlds_Workflows.png "Worlds Workflows")
 
 ## Quick Reference
 
