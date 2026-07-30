@@ -70,7 +70,7 @@
           {
             "group": "Getting Started",
             "pages": [
-              "index",
+              "workflows/overview",
               "getting-started/overview",
               "getting-started/prerequisites"
             ]
@@ -197,5 +197,12 @@
     "socials": {
       "website": "https://www.worlds.io/"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/platform-overview/navigating-worlds",
+      "permanent": false
+    }
+  ]
 }
