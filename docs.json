@@ -14,6 +14,57 @@
   "navigation": {
     "tabs": [
       {
+        "tab": "Platform Overview",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "platform-overview/navigating-worlds",
+              "platform-overview/user-menu",
+              "platform-overview/visual-search",
+              "platform-overview/iris"
+            ]
+          },
+          {
+            "group": "Monitoring",
+            "pages": [
+              "monitoring/live-monitor",
+              "monitoring/overwatch",
+              "monitoring/event-activity",
+              "monitoring/event-intelligence",
+              "monitoring/dashboard-management",
+              "monitoring/published-dashboards"
+            ]
+          },
+          {
+            "group": "Agents & Workflows",
+            "pages": [
+              "agents-and-workflows/overview"
+            ]
+          },
+          {
+            "group": "Collections & Models",
+            "pages": [
+              "collections-and-models/overview",
+              "collections-and-models/model-training-deployment"
+            ]
+          },
+          {
+            "group": "Sites & Cameras",
+            "pages": [
+              "sites-and-cameras/builder",
+              "sites-and-cameras/cameras-folders-zones"
+            ]
+          },
+          {
+            "group": "Settings",
+            "pages": [
+              "settings/overview"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Workflows",
         "groups": [
           {
@@ -79,57 +130,6 @@
             "pages": [
               "nodes/actions",
               "nodes/debug"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Platform Overview",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "pages": [
-              "platform-overview/navigating-worlds",
-              "platform-overview/user-menu",
-              "platform-overview/visual-search",
-              "platform-overview/iris"
-            ]
-          },
-          {
-            "group": "Monitoring",
-            "pages": [
-              "monitoring/live-monitor",
-              "monitoring/overwatch",
-              "monitoring/event-activity",
-              "monitoring/event-intelligence",
-              "monitoring/dashboard-management",
-              "monitoring/published-dashboards"
-            ]
-          },
-          {
-            "group": "Agents & Workflows",
-            "pages": [
-              "agents-and-workflows/overview"
-            ]
-          },
-          {
-            "group": "Collections & Models",
-            "pages": [
-              "collections-and-models/overview",
-              "collections-and-models/model-training-deployment"
-            ]
-          },
-          {
-            "group": "Sites & Cameras",
-            "pages": [
-              "sites-and-cameras/builder",
-              "sites-and-cameras/cameras-folders-zones"
-            ]
-          },
-          {
-            "group": "Settings",
-            "pages": [
-              "settings/overview"
             ]
           }
         ]
