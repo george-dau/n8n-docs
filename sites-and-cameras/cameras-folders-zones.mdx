@@ -7,10 +7,7 @@ Besides [Sites & Builder](/sites-and-cameras/builder), the Cameras page (under S
 
 ## Before You Start
 
-- This page is a faster, simpler alternative to [Builder](/sites-and-cameras/builder) for two specific situations: uploading unrelated historic or offline video for model training or testing (folders), which Builder can't do at all, or quickly spinning up a camera feed for testing without placing it in physical space.
-- Leave Advanced Settings (thresholds, sensitivity, frames per second) at their defaults unless you have a specific reason to tune them. You can always adjust later.
-
-\[SCREENSHOT: Cameras page - Cameras/Folders/All tabs\]
+- This page is a faster, simpler alternative to [Builder](/sites-and-cameras/builder) for two specific situations: uploading unrelated historic or offline video for model training or testing (in **Folders**), which Builder can't do at all, or quickly spinning up a camera feed for testing without placing it in physical space.
 
 ## Step 1: Choose a View
 
@@ -22,20 +19,26 @@ Three tabs sit across the top of the page:
 
 Use the filters menu on the right to search by name or associated site, or toggle to show only enabled cameras.
 
-**Tip:** Cameras can be enabled or disabled for management or development purposes, but only enable a camera once it has a valid live stream.
-
-\[SCREENSHOT: Filters menu - search and enabled-only toggle\]
+![Worlds Cameras](/images/Worlds_Cameras.png "Worlds Cameras")
 
 ## Step 2: Create a New Source
 
 Click **New Source** in the top right, then name it and choose **Camera** or **Folder**.
 
 - **Folder** - just needs a name, nothing else required.
-- **Camera** - continue on to Advanced Settings and, optionally, streaming and location info.
+- **Camera** - adds optional fields for streaming URL, location, and Advanced Settings.
 
-\[SCREENSHOT: New Source dialog - name and type selection\]
+**Tip:** Cameras can be enabled or disabled for management or development purposes, only enable cameras that have a valid live stream.
 
-## Step 3: Configure Advanced Settings
+![Worlds New Source](/images/Worlds_NewSource.png "Worlds New Source")
+
+## Step 3: Add Streaming and Location (Cameras Only)
+
+If you're creating a camera, you can optionally add an RTSP URL and enable location, the same as you would in Builder, to place it on the map. Or leave both off to create the camera as quickly as possible.
+
+**Note:** A camera created without a streaming URL behaves like a folder, except you can upload multiple videos to it from the same source and keep them together as one continuous data source, which a folder alone doesn't guarantee if the footage comes from different cameras.
+
+## Step 4 (Optional): Configure Advanced Settings
 
 Applies to both cameras and folders:
 
@@ -43,16 +46,6 @@ Applies to both cameras and folders:
 - Default sensitivity options applied later when you build models on this source
 
 **Tip:** Leave these at their defaults to start. Cameras with a wide field of view and small objects of interest in frame may benefit from higher sensitivity to properly segment those smaller objects, but that's not guaranteed, and you can always adjust later.
-
-\[SCREENSHOT: Advanced Settings panel\]
-
-## Step 4: Add Streaming and Location (Cameras Only)
-
-If you're creating a camera, you can optionally add an RTSP URL and enable location, the same as you would in Builder, to place it on the map. Or leave both off to create the camera as quickly as possible.
-
-**Note:** A camera created without a streaming URL behaves like a folder, except you can upload multiple videos to it from the same source and keep them together as one continuous data source, which a folder alone doesn't guarantee if the footage comes from different cameras.
-
-\[SCREENSHOT: Streaming URL and location fields\]
 
 ## Step 5: Manage the Data Source
 
@@ -62,21 +55,21 @@ Opening any camera or folder you've created shows:
 - Which collection(s) it's connected to, or a selection box in the bottom right to connect it to one
 - An upload dialog (top right) to add new videos
 
-\[SCREENSHOT: Data source detail page - files, collection selector, upload button\]
+![Worlds Source Selected](/images/Worlds_SourceSelected.png "Worlds Source Selected")
 
 ## Step 6: Configure Zones (Cameras Only)
 
-From the options menu in the top right, select **Zones**. This pulls up the latest available video segment from that camera, along with any zones already configured.
+From the options menu in the top right, select **Zones**. This pulls up the latest available video from that camera, along with any zones already configured.
 
-To add a new zone: click points to draw vertices directly on the video, then click your starting point again to close the polygon. Give the zone a name. You can then drag the whole shape, drag individual points, or rotate and scale it as needed.
+Click the **Add new zone** button in the right panel, and then click to draw vertices directly on the video. Click your starting point again to close the polygon, then give the zone a name. You can then drag the whole shape, drag individual points, or rotate and scale it as needed.
 
-**Tip:** If a camera's position changes and a zone no longer fits, select it and clear its points to redraw from scratch, the zone keeps its original ID and name.
+**Tip:** If a camera's position changes and a zone no longer fits, select it and clear its points to redraw from scratch, the zone keeps its original ID and name - keeping downstream workflow references intact.
 
 **Note:** Zones only apply to cameras, not folders, since a folder's video may come from several different source cameras with no single fixed frame to draw a zone on.
 
-Zones are primarily used in workflow logic, to detect when an object is or isn't present in a zone, or to track a sequence of objects moving through multiple zones. See the [Agents & Workflows](/agents-and-workflows/overview) documentation for more on how zones get used there.
+![Worlds Zones](/images/Worlds_Zones-1.png "Worlds Zones")
 
-\[SCREENSHOT: Zone editor with polygon drawn on video frame\]
+**Zones** are primarily used in workflow logic, to detect when an object is or isn't present in a zone, or to track a sequence of objects moving through multiple zones. See the [Agents & Workflows](/agents-and-workflows/overview) documentation for more on how zones get used there.
 
 ## Quick Reference
 
