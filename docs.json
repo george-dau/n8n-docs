@@ -16,7 +16,7 @@
       {
         "tab": "Platform Overview",
         "pages": [
-          "untitled-page",
+          "welcome",
           {
             "group": "Getting Started",
             "pages": [
@@ -207,7 +207,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/platform-overview/navigating-worlds",
+      "destination": "/welcome",
       "permanent": false
     }
   ]
