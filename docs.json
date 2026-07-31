@@ -17,6 +17,7 @@
         "tab": "Platform Overview",
         "pages": [
           "welcome",
+          "welcome",
           {
             "group": "Getting Started",
             "pages": [
