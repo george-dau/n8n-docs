@@ -117,14 +117,22 @@ When the model is run, a new Detector will be provisioned automatically and appe
 
 **Model metrics.** From the Models page, you'll see a model metrics view listing every model trained in the collection. At the top: overall metrics for F1, Precision, Recall, and mean Average Precision (mAP), plus a chart of model performance over time as each new model gets trained.
 
+![Worlds Collection Models](/images/Worlds_CollectionModels.png "Worlds Collection Models")
+
 **Model detail view.** Click any model in the list to open more detail: per-class model metrics, a confusion matrix, and a precision/recall chart.
+
+![Worlds Model Metrics](/images/Worlds_ModelMetrics.png "Worlds Model Metrics")
 
 - **Confusion Matrix** - a detailed breakdown of every object class in the collection and how likely each is to be confused with another, based on the test set from data generation.
 - **Precision & Recall** - pick a class from the dropdown to see how confidence threshold affects precision and recall at each level. **Tip:** this view is useful for setting the ideal confidence threshold for a class after the model's trained and deployed. Adjusting a class's detection threshold after training can surface detections and tracks you'd otherwise miss, or cut down on false positives, without retraining anything. Thresholds can be adjusted from this chart, or from Options \> Configure model in the top-right.
 
+![Worlds Precision Recall](/images/Worlds_PrecisionRecall.png "Worlds Precision Recall")
+
 **Note:** whenever you generate a new set of training data and train a new model, every past model (up to 10) gets re-evaluated against the new test set. As you add more varied segments and object classes over time, expect the metrics on _older_ models to decline, that's the test set getting harder, not those models getting worse. The Training Performance Over Time chart on the Models page is the one to watch, it should keep trending up as you iterate and tag more segments.
 
-**The inference viewer.** To see the inference output of a Detector, select the model and click **Live Detections** for any camera in the top right. If it's been run against one-off video, find that video listed under **Detections on Video** and click through to the inference viewer.
+**The inference viewer.** To see the inference output of a Detector, from the Sources tab select any video from any camera in the collection against which a model has been run, or from the model click **Live Detections** for any camera in the top right. If it's been run against one-off video, find that video listed under **Detections on Video** on the model's page and click through to the inference viewer.
+
+![Worlds Inference View](/images/Worlds_InferenceView.png "Worlds Inference View")
 
 The inference viewer is where you go to evaluate a model's performance in more depth. The bottom left lists available videos for the selected source, with a date picker to navigate through time; selecting one loads it into the video player on the left. The middle panel shows a track for every detected object, with start time, end time, and duration, color-coded to match the tags panel on the right.
 
