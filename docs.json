@@ -15,7 +15,8 @@
     "tabs": [
       {
         "tab": "Platform Overview",
-        "groups": [
+        "pages": [
+          "untitled-page",
           {
             "group": "Getting Started",
             "pages": [
