@@ -7,10 +7,10 @@ Dashboard Management, under Settings in the navigation, is where custom dashboar
 
 ## Before You Start
 
-- Currently limited to Super Administrators, traditionally reserved for Worlds employees who help set up and configure your environment. Worlds is working to open this up, both to more end-user roles and to deeper integration with Iris. If you or your team want to build custom dashboards, the Worlds team can grant Super Admin access, or build them for you.
+- Currently limited to Super Administrators, traditionally reserved for Worlds employees who help set up and configure your environment. Worlds is working to open this up, both to more end-user roles and to deeper integration with Iris. If you or your team want to build custom dashboards - please let us know.
 - The **Custom Widgets** tab covered near the end of this guide is feature-flagged and may not be enabled in every environment.
 
-\[SCREENSHOT: Dashboard Management page - Dashboards and Custom Widgets tabs\]
+![Worlds Dashboard Management](/images/Worlds_DashboardManagement.png "Worlds Dashboard Management")
 
 ## Step 1: Create a New Dashboard
 
@@ -18,13 +18,11 @@ Click **New Dashboard** in the top right and give it a name, then choose a layou
 
 **Tip:** The layout is just a starting point, not a commitment. Large-format layouts suit a dashboard destined for a TV or big display; more focused layouts suit something reviewed on a monitor. Either way, everything is editable once you're in the canvas, so the initial choice isn't a big decision.
 
-\[SCREENSHOT: New Dashboard dialog - name and layout selection\]
+![Worlds Dashboard Layout](/images/Worlds_DashboardLayout.png "Worlds Dashboard Layout")
 
-## Step 2: Build Your Canvas
+## Step 2: Manipulate Your Canvas
 
 Your layout choice loads as a set of blank spaces. Click and drag the bottom corner of any space to resize it: leaving negative space fills in the smallest available widget size, or drag a space larger to expand it and absorb whatever's behind it.
-
-\[SCREENSHOT: Dashboard canvas with empty widget spaces\]
 
 ## Step 3: Choose a Widget Type
 
@@ -38,19 +36,17 @@ Click the plus icon in any empty space to open the widget editor. "Widget" is th
 - **Inspect Details** - a ranked list widget, similar to the bottom list on Event Intelligence, except it counts by category rather than pulling in specific events.
 - **Custom Widgets** - any widget you've built with the custom code editor (see below) shows up here.
 
-\[SCREENSHOT: Widget category picker\]
+![Worlds Dashboard Widget](/images/Worlds_DashboardWidget.png "Worlds Dashboard Widget")
 
 ## Step 4: Choose a Data Source
 
-Most widgets only offer Event Activity as a data source, since visualizing the output of your workflows is the primary use case. Some widgets, like Total Count, can also pull from Tracks (individual detections by tracked position), Zones, or Devices (cameras).
+The labels at the top of the widget present options for compatible data sources. Many widgets only offer Event Activity as a data source, since visualizing the output of your workflows is the primary use case. Some widgets, like Total Count, can also pull from Tracks (individual detections by tracked position), Zones, or Devices (cameras).
 
-Select a widget, pick its data source, then click **Continue** to configure it.
+Select a data source, then click **Continue** to configure it.
 
-\[SCREENSHOT: Data source selection for a widget\]
+## Step 5 (Optional): Add to a Section
 
-## Step 5: Add to a Section
-
-You can add a widget to a top or bottom section within the same space, useful for combining visualizations that share the same filters, for example, pairing a total count with a line chart of the same events over time.
+You can also add a widget to a top or bottom section within the same space, useful for grouping visualizations that share the same filters, for example, pairing total event counts by priority with a line chart of the same events over time.
 
 ## Step 6: Configure the Widget
 
@@ -60,7 +56,7 @@ Clicking a widget opens its configuration panel on the left, with a live preview
 
 Apply filters and sorts so the widget only pulls the data you actually want. You can filter by event/activity name, associated camera, priority, site, agent, or any metadata key-value pair, and add sort steps if the order matters.
 
-\[SCREENSHOT: Core Data tab with a filter applied\]
+![Worlds Widget Core Data](/images/Worlds_WidgetCoreData.png "Worlds Widget Core Data")
 
 ### Display
 
@@ -76,7 +72,7 @@ Most of the configuration lives here.
 - **Display options** - show/hide gridlines, legend, axis labels, title, data markers, or data labels. Some of these expand into further formatting choices once enabled.
 - **Advanced settings** - usually fine at the default, but worth adjusting if you're displaying large volumes of data, since the number of series or data points shown can be capped by default. Also where you control whether null values are passed through or grouped into an "Unknown" category.
 
-\[SCREENSHOT: Display tab with axis and series options\]
+![Worlds Widget Display](/images/Worlds_WidgetDisplay.png "Worlds Widget Display")
 
 ### Colors
 
@@ -84,19 +80,18 @@ Set the widget's color palette from a dropdown of preset palettes, or choose a s
 
 Below that, the color filters menu lets you target specific values: select the series name, use "equal to" (or "in list" for multiple values) to target it, choose a color, and click Save. Useful for keeping meaning consistent across a dashboard, for example, always showing "QA Passed" or "Approved" in green and "QA Failed" or "Denied" in red across every widget.
 
-\[SCREENSHOT: Colors tab with a color filter applied\]
-
 ## Step 7: Save and Keep Building
 
 Click **Save to Dashboard** in the top right to return to the canvas with your widget placed. From there:
 
 - Add more widgets via the plus icons
-- Click and drag to move or resize existing widgets
+- Edit or delete existing widgets
+- Click and drag from the top to move, or from the bottom-right to resize existing widgets
 - Click **Add Row** at the bottom for more space
 
 **Tip:** Delete any unused empty rows before saving the dashboard, it keeps the published version cleaner and easier to use.
 
-\[SCREENSHOT: Dashboard canvas with multiple widgets placed\]
+![Worlds Custom Dashboard](/images/Worlds_CustomDashboard.png "Worlds Custom Dashboard")
 
 ## Step 8: Publish
 
@@ -105,6 +100,8 @@ Saving a dashboard publishes it immediately, it becomes available to every user 
 ## Custom Widgets (Code Editor)
 
 Back on the root Dashboard Management page, the Custom Widgets tab (if enabled) lists any custom widgets already built in your environment, or an empty page with a **New Widget** button if none exist yet.
+
+![Worlds Custom Widget](/images/Worlds_CustomWidget.png "Worlds Custom Widget")
 
 Clicking **New Widget** opens a built-in code editor:
 
@@ -115,7 +112,7 @@ Clicking **New Widget** opens a built-in code editor:
 
 Name the widget in the top left and save. Once it's previewed as working and published, it becomes available in the standard widget picker (under Custom Widgets, from Step 3) for use on any dashboard.
 
-\[SCREENSHOT: Custom widget code editor with file panel and preview tab\]
+![Worlds Widget Code](/images/Worlds_WidgetCode.png "Worlds Widget Code")
 
 ## Quick Reference
 
