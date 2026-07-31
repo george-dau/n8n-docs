@@ -204,11 +204,5 @@
       "website": "https://www.worlds.io/"
     }
   },
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/welcome",
-      "permanent": false
-    }
-  ]
+  "redirects": []
 }
