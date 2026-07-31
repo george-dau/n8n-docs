@@ -12,7 +12,9 @@ Builder is where you configure the real-world spatial context of a site, cameras
 
 ## Step 1: Select or Create a Site
 
-Under Sites, you'll see every site in your organization that you have permission to view, listed down the left side. Click the icon at the top to create a new site, or select an existing one. Selecting a site zooms the map to that location.
+Under **Sites**, you'll see every site in your organization that you have permission to view, listed down the left side. Click the **New Site** button at the top to create a new site, or select an existing one. Selecting a site zooms the map to that location.
+
+![Worlds Site Details](/images/Worlds_SiteDetails.png "Worlds Site Details")
 
 Once you're on a site, the same left panel shows every spatial object type associated with it:
 
@@ -20,50 +22,46 @@ Once you're on a site, the same left panel shows every spatial object type assoc
 - **Detectors** - the live models running inference across the site's cameras
 - **Points of Interest** - geospatial points that group cameras together
 - **Geofences** - polygons in lat/long space used to trigger workflow logic
-- **Facilities** - floor plans for buildings at the site, usable today for camera calibration reference and mapped data visualization elsewhere in the product ([Overwatch](/monitoring/overwatch) support is coming soon)
+- **Facilities** - floor plans for buildings at the site, useful today for camera calibration reference and mapped data visualization elsewhere in the product
 
 **Tip:** Geofences are especially useful if you're integrating GPS devices into your Worlds data.
 
-\[SCREENSHOT: Site selected, map zoomed with left panel object list\]
-
 ## Step 2: Edit Site Info or Launch Builder
 
-Click the ellipses icon next to a site for two options: **Edit Site** and **Launch Builder**.
+Click the ellipses icon next to the site name for two options: **Edit Site** and **Launch Builder**.
 
 - **Edit Site** covers basic site information: name, location (by lat/long or by searching an address), and which storage account the site uses. Assigning storage accounts per site is useful if you want to separate storage costs by facility.
 - **Launch Builder** is where the actual spatial configuration happens, and typically where you'll create and calibrate cameras.
-
-\[SCREENSHOT: Ellipses menu - Edit Site / Launch Builder\]
 
 ## Step 3: Navigate the Builder Map
 
 Inside Builder, the same object menu (Cameras, Detectors, Points of Interest, Geofences, Facilities) sits on the left to find, select, and edit existing objects. Use the **Insert** button at the top of the map to create a new camera, point of interest, geofence, or facility.
 
-**Tip:** Scroll to zoom, left-click and drag to pan, and hold Ctrl while dragging to rotate the map. Getting the right vantage and zoom level makes placing and reviewing objects much easier.
+**Tip:** Scroll to zoom, left-click and drag to pan, and hold Ctrl while dragging to rotate the map. Getting the right vantage and zoom level makes placing objects and calibrating cameras much easier.
 
-\[SCREENSHOT: Builder map view with Insert menu open\]
+![Worlds Builder Geofence](/images/Worlds_BuilderGeofence.png "Worlds Builder Geofence")
 
 ## Step 4: Add and Position a Camera
 
 Selecting or inserting a camera opens a right-side panel with its basic information: streaming URL, position, and rotation.
 
-**Tip:** Get the position as accurate as possible, either by entering exact latitude and longitude or by clicking and dragging the camera on the map. Rotation only needs a rough estimate at this stage, point-to-point calibration (Step 5) will set the actual rotation value for you afterward.
+**Tip:** Get the position as accurate as possible, either by entering exact latitude and longitude or by clicking and dragging the camera on the map. Rotation only needs a rough estimate at this stage, point-to-point calibration (Step 5) will set a computed rotation value for you afterward.
 
 Once a camera is placed, confirm it's streaming video before moving on to calibration.
 
-\[SCREENSHOT: Camera panel showing streaming URL, position, and rotation fields\]
+![Worlds Builder Camera](/images/Worlds_BuilderCamera.png "Worlds Builder Camera")
 
 ## Step 5: Calibrate the Camera
 
 With a camera selected, find **Active Calibrations** at the bottom of the right panel and click the plus icon to start a new calibration. This pulls up a recent thumbnail from the camera's live stream in a panel below the map.
 
-Use the **Add Marker** button to place matching points on both the map and the video thumbnail.
+Use the **Add Marker** button to place matching points on both the map and the video thumbnail. Then click and drag them into matching positions in both the map and video panels.
 
-**Tip:** Reference static objects and artifacts, corners, doors, pillars, and place them as accurately as you can. This is what lets Worlds translate detections from that camera into real-world locations.
+**Tip:** An accurate calibration requires at least five to seven markers. Reference static objects and artifacts, corners, doors, pillars, and place them as accurately as you can. This is what lets Worlds translate detections from that camera into real-world locations.
 
-Once all markers are placed, click **Quick Save** to start the calibration job. When it completes, the camera is calibrated, and its detections will carry both a lat/long position and a pixel location within the camera frame.
+Once all markers are placed, click **Quick Save** to start the calibration job. When it completes, the camera is calibrated, and its detections will begin to carry a lat/long position in addition to the pixel location within the camera frame.
 
-\[SCREENSHOT: Calibration panel with markers placed on map and video thumbnail\]
+![Worlds Camera Calibration](/images/Worlds_CameraCalibration.png "Worlds Camera Calibration")
 
 ## Step 6: Group Cameras with Points of Interest
 
