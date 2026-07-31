@@ -9,7 +9,7 @@ This guide walks through how to go from raw camera feeds to a working vision mod
 
 **Tip:** Define your use case before you touch anything. Know what events or objects you actually need to detect (a forklift entering a zone, inventory leaving storage, a pallet jack in use, etc). That goal shapes every decision below, from how you group cameras to what you tag.
 
-**Warning:** If you're new to the platform, build and test in a non-production or demo environment first. Making changes directly in a live/production environment risks breaking real workflows other teams depend on.
+**Warning:** If you're new to the platform, build and test in a non-production or sandbox collection first. Making changes directly in a live/production environment risks breaking real workflows other teams depend on.
 
 ## Step 1: Organize Cameras into Collections
 
@@ -58,37 +58,85 @@ The tagging interface shows your indexed segments in a grid, based on whether yo
 
 - **Find All in Frame** - use the slider in the bottom left to move to any frame in the video panel on the left, then click **Find All in Frame** to see every segment captured at that specific point in the video.
 - **Find All in Region** - draw directly on the video frame to select an area, then it finds every segment captured in that area across the entire length of the indexed video.
+- **Find Similar** - click the magnifying glass icon under any segment to find visually-matching segments from the current index, ranked by similarity.
 
-**Backgrounds:** Click the **Backgrounds** button to open a tab of background images. click the plus icon to add a new background, or select an existing background to remove it.
+![Worlds Tagging Collection Search](/images/Worlds_Tagging_CollectionSearch.png "Worlds Tagging Collection Search")
 
-**Tip:** A good background has no objects of interest in it at all. Find the cleanest, emptiest view you can, it directly improves your training data and final model quality.
+**Tip:** If you're indexing multiple videos from a camera, or multiple cameras, and want to find similar objects across all of them, enable the **Search In Collection** toggle in the top right before clicking the magnifying glass to find similar segments. It expands your search from just the currently selected indexed video to every indexed video in the collection, a good way to accelerate tagging and build a more accurate model by finding relevant segments faster.
 
-**Applying tags:** From the segments panel in the middle of the screen, you'll see every segment captured from your indexing job. Click any relevant segment, and a menu appears at the top to apply a tag: use the dropdown to create a new tag or apply the segment to an existing object class.
+**Backgrounds:** Click the **Backgrounds** button above the video to expand a row of background images from this index. Click the plus icon to add a new background at the current timestamp, or select an existing background to remove it.
 
-- Shift-click to select multiple segments at once.
-- Click the magnifying glass icon under any segment to find visually similar segments, especially useful if you indexed for **Everything** and are hunting for a specific object across a large, mixed pool of segments.
+**Tip:** A good background has no objects of interest in it at all. Find the cleanest, emptiest view you can, it directly improves your training data and final model quality. Each unique camera in your collection should have a selected background.
 
-**Tip:** If you're indexing multiple videos from a camera, or multiple cameras, and want to find similar objects across all of them, use the **Search Collection** toggle in the top right. It expands your search from just the currently selected indexed video to every indexed video in the collection, a good way to accelerate tagging and build a more accurate model by finding relevant segments faster.
+**Applying tags:** From the segments panel in the middle of the screen, you'll see every segment captured from your indexing job. Click to add or remove segments from your selection, or shift-click to select in bulk, and a menu appears at the top to apply a tag: use the dropdown to create a new tag or apply the segment to an existing object class.
+
+<Frame>
+  ![Worlds Apply Tag](/images/Worlds_ApplyTag.png "Worlds Apply Tag")
+</Frame>
 
 Once tagging is complete, the next step is generating training data.
 
-## Step 4: Train and Iterate the Model
+## Step 4: Data Generation
 
-- Train a model version, then review its performance using the inference viewer.
-- This process is intentionally iterative. Expect to be on v2, v3, and beyond as you refine things, it's normal, not a sign something went wrong the first time.
+Once all indexed video is tagged, head to the **Training Data** tab and click **Generate Training Data** in the top right.
 
-**Tip:** If you notice false positives or missed detections, the fix is often to add a new object class so the model has better context for what it's looking at, rather than assuming the model itself is broken.
+![Worlds Training Data](/images/Worlds_TrainingData.png "Worlds Training Data")
 
-## Step 5: Move to the Workflow Builder
+First, select which object classes from the collection should be included in this round of training.
 
-With collections, zones, and a trained model in place, the final step is building automated workflows (in the [workflow builder](/agents-and-workflows/overview)) that act on the zone and tag data established in Steps 1-4.
+![Worlds Training Data Classes](/images/Worlds_TrainingData_Classes.png "Worlds Training Data Classes")
 
-**Tip:** Look at existing workflows and models your team has already built. They're a useful reference point for structure and strategy before you build your own from scratch.
+**Tip:** Generally, select all classes. The exception is a class still under active development, exclude it if you'd rather get to a performant model on your other classes first, and fold it in later.
+
+On the next screen, choose your augmentation mix.
+
+![Worlds Training Data Mix](/images/Worlds_TrainingData_Mix.png "Worlds Training Data Mix")
+
+**Tip:** The default works well in most cases. You can adjust it in specific situations to improve the quality of your final model, but in general there's no need to touch these settings.
+
+Click **Generate Training Data** to kick off the job. Worlds generates a large volume of images from your source video and tagged segments, both to train the computer vision model and to build an evaluation dataset used to compute metrics on the new model. This can take a while depending on how much data is in your collection.
+
+## Step 5: Train the Model
+
+Once data generation is complete, return to Worlds and go to the **Models** page. The **Train a New Model** button activates once all prerequisite steps in the collection are complete.
+
+**Note:** Tagging and training data generation stay live inputs into this step. Tag more segments at any point, and you can generate a new set of training data from them; iterate on your training data, and you're enabled to train a new model from it.
+
+Clicking **Train a New Model** also takes some time to process. Once it completes, return to the Models page to evaluate the result.
+
+## Step 6: Evaluate the Model
+
+**Model metrics.** From the Models page, you'll see a model metrics view listing every model trained in the collection. At the top: overall metrics for F1, Precision, Recall, and mean Average Precision (mAP), plus a chart of model performance over time as each new model gets trained.
+
+**Model detail view.** Click any model in the list to open more detail: per-class model metrics, a confusion matrix, and a precision/recall chart.
+
+- **Precision & Recall** - pick a class from the dropdown to see how confidence threshold affects precision and recall at each level. **Tip:** this view is useful for setting the ideal confidence threshold for a class after the model's trained and deployed. Adjusting a class's detection threshold after training can surface detections and tracks you'd otherwise miss, or cut down on false positives, without retraining anything.
+- **Confusion Matrix** - a detailed breakdown of every object class in the collection and how likely each is to be confused with another, based on the test set from data generation.
+
+**Note:** whenever you generate a new set of training data and train a new model, every past model (up to 10) gets re-evaluated against the new test set. As you add more varied segments and object classes over time, expect the metrics on _older_ models to decline, that's the test set getting harder, not those models getting worse. The training-performance-over-time chart on the Models page is the one to watch, it should keep trending up as you iterate and tag more segments.
+
+**Running a model.** After selecting a model from the Models tab in the collection view, you have options at the top to run it:
+
+- On live video sources in the collection, or
+- On static images or video (uploaded to a folder in the collection, or a single video selected from a live stream)
+
+To run it: select the model and click **Live Detections** for any camera in the top right. If it's already been run against a one-off video, find that video listed under **Detections on Video** and click through to the inference viewer.
+
+**The inference viewer.** This is also where you go to evaluate a model's performance in more depth. The bottom left lists available videos for the selected source, with a date picker to navigate through time; selecting one loads it into the video player on the left. The middle panel shows a track for every detected object, with start time, end time, and duration, color-coded to match the tags panel on the right.
+
+- Click a tag on the right to filter to just that class.
+- Click a track to highlight it in video playback, or click further along a track to jump the video to that point in time.
+- A solid, continuous block on the timeline means the object was tracked without interruption. A broken-up track means detection was lost and picked back up.
+
+**Warning:** broken tracks aren't necessarily a sign of a bad model. Occlusion is a common cause, if a forklift drives in front of a tracked object, the system may drop that detection and pick it up as a _new_ track once it's visible again. This is expected behavior to watch for, not automatically a flaw to fix.
+
+This view is genuinely useful for two things: evaluating a model's performance in detail, and troubleshooting workflow logic, for example, seeing exactly when (and by how much) a track intersected a zone. It's where you see the full inference output of any model for detailed review.
 
 ## Quick Reference: The Flow
 
 1. **Collections** - group cameras by shared visual context and goal
-2. **Zones** - define the specific areas that matter within each camera
-3. **Tagging / Inference Review** - label objects, review detection tracks
-4. **Model Training** - train, evaluate, iterate
-5. [**Workflow Builder**](/agents-and-workflows/overview) - automate based on zones and tags
+2. **Indexing** - segment raw video into candidate objects, targeted (Specific) or exhaustive (Everything)
+3. **Tagging** - find, review, and label segments into object classes
+4. **Generate Training Data** - select classes, set augmentation, and let Worlds build the training and evaluation datasets
+5. **Model Training** - train, and deploy a 
+6. **Evaluate the Model** - review metrics, precision/recall, and confusion matrix on the Models page; run the model and use the inference viewer to check its detections in detail
