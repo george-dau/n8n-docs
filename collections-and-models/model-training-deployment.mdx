@@ -102,7 +102,14 @@ Once data generation is complete, return to Worlds and go to the **Models** page
 
 **Note:** Tagging and training data generation stay live inputs into this step. Tag more segments at any point, and you can generate a new set of training data from them; iterate on your training data, and you're enabled to train a new model from it.
 
-Clicking **Train a New Model** also takes some time to process. Once it completes, return to the Models page to evaluate the result.
+Clicking **Train a New Model** also takes some time to process. Once it completes, return to the Models page to evaluate the results.
+
+**Running a model.** After a model is trained, it can be deployed by selecting the model from the Models tab and then clicking the **Run Model** button in the top-right. You have options to run it:
+
+- On live video sources in the collection, or
+- On historical video only (uploaded to a folder in the collection, or a single video selected from a live stream)
+
+When the model is run, a new Detector will be provisioned automatically and appear in the Active Processes menu.
 
 ## Step 6: Evaluate the Model
 
@@ -110,27 +117,22 @@ Clicking **Train a New Model** also takes some time to process. Once it complete
 
 **Model detail view.** Click any model in the list to open more detail: per-class model metrics, a confusion matrix, and a precision/recall chart.
 
-- **Precision & Recall** - pick a class from the dropdown to see how confidence threshold affects precision and recall at each level. **Tip:** this view is useful for setting the ideal confidence threshold for a class after the model's trained and deployed. Adjusting a class's detection threshold after training can surface detections and tracks you'd otherwise miss, or cut down on false positives, without retraining anything.
 - **Confusion Matrix** - a detailed breakdown of every object class in the collection and how likely each is to be confused with another, based on the test set from data generation.
+- **Precision & Recall** - pick a class from the dropdown to see how confidence threshold affects precision and recall at each level. **Tip:** this view is useful for setting the ideal confidence threshold for a class after the model's trained and deployed. Adjusting a class's detection threshold after training can surface detections and tracks you'd otherwise miss, or cut down on false positives, without retraining anything. Thresholds can be adjusted from this chart, or from Options \> Configure model in the top-right.
 
-**Note:** whenever you generate a new set of training data and train a new model, every past model (up to 10) gets re-evaluated against the new test set. As you add more varied segments and object classes over time, expect the metrics on _older_ models to decline, that's the test set getting harder, not those models getting worse. The training-performance-over-time chart on the Models page is the one to watch, it should keep trending up as you iterate and tag more segments.
+**Note:** whenever you generate a new set of training data and train a new model, every past model (up to 10) gets re-evaluated against the new test set. As you add more varied segments and object classes over time, expect the metrics on _older_ models to decline, that's the test set getting harder, not those models getting worse. The Training Performance Over Time chart on the Models page is the one to watch, it should keep trending up as you iterate and tag more segments.
 
-**Running a model.** After selecting a model from the Models tab in the collection view, you have options at the top to run it:
+**The inference viewer.** To see the inference output of a Detector, select the model and click **Live Detections** for any camera in the top right. If it's been run against one-off video, find that video listed under **Detections on Video** and click through to the inference viewer.
 
-- On live video sources in the collection, or
-- On static images or video (uploaded to a folder in the collection, or a single video selected from a live stream)
-
-To run it: select the model and click **Live Detections** for any camera in the top right. If it's already been run against a one-off video, find that video listed under **Detections on Video** and click through to the inference viewer.
-
-**The inference viewer.** This is also where you go to evaluate a model's performance in more depth. The bottom left lists available videos for the selected source, with a date picker to navigate through time; selecting one loads it into the video player on the left. The middle panel shows a track for every detected object, with start time, end time, and duration, color-coded to match the tags panel on the right.
+The inference viewer is where you go to evaluate a model's performance in more depth. The bottom left lists available videos for the selected source, with a date picker to navigate through time; selecting one loads it into the video player on the left. The middle panel shows a track for every detected object, with start time, end time, and duration, color-coded to match the tags panel on the right.
 
 - Click a tag on the right to filter to just that class.
 - Click a track to highlight it in video playback, or click further along a track to jump the video to that point in time.
 - A solid, continuous block on the timeline means the object was tracked without interruption. A broken-up track means detection was lost and picked back up.
 
-**Warning:** broken tracks aren't necessarily a sign of a bad model. Occlusion is a common cause, if a forklift drives in front of a tracked object, the system may drop that detection and pick it up as a _new_ track once it's visible again. This is expected behavior to watch for, not automatically a flaw to fix.
-
 This view is genuinely useful for two things: evaluating a model's performance in detail, and troubleshooting workflow logic, for example, seeing exactly when (and by how much) a track intersected a zone. It's where you see the full inference output of any model for detailed review.
+
+**Warning:** broken tracks aren't necessarily a sign of a bad model. Occlusion is a common cause, if a forklift drives in front of a tracked object, the system may drop that detection and pick it up as a _new_ track once it's visible again. This is expected behavior to watch for, and can usually be accounted for in dependent workflows, not automatically a flaw to fix.
 
 ## Quick Reference: The Flow
 
@@ -138,5 +140,5 @@ This view is genuinely useful for two things: evaluating a model's performance i
 2. **Indexing** - segment raw video into candidate objects, targeted (Specific) or exhaustive (Everything)
 3. **Tagging** - find, review, and label segments into object classes
 4. **Generate Training Data** - select classes, set augmentation, and let Worlds build the training and evaluation datasets
-5. **Model Training** - train, and deploy a 
-6. **Evaluate the Model** - review metrics, precision/recall, and confusion matrix on the Models page; run the model and use the inference viewer to check its detections in detail
+5. **Model Training** - train a vision model and deploy a detector
+6. **Evaluate the Model** - review metrics, precision/recall, and confusion matrix on the Models page; use the inference viewer to check its detections in detail
