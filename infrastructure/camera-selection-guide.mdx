@@ -18,8 +18,6 @@ The success of any computer vision AI system starts with clear, well-targeted im
 - **PTZ** - remote pan, tilt, and zoom control from a single device, covering multiple areas. Best for dynamic camera views, or where PTZ hardware is already deployed for other operational purposes. Consult a Worlds Solutions Architect before selecting this type.
 - **Thermal** - detects temperature variation rather than visible light, giving visibility in total darkness or through smoke. Best for specialized cases: liquid leak detection, defect identification, or monitoring materials with distinct thermal properties.
 
-\[DIAGRAM: Camera type illustration\]
-
 ## The Core Relationship: Distance, Resolution, and Object Size
 
 Worlds' ability to recognize and track an object depends on pixel density, the number of pixels representing that object per foot (or meter) of the scene. Too few pixels, and the AI can't confidently distinguish details. Too many, and you're overspending on compute or introducing detection latency.
@@ -37,7 +35,9 @@ Worlds' ability to recognize and track an object depends on pixel density, the n
 - People or medium-sized objects: 40-80 px/ft
 - Small or detailed objects (hands, labels, tools): 100\+ px/ft
 
-\[DIAGRAM: Detection confidence vs. distance chart\]
+<Frame>
+  ![Worlds Camera Selection C Ivs Distance](/images/Worlds_CameraSelection_CIvsDistance.jpeg "Worlds Camera Selection C Ivs Distance")
+</Frame>
 
 **Resolution guide:**
 
@@ -57,7 +57,9 @@ A camera's field of view, how wide or narrow the scene appears, is driven by sen
 
 A wide-angle lens shows more area with less detail per object; a narrow lens covers less area but with greater clarity.
 
-\[DIAGRAM: FOV cones at different focal lengths\]
+<Frame>
+  ![Worlds Camera Selection Focal Length](/images/Worlds_CameraSelection_FocalLength.jpeg "Worlds Camera Selection Focal Length")
+</Frame>
 
 ## Tracking Small or Highly Detailed Objects
 
