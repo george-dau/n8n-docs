@@ -16,7 +16,7 @@
       {
         "tab": "Platform Overview",
         "pages": [
-          "index",
+          "welcome",
           {
             "group": "Getting Started",
             "pages": [
