@@ -24,8 +24,6 @@ Once you're on a site, the same left panel shows every spatial object type assoc
 - **Geofences** - polygons in lat/long space used to trigger workflow logic
 - **Facilities** - floor plans for buildings at the site, useful today for camera calibration reference and mapped data visualization elsewhere in the product
 
-**Tip:** Geofences are especially useful if you're integrating GPS devices into your Worlds data.
-
 ## Step 2: Edit Site Info or Launch Builder
 
 Click the ellipses icon next to the site name for two options: **Edit Site** and **Launch Builder**.
@@ -57,7 +55,7 @@ With a camera selected, find **Active Calibrations** at the bottom of the right 
 
 Use the **Add Marker** button to place matching points on both the map and the video thumbnail. Then click and drag them into matching positions in both the map and video panels.
 
-**Tip:** An accurate calibration requires at least five to seven markers. Reference static objects and artifacts, corners, doors, pillars, and place them as accurately as you can. This is what lets Worlds translate detections from that camera into real-world locations.
+**Tip:** An accurate calibration requires at least five to seven markers. Reference static objects and artifacts, corners, doors, pillars, and place them as accurately as you can - if challenging to locate in the map panel, create a **Facility** and upload a floor plan image to place on the map for reference. Calibration is what lets Worlds translate detections from that camera into real-world locations.
 
 Once all markers are placed, click **Quick Save** to start the calibration job. When it completes, the camera is calibrated, and its detections will begin to carry a lat/long position in addition to the pixel location within the camera frame.
 
@@ -67,9 +65,7 @@ Once all markers are placed, click **Quick Save** to start the calibration job. 
 
 Insert a point of interest from the top menu. It appears on the map as a point you can click and drag, similar to a camera. Use the right-side panel to select which cameras should be associated with it from a dropdown.
 
-**Tip:** Points of interest aren't commonly needed, but they're valuable when several cameras share a single mount facing different directions, or when you want to group cameras across a larger outdoor site (different lots on a construction project, or different buildings on a larger campus) so you can quickly filter to just that group.
-
-\[SCREENSHOT: Point of interest with associated cameras panel\]
+**Tip:** Points of interest aren't commonly needed, but they can be valuable when several cameras share a single mount facing different directions, or to group cameras with overlapping views of the same area (such as lots at a construction site, or work areas in a manufacturing facility).
 
 ## Step 7: Define Areas with Geofences
 
@@ -77,7 +73,7 @@ Insert a geofence from the top menu to create a polygon. Click a point to edit i
 
 Geofences define specific areas of physical space. They're especially useful alongside calibrated cameras with a wide field of view, common in outdoor settings, letting you build workflow logic that triggers when a detected object does or doesn't intersect the defined area.
 
-\[SCREENSHOT: Geofence polygon on map\]
+**Tip:** Geofences are especially useful if you're integrating GPS devices into your Worlds data.
 
 ## Step 8: Upload Floor Plans with Facilities
 
@@ -93,8 +89,6 @@ Once created, a **Floors** menu appears on the right. Click to add a floor and y
 **Tip:** Align the floor plan to the existing building outline in the mapping library as precisely as you can. Once aligned and saved, it becomes a reference for calibrating cameras against interior features (walls, structures, corners, doors), and adds spatial context to cameras, detections, and events elsewhere in the product.
 
 Save the floor once you're satisfied with the alignment.
-
-\[SCREENSHOT: Facility floor plan aligned to map, opacity slider visible\]
 
 ## Quick Reference
 
