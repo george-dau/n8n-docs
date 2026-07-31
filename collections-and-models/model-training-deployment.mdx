@@ -23,34 +23,54 @@ A [**collection**](/collections-and-models/overview) is a folder that groups cam
 
 **Example:** A two-camera collection covering a loading dock area, where both cameras track people, a forklift, inventory, and a pallet jack, just from different angles. Because both cameras are watching the same kind of activity in the same environment, they share one model.
 
-Click the Manage Sources button in the top-right of the Sources tab to add or remove cameras from a collection.
+Click the **Manage Sources** button in the top-right of the **Sources** tab to add or remove cameras from a collection.
 
 ![Worlds Manage Sources](/images/Worlds_ManageSources.png "Worlds Manage Sources")
 
 ## Step 2: Index Video
 
-Before you can tag anything, you need indexed video to tag it from. From the **Sources** tab, select any camera associated with the collection, then select any hour of video streamed from that camera, and click **Start Indexing**.
+Before you can tag anything, you need indexed video to tag it from. From the **Sources** tab, select any camera associated with the collection, then click **Start Indexing** for any hour of video streamed from that camera.
 
-From this screen, drag the start and end time handles to select just the window containing the objects you care about most.
+![Worlds Start Indexing](/images/Worlds_StartIndexing.png "Worlds Start Indexing")
+
+From the following screen, drag the start and end time handles to select just the window containing the objects you are interested in tracking.
+
+![Worlds Segments Specific Everything](/images/Worlds_SegmentsSpecificEverything.png "Worlds Segments Specific Everything")
 
 **Tip:** Shorter indexes process faster. In general, aim for as short an index as possible, focused on the objects of interest you want to tag into your model. There's no harm in indexing extra video beyond that, it'll just take longer to process.
 
-Next to **Find Objects**, you'll find a toggle between **Specific** and **Everything**:
+At the top of the video, you'll find a toggle between **Specific** and **Everything**:
 
-- **Specific** (default) - enter a list of terms in the text box, then click **Find Objects**. Worlds will only segment the objects matching your prompts.
+- **Specific** (default) - enter a prompt in the text box, click the **Suggest terms** button to commit it (Worlds automatically applies synonymous terms to improve results), then click **Find Objects**. Worlds will only segment the objects matching your prompt.
 - **Everything** - segments all moving objects in the index, then groups them by visual similarity for you to sort through when tagging.
 
-**Tip:** Specific indexing is the faster path to a performant model, use it when you can. Be aware of its vocabulary limits, though: it works best for common objects like people and vehicles. More unusual or specific objects will likely need Everything, followed by manually sorting the results.
+**Tip:** Specific indexing is the faster path to a performant model, use it when you can. But be aware of vocabulary limitations: it works best for common objects like people and vehicles. More unusual or specific objects will likely need require segmenting **Everything**, followed by manually sorting the results.
 
-## Step 3: Tag and Review Detections
+Clicking the **Find objects** button at the bottom-right of the video will kick off an Indexing **Job** visible on the **Jobs** page and in the **Active Processes** menu at the bottom of navigation. Completion time varies by the duration, resolution, and activity of the selected video. Track progress in Worlds, and return to tag the indexed video when complete.
 
-This is where you move into the **tagging interface** and its companion, the **inference viewer**.
+## Step 3: Tag Segments by Class
 
-- The inference viewer shows your video feed alongside a timeline of every object detected and tracked during that period.
-- Each object type (forklift, inventory, pallet jack, person, etc) is a label you've trained into the model, shown as its own track on the timeline.
-- A solid, continuous block on the timeline means the object was tracked without interruption. A broken-up track means detection was lost and picked back up.
+The tagging interface shows your indexed segments in a grid, based on whether you indexed for **Specific** objects or **Everything** at the indexing step.
 
-**Warning:** Broken tracks aren't necessarily a sign of a bad model. Occlusion is a common cause, if a forklift drives in front of a tracked object, the system may drop that detection and pick it up as a _new_ track once it's visible again. This is expected behavior to watch for, not automatically a flaw to fix.
+![Worlds Tagging](/images/Worlds_Tagging.png "Worlds Tagging")
+
+**Finding segments:**
+
+- **Find All in Frame** - use the slider in the bottom left to move to any frame in the video panel on the left, then click **Find All in Frame** to see every segment captured at that specific point in the video.
+- **Find All in Region** - draw directly on the video frame to select an area, then it finds every segment captured in that area across the entire length of the indexed video.
+
+**Backgrounds:** Click the **Backgrounds** button to open a tab of background images. click the plus icon to add a new background, or select an existing background to remove it.
+
+**Tip:** A good background has no objects of interest in it at all. Find the cleanest, emptiest view you can, it directly improves your training data and final model quality.
+
+**Applying tags:** From the segments panel in the middle of the screen, you'll see every segment captured from your indexing job. Click any relevant segment, and a menu appears at the top to apply a tag: use the dropdown to create a new tag or apply the segment to an existing object class.
+
+- Shift-click to select multiple segments at once.
+- Click the magnifying glass icon under any segment to find visually similar segments, especially useful if you indexed for **Everything** and are hunting for a specific object across a large, mixed pool of segments.
+
+**Tip:** If you're indexing multiple videos from a camera, or multiple cameras, and want to find similar objects across all of them, use the **Search Collection** toggle in the top right. It expands your search from just the currently selected indexed video to every indexed video in the collection, a good way to accelerate tagging and build a more accurate model by finding relevant segments faster.
+
+Once tagging is complete, the next step is generating training data.
 
 ## Step 4: Train and Iterate the Model
 
