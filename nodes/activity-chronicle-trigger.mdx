@@ -30,11 +30,11 @@ Choose which lifecycle signals this trigger delivers. **Trigger On** is a multi-
 | Signal | When it fires |
 | --- | --- |
 | `chronicle_created` | The first time the state machine sees this chronicle ID, and the chronicle is still open (`endTime` is null) |
-| `chronicle_updated` | Any newer change to a chronicle the state machine already knows about, including edits made after the chronicle closed |
+| `chronicle_updated` | Any other content change to a chronicle the state machine already knows about, including edits made after the chronicle closed |
 | `chronicle_closed` | The chronicle's `endTime` transitions from null to set — or, if the state machine sees the chronicle for the first time and it is already closed, `chronicle_closed` fires immediately with no preceding `chronicle_created` |
 
 <Note>
-**Dedup guarantee**: the state machine emits exactly one `chronicle_created` per chronicle ID. Duplicate or out-of-order updates — where the chronicle's `updatedAt` is not newer than the last state the state machine stored — are suppressed. This lifecycle state survives state machine restarts.
+**Dedup guarantee**: the state machine emits exactly one `chronicle_created` per chronicle ID. Deduplication is content-based — the state machine stores a hash of the chronicle's raw JSON and suppresses byte-identical re-deliveries. This lifecycle state survives state machine restarts.
 </Note>
 
 ## Filtering
@@ -62,7 +62,7 @@ Configure which chronicles this trigger receives. Every filter is a list; within
   "chronicle": {
     "...": "raw ActivityChronicle object from the Worlds API, passed through unmodified"
   },
-  "timestamp": "2026-08-19T10:00:05Z",
+  "timestamp": "2026-08-19T10:00:05.000Z",
   "trigger_config": {
     "signal_type": "activity_chronicle",
     "trigger_on": ["chronicle_created", "chronicle_updated", "chronicle_closed"],
@@ -75,7 +75,7 @@ Configure which chronicles this trigger receives. Every filter is a list; within
 | --- | --- |
 | `signal` | One of `chronicle_created`, `chronicle_updated`, `chronicle_closed` |
 | `chronicle` | The raw `ActivityChronicle` object from the Worlds API, passed through unmodified — no fields are added, removed, or renamed |
-| `timestamp` | The chronicle's `updatedAt` timestamp (ISO 8601) |
+| `timestamp` | The time the state machine emitted this signal (ISO 8601, UTC) — not the chronicle's `updatedAt` |
 | `trigger_config` | Metadata about the trigger that produced this execution: the signal type, the signals selected in **Trigger On**, and the workflow's ID and name |
 
 <Note>

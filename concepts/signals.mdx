@@ -153,7 +153,7 @@ Fired **once** — the first time the state machine sees this chronicle ID, whil
 
 ### chronicle_updated
 
-Fired on **any newer change** to a chronicle the state machine already knows about, including edits made after the chronicle has closed.
+Fired on **any other content change** to a chronicle the state machine already knows about, including edits made after the chronicle has closed.
 
 **Common use:** React to changes in chronicle details — status, priority, labels — while the chronicle is open or after it has closed.
 
@@ -164,7 +164,7 @@ Fired **once** when the chronicle's `endTime` transitions from null to set. If t
 **Common use:** Finalize processing for a chronicle — for example, generating a summary or notification once the underlying event has concluded.
 
 <Note>
-**Dedup guarantee:** the state machine emits exactly one `chronicle_created` per chronicle ID. Duplicate or out-of-order updates — where the chronicle's `updatedAt` is not newer than the last stored state — are suppressed. This lifecycle state survives state machine restarts.
+**Dedup guarantee:** the state machine emits exactly one `chronicle_created` per chronicle ID. Deduplication is content-based — the state machine stores a hash of the chronicle's raw JSON per chronicle ID and suppresses byte-identical re-deliveries. This lifecycle state survives state machine restarts.
 </Note>
 
 ### Activity chronicle payload
@@ -173,7 +173,7 @@ Fired **once** when the chronicle's `endTime` transitions from null to set. If t
 {
   "signal": "chronicle_created | chronicle_updated | chronicle_closed",
   "chronicle": { "...": "raw ActivityChronicle object from the Worlds API, passed through unmodified" },
-  "timestamp": "2026-08-19T10:00:05Z"
+  "timestamp": "2026-08-19T10:00:05.000Z"
 }
 ```
 
@@ -181,4 +181,4 @@ Fired **once** when the chronicle's `endTime` transitions from null to set. If t
 | --- | --- |
 | `signal` | One of `chronicle_created`, `chronicle_updated`, `chronicle_closed` |
 | `chronicle` | The raw `ActivityChronicle` object from the Worlds API, passed through unmodified |
-| `timestamp` | The chronicle's `updatedAt` timestamp (ISO 8601) |
+| `timestamp` | The time the state machine emitted this signal (ISO 8601, UTC) — not the chronicle's `updatedAt` |
