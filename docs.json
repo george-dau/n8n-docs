@@ -98,7 +98,8 @@
             "group": "Trigger Nodes",
             "pages": [
               "nodes/detection-webhook-trigger",
-              "nodes/replay-trigger"
+              "nodes/replay-trigger",
+              "nodes/activity-chronicle-trigger"
             ]
           },
           {

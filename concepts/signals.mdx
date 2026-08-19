@@ -1,16 +1,17 @@
 ---
 title: "Signals"
-description: "Understanding track and zone signals from the state machine"
+description: "Understanding track, zone, and activity chronicle signals from the state machine"
 ---
 
 ## What are signals?
 
-A **signal** is an event emitted by the state machine when something changes about a track or a zone. Every item that arrives at your workflow's trigger node includes a `signal` field indicating what happened.
+A **signal** is an event emitted by the state machine when something changes about a track, a zone, or an activity chronicle. Every item that arrives at your workflow's trigger node includes a `signal` field indicating what happened.
 
-There are two families of signals depending on your [trigger configuration](/nodes/detection-webhook-trigger):
+There are three families of signals depending on your trigger configuration:
 
-- **Track state signals** — `track_created`, `track_updated`, `track_expired`
-- **Zone state signals** — `zone_occupied`, `zone_updated`, `zone_empty`
+- **Track state signals** — `track_created`, `track_updated`, `track_expired` ([Detection Webhook Trigger](/nodes/detection-webhook-trigger))
+- **Zone state signals** — `zone_occupied`, `zone_updated`, `zone_empty` ([Detection Webhook Trigger](/nodes/detection-webhook-trigger))
+- **Activity chronicle signals** — `chronicle_created`, `chronicle_updated`, `chronicle_closed` ([Activity Chronicle Trigger](/nodes/activity-chronicle-trigger))
 
 ## Track state signals
 
@@ -139,3 +140,45 @@ Each zone signal includes the full list of active tracks in the zone:
 | `track_count` | Total number of active tracks |
 | `trigger_track_id` | The specific track that caused this zone update (the one that entered, exited, or updated) |
 | `trigger_tag` | Object type of the trigger track |
+
+## Activity chronicle signals
+
+Activity chronicle signals fire for the lifecycle of **activity chronicles** — externally-produced event summaries on the Worlds platform, as opposed to track and zone signals which are derived from raw detections. They are delivered by the [Activity Chronicle Trigger](/nodes/activity-chronicle-trigger) and are available only in **streaming mode**; there is no batch equivalent.
+
+### chronicle_created
+
+Fired **once** — the first time the state machine sees this chronicle ID, while the chronicle is still open (`endTime` is null).
+
+**Common use:** Start tracking a chronicle for the duration of its lifecycle.
+
+### chronicle_updated
+
+Fired on **any newer change** to a chronicle the state machine already knows about, including edits made after the chronicle has closed.
+
+**Common use:** React to changes in chronicle details — status, priority, labels — while the chronicle is open or after it has closed.
+
+### chronicle_closed
+
+Fired **once** when the chronicle's `endTime` transitions from null to set. If the state machine sees a chronicle for the first time and it is already closed, `chronicle_closed` fires immediately with no preceding `chronicle_created`.
+
+**Common use:** Finalize processing for a chronicle — for example, generating a summary or notification once the underlying event has concluded.
+
+<Note>
+**Dedup guarantee:** the state machine emits exactly one `chronicle_created` per chronicle ID. Duplicate or out-of-order updates — where the chronicle's `updatedAt` is not newer than the last stored state — are suppressed. This lifecycle state survives state machine restarts.
+</Note>
+
+### Activity chronicle payload
+
+```json
+{
+  "signal": "chronicle_created | chronicle_updated | chronicle_closed",
+  "chronicle": { "...": "raw ActivityChronicle object from the Worlds API, passed through unmodified" },
+  "timestamp": "2026-08-19T10:00:05Z"
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `signal` | One of `chronicle_created`, `chronicle_updated`, `chronicle_closed` |
+| `chronicle` | The raw `ActivityChronicle` object from the Worlds API, passed through unmodified |
+| `timestamp` | The chronicle's `updatedAt` timestamp (ISO 8601) |
