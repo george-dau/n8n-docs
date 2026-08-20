@@ -21,11 +21,9 @@ See [Prerequisites](/getting-started/prerequisites) for setup details.
 Activity chronicle subscriptions are **streaming only** — there is no batch mode. The state machine registers one unfiltered chronicle subscription per unique credential set and applies filtering and deduplication locally before delivering to your workflow.
 </Note>
 
-## Trigger On
+## Lifecycle signals
 
-Choose which lifecycle signals this trigger delivers. **Trigger On** is a multi-select — pick one or more of `chronicle_created`, `chronicle_updated`, `chronicle_closed`. The default is **Chronicle Created** only; select additional signals to receive more of the lifecycle in the same workflow.
-
-### Chronicle lifecycle signals
+This trigger fires on **every** activity chronicle lifecycle change — there is no signal selector. The payload's `signal` field identifies which change occurred: `chronicle_created`, `chronicle_updated`, or `chronicle_closed`. Route on this field downstream with an **IF** or **Switch** node if your workflow only needs to act on some of the lifecycle.
 
 | Signal | When it fires |
 | --- | --- |
@@ -37,14 +35,17 @@ Choose which lifecycle signals this trigger delivers. **Trigger On** is a multi-
 **Dedup guarantee**: the state machine emits exactly one `chronicle_created` per chronicle ID. Deduplication is content-based — the state machine stores a hash of the chronicle's raw JSON and suppresses byte-identical re-deliveries. This lifecycle state survives state machine restarts.
 </Note>
 
-## Filtering
+## Chronicle Producers
 
-Configure which chronicles this trigger receives. Every filter is a list; within a single filter, values are matched with **OR** (any value matches). Across different filters, matches are combined with **AND**. An empty filter matches all chronicles.
+**Chronicle Producers** is the primary filter, shown at the top level of the node. It's a multi-select populated with the chronicle producers (agents) available in your environment — use it to choose which agents to read chronicles from. Leave it empty to receive chronicles from every producer.
+
+## Additional Filters
+
+The remaining filters are secondary and live in the collapsed **Additional Filters** collection. Every filter is a list; within a single filter, values are matched with **OR** (any value matches). Across different filters, matches are combined with **AND**. An empty filter matches all chronicles.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
 | **Chronicle IDs** | Comma-separated text | Specific chronicle IDs to receive updates for |
-| **Chronicle Producer IDs** | Multi-select | Only chronicles created by these producers |
 | **Data Sources** | Multi-select | Only chronicles associated with these data sources |
 | **Sites** | Multi-select | Only chronicles associated with these sites |
 | **Tags** | Multi-select | Only chronicles tagged with these tag IDs |
@@ -65,7 +66,6 @@ Configure which chronicles this trigger receives. Every filter is a list; within
   "timestamp": "2026-08-19T10:00:05.000Z",
   "trigger_config": {
     "signal_type": "activity_chronicle",
-    "trigger_on": ["chronicle_created", "chronicle_updated", "chronicle_closed"],
     "workflow": { "id": "...", "name": "My Workflow" }
   }
 }
@@ -73,10 +73,10 @@ Configure which chronicles this trigger receives. Every filter is a list; within
 
 | Field | Description |
 | --- | --- |
-| `signal` | One of `chronicle_created`, `chronicle_updated`, `chronicle_closed` |
+| `signal` | One of `chronicle_created`, `chronicle_updated`, `chronicle_closed` — use this to route the execution downstream |
 | `chronicle` | The raw `ActivityChronicle` object from the Worlds API, passed through unmodified — no fields are added, removed, or renamed |
 | `timestamp` | The time the state machine emitted this signal (ISO 8601, UTC) — not the chronicle's `updatedAt` |
-| `trigger_config` | Metadata about the trigger that produced this execution: the signal type, the signals selected in **Trigger On**, and the workflow's ID and name |
+| `trigger_config` | Metadata about the trigger that produced this execution: the signal type and the workflow's ID and name |
 
 <Note>
 `chronicle` is a passthrough of the Worlds API's `ActivityChronicle` object — its shape follows the Worlds API, not this node. Inspect a live execution to see the exact fields available for your tenant.
