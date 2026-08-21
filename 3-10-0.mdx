@@ -1,0 +1,35 @@
+---
+title: "3.10.0"
+---
+
+August 21, 2026
+
+---
+
+#### **Model Training**
+
+Better inputs make better models, so we're giving you more control over what goes into training and made it easier to keep that data clean with a supporting suite of tools.
+
+- **Feedback Loop** - Enable corrections and click to segment incorrect or missed detections from the inference viewer. Instead of the same inaccuracies showing up in successive deployments, your feedback becomes training data your models actually learn from, so accuracy improves more with each iteration.
+- **Configurable Overlap Threshold** - Set the allowable overlap between objects in your training data directly in the UI, tunable for better accuracy across different camera fields of view and angles.
+- **Segmentation Prompt History** - Collections now save your segmentation-prompt history, so you can carry forward consistent prompts and segments across indexes and keep untagged or inconsistent objects out of the training data.
+
+---
+
+#### **Overwatch**
+
+More clarity and more control, right where you need it - without digging through tabs or menus to get there.
+
+- **Right-Click Quick Actions** - Right-click any object on the map to jump straight to settings or details, without leaving the spatial view or juggling extra windows.
+- **Sharper Tracking** - Visual detections and GPS-tracked objects now display independently, with a steadier, more stable timeline as you track movement over time.
+
+---
+
+#### **Platform Performance**
+
+Behind-the-scenes bug squashing, plus a routine round of security hardening.
+
+- **Inference View & Linking** - Inference data now displays and links correctly within event clip assets, so review flows smoothly from event to detection to context.
+- **Reliable Detector Updates** - Re-running a model on a collection now updates the existing detector instead of creating a duplicate.
+- **Cleaner Filtering & Display** - Fixed camera and label filtering in Overwatch, corrected detection box offset on non-16:9 camera feeds, and resolved a rendering issue in the segmentation tool.
+- **Platform Hardening** - Patched a batch of dependency-level vulnerabilities across request handling, WebSocket connections, and data serialization as part of routine security maintenance.
