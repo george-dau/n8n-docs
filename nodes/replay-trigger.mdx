@@ -31,10 +31,14 @@ The Replay Trigger lets you test workflows using historical detection data. It r
     | **Site** | Select | Site to query |
     | **Data Sources** | Multi-select | Cameras to query tracks from |
     | **Zones** | Multi-select | Specific zones to filter by |
-    | **Tags** | Multi-select | Object types to include |
+    | **Tags** | Multi-select | Object types to include. Leave empty to include all tags. |
     | **Start Time** | DateTime | Start of time range (UTC) |
     | **End Time** | DateTime | End of time range (UTC) |
     | **Max Tracks** | Number | Maximum tracks to fetch (default: 100) |
+
+    <Note>
+      The time range cannot exceed 24 hours. For longer periods, create one replay session per day.
+    </Note>
   </Tab>
 </Tabs>
 
