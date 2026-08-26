@@ -1,0 +1,202 @@
+---
+title: "Chronicle Aggregation"
+description: "Pull and aggregate activity or event chronicles over a time range for digests, reports, and rollups"
+---
+
+The **Chronicle Aggregation** resource (on the Worlds Actions node) queries chronicles over a time range and aggregates them — raw list, rollup summary, or grouped by dimension. Unlike the [Activity Chronicle Trigger](/nodes/detection-webhook-trigger), which pushes individual lifecycle events as they happen, this resource **pulls** a window of chronicles on demand.
+
+## When to use
+
+Use Chronicle Aggregation whenever a workflow needs to summarize activity over a period rather than react to a single chronicle event — daily digest emails, shift reports, compliance rollups, or any downstream logic that wants "everything that happened in the last N hours" as one set.
+
+<Note>
+This resource does **not** self-schedule. Pair it with n8n's built-in **Schedule Trigger** node — the trigger fires on a cron schedule, and Chronicle Aggregation resolves the query window at execution time.
+</Note>
+
+## The Schedule Trigger pattern
+
+```
+Schedule Trigger (cron)  →  Worlds node: Chronicle Aggregation (Query)  →  digest email / report / downstream logic
+```
+
+For a daily digest, set the Schedule Trigger to run once a day and leave **Time Range** on its default **Relative Window** — each run automatically covers the period since the last one, with no date math in the workflow.
+
+## Parameters
+
+### Record Kind
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Record Kind** | Select | `Activity Chronicles` | Which chronicle records to query: `Activity Chronicles` or `Event Chronicles` |
+
+<Warning>
+Event chronicles are **point-in-time** (they carry only a `timestamp`, no start/end interval) and are owned by chronicle producers, not sites or data sources. **Site IDs** and **Data Source IDs** filters never match event chronicles. Internally, an event chronicle is treated as a zero-length interval (`start = end = timestamp`) for window matching, which also means **Include Open Chronicles** is a no-op for them — they're always considered closed.
+</Warning>
+
+### Chronicle Producers
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Chronicle Producers** | Multi-select | (empty = all) | Producers to include. Both record kinds are owned by chronicle producers, so this filter applies to activity and event chronicles alike. |
+
+### Time Range
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Time Range** | Select | `Relative Window` | `Relative Window (e.g. Last 24 Hours)` or `Explicit Start/End` |
+| **Window Amount** | Number | `24` | Look back this many units from now. Shown only when Time Range is Relative Window. |
+| **Window Unit** | Select | `Hours` | `Minutes`, `Hours`, or `Days`. Shown only when Time Range is Relative Window. |
+| **Start Time** | DateTime | — | Required when Time Range is Explicit Start/End |
+| **End Time** | DateTime | — | Required when Time Range is Explicit Start/End |
+
+Relative windows resolve `start_time`/`end_time` at execution time, computed from `now` — this is what makes the resource cron-friendly under a Schedule Trigger. Explicit Start/End is useful for backfills, ad hoc reports, or when the window comes from elsewhere in the workflow (e.g. an expression referencing the last run's data).
+
+### Output
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Output** | Select | `Raw List (One Item Per Chronicle)` | `raw`, `rollup`, `grouped`, or `raw_and_rollup` — see [Output modes](#output-modes) below |
+| **Group By** | Select | `Label` | Dimension to group by: `Label`, `Priority`, `Producer`, `Site`, `Status`. Shown only when Output is Grouped. |
+
+### Additional Filters
+
+All filters are comma-separated string lists, applied after fetching (OR within a field, AND across fields).
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| **Data Source IDs** | String (CSV) | Activity chronicles only — event chronicles have no data sources and will not match |
+| **Labels** | String (CSV) | e.g. `ppe, safety` |
+| **Priorities** | String (CSV) | e.g. `HIGH, LOW` |
+| **Site IDs** | String (CSV) | Activity chronicles only — event chronicles have no sites and will not match |
+| **Statuses** | String (CSV) | e.g. `OPEN, CLOSED` |
+
+### Advanced options
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| **Include Open Chronicles** | Boolean | `true` | Whether chronicles without an end time are included. No-op for event chronicles (always closed). |
+| **Limit** | Number | `5000` (max `20000`) | Max chronicles retained after filtering, sorted by start time. The output is flagged truncated when the match count exceeds it. |
+| **Overlap Lookback (Days)** | Number | `7` | Only used with Overlap Window time match. How far before the window start to look for chronicles that started earlier but still overlap it. |
+| **Time Match** | Select | `Overlaps Window` | `Overlaps Window` or `Started in Window` — see [Time match semantics](#time-match-semantics) below |
+
+## Time match semantics
+
+| Mode | Value | Behavior |
+| --- | --- | --- |
+| **Overlaps Window** | `overlap` (default) | The chronicle's `[start, end]` interval overlaps `[start_time, end_time)`. An open chronicle (no `end_time`) is treated as extending to now. |
+| **Started in Window** | `started_in` | The chronicle's start falls within `[start_time, end_time)`. |
+
+With Overlap Window, a chronicle that started well before the requested window but is still running (or ended just after the window opened) still counts — the state machine looks backward from `start_time` by **Overlap Lookback (Days)** (default 7, mirroring the state machine's default chronicle state TTL) to find candidates. If you need chronicles that started strictly inside the window, use Started in Window instead.
+
+## Output modes
+
+Every output item carries `item_type` so downstream nodes can branch on shape: `chronicle`, `group`, `rollup`, or (raw mode only, when truncated) `meta`.
+
+<Tabs>
+  <Tab title="Raw">
+    One n8n item per chronicle, tagged `item_type: "chronicle"`. Nothing else is added — no `meta` wrapper, since there's no single item to carry it on.
+
+    ```json
+    {
+      "item_type": "chronicle",
+      "id": "chronicle-uuid",
+      "status": "active",
+      "label": "forklift",
+      "startTime": "2026-08-25T14:03:00.000Z",
+      "endTime": null
+    }
+    ```
+
+    <Note>
+    If the match count exceeded **Limit**, an extra trailing item is emitted with `item_type: "meta"` carrying the full `meta` object (including `truncated: true`) — this is the only way raw mode surfaces truncation, since individual chronicle items have nowhere else to carry it.
+    </Note>
+  </Tab>
+  <Tab title="Rollup">
+    A single summary item, tagged `item_type: "rollup"`, with `meta` embedded directly on it.
+
+    ```json
+    {
+      "item_type": "rollup",
+      "total": 15,
+      "by_status": { "active": 10, "closed": 5 },
+      "by_priority": { "high": 4, "medium": 11 },
+      "by_label": { "forklift": 12, "pedestrian": 3 },
+      "by_producer": { "producer-uuid": 15 },
+      "earliest_start": "2026-08-25T14:03:00.000Z",
+      "latest_end": "2026-08-25T23:58:00.000Z",
+      "meta": {
+        "window": { "start_time": "2026-08-25T00:00:00.000Z", "end_time": "2026-08-26T00:00:00.000Z", "time_match": "overlap" },
+        "record_kind": "activity_chronicle",
+        "chunks_queried": 1,
+        "total_matched": 15,
+        "truncated": false
+      }
+    }
+    ```
+
+    `earliest_start`/`latest_end` are omitted when the retained set is empty. `latest_end` only advances for chronicles with a known end time — open chronicles don't contribute.
+  </Tab>
+  <Tab title="Grouped">
+    One item per group, tagged `item_type: "group"`, with `meta` embedded on each item. A chronicle with no value for the grouping dimension falls into a group keyed `"(none)"`. Multi-valued dimensions (Label, Site) fan a chronicle into every matching group.
+
+    ```json
+    {
+      "item_type": "group",
+      "key": "forklift",
+      "count": 12,
+      "chronicles": [ "...raw chronicle objects..." ],
+      "meta": {
+        "window": { "start_time": "2026-08-25T00:00:00.000Z", "end_time": "2026-08-26T00:00:00.000Z", "time_match": "overlap" },
+        "record_kind": "activity_chronicle",
+        "chunks_queried": 1,
+        "total_matched": 15,
+        "truncated": false
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Raw List + Rollup">
+    Emits both: one `item_type: "chronicle"` item per chronicle, followed by one `item_type: "rollup"` item with `meta` embedded. Use this when you want both the full detail and a quick summary in the same execution — e.g. attach the rollup numbers to an email subject line while iterating the raw list to build the email body.
+  </Tab>
+</Tabs>
+
+## Truncation
+
+`meta.total_matched` is the retained (post-truncation) count, and `meta.truncated` is `true` when the actual match count exceeded **Limit**. Rollup and grouped aggregates are computed over the retained set only, not the full match set — a truncated rollup or group is still internally consistent, just incomplete. Check `meta.truncated` (embedded on rollup/grouped items, or the trailing meta item in raw mode) before treating counts as exhaustive, and narrow the time range or filters if you hit it regularly.
+
+## Credentials
+
+Requires **GraphQL Subscription API** credentials, same as other Worlds Actions resources. Credentials are sent per-request to the state machine and are never persisted there.
+
+## Deploy order
+
+Chronicle Aggregation calls `POST /api/chronicles/query` on the state machine. **The state machine must be upgraded before this node is used** — against an older state machine that doesn't have this endpoint, the node fails with a clear error telling you to upgrade `n8n-state-machine`, rather than a generic HTTP failure.
+
+## Example: daily digest email
+
+<Steps>
+  <Step title="Schedule Trigger">
+    Add a **Schedule Trigger** node set to run once a day (e.g. 7:00 AM).
+  </Step>
+  <Step title="Worlds node — Chronicle Aggregation">
+    Add a Worlds node, resource **Chronicle Aggregation**, operation **Query**.
+    - **Record Kind**: `Activity Chronicles`
+    - **Time Range**: `Relative Window`, Window Amount `24`, Window Unit `Hours`
+    - **Output**: `Raw List + Rollup`
+    - **Additional Filters → Statuses**: `active, closed` (skip anything still pending)
+  </Step>
+  <Step title="Filter the rollup item">
+    Use an **IF** node checking `{{$json.item_type}} === "rollup"` to split the single summary item from the per-chronicle items.
+  </Step>
+  <Step title="Build the email">
+    On the rollup branch, use a **Set** node to compose subject/summary text from `total`, `by_status`, `by_label`, etc. On the chronicle branch, use an **Aggregate** or **HTML** node to render the per-chronicle list as the email body table.
+  </Step>
+  <Step title="Send Worlds Email">
+    Wire both into the Worlds Actions node's **Send Worlds Email** resource (see [Worlds Actions](/nodes/actions)) to deliver the digest.
+  </Step>
+</Steps>
+
+## Related
+
+- [Worlds Actions](/nodes/actions) — other resources on the same node, including Send Worlds Email
+- [State Machine API](/state-machine/api-reference) — `POST /api/chronicles/query` request/response schema
