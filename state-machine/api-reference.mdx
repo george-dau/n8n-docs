@@ -208,6 +208,7 @@ curl -X POST http://n8n-state-machine:8080/api/chronicles/query \
 | --- | --- | --- | --- |
 | `credentials.graphql_url` | String | Yes | Worlds GraphQL endpoint. Subject to the `ALLOWED_URL_DOMAINS` SSRF allowlist. |
 | `credentials.token_id` / `credentials.token_value` | String | Yes | `x-token-id` / `x-token-value` auth |
+| `credentials.ws_url` | String | No | Accepted but unused by this endpoint — this is an HTTP-only query, not a subscription. |
 | `record_kind` | String | Yes | `activity_chronicle` (has `start_time`/`end_time`, `sites`, `dataSources`) or `event_chronicle` (point-in-time: only `timestamp`) |
 | `start_time` / `end_time` | String (ISO 8601) | Yes | Query window |
 | `time_match` | String | No | `overlap` (default) — chronicle's `[start, end]` interval overlaps `[start_time, end_time)`, with an open chronicle treated as extending to now; or `started_in` — chronicle's start falls within `[start_time, end_time)` |
