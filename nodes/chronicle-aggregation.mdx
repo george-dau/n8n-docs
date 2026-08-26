@@ -83,10 +83,10 @@ All filters are comma-separated string lists, applied after fetching (OR within 
 
 | Mode | Value | Behavior |
 | --- | --- | --- |
-| **Overlaps Window** | `overlap` (default) | The chronicle's `[start, end]` interval overlaps `[start_time, end_time)`. An open chronicle (no `end_time`) is treated as extending to now. |
-| **Started in Window** | `started_in` | The chronicle's start falls within `[start_time, end_time)`. |
+| **Started in Window** | `started_in` (default) | The chronicle's start falls within `[start_time, end_time)`. Start time is the one field every chronicle is guaranteed to have. |
+| **Overlaps Window** | `overlap` | The chronicle's `[start, end]` interval overlaps `[start_time, end_time)`. An open chronicle (no `end_time`) is treated as extending to now — "what is active right now". |
 
-With Overlap Window, a chronicle that started well before the requested window but is still running (or ended just after the window opened) still counts — the state machine looks backward from `start_time` by **Overlap Lookback (Days)** (default 7, mirroring the state machine's default chronicle state TTL) to find candidates. If you need chronicles that started strictly inside the window, use Started in Window instead.
+With Overlap Window, a chronicle that started well before the requested window but is still running (or ended just after the window opened) still counts — the state machine looks backward from `start_time` by **Overlap Lookback (Days)** (default 7, mirroring the state machine's default chronicle state TTL) to find candidates. Beware: a producer that never sets `end_time` leaves all its chronicles permanently open, so Overlaps Window returns its entire backlog in every window — Started in Window (the default) is immune to this.
 
 ## Output modes
 

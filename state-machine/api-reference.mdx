@@ -211,7 +211,7 @@ curl -X POST http://n8n-state-machine:8080/api/chronicles/query \
 | `credentials.ws_url` | String | No | Accepted but unused by this endpoint — this is an HTTP-only query, not a subscription. |
 | `record_kind` | String | Yes | `activity_chronicle` (has `start_time`/`end_time`, `sites`, `dataSources`) or `event_chronicle` (point-in-time: only `timestamp`) |
 | `start_time` / `end_time` | String (ISO 8601) | Yes | Query window |
-| `time_match` | String | No | `overlap` (default) — chronicle's `[start, end]` interval overlaps `[start_time, end_time)`, with an open chronicle treated as extending to now; or `started_in` — chronicle's start falls within `[start_time, end_time)` |
+| `time_match` | String | No | `started_in` (default) — chronicle's start falls within `[start_time, end_time)`; or `overlap` — chronicle's `[start, end]` interval overlaps `[start_time, end_time)`, with an open chronicle treated as extending to now (producers that never close chronicles will match their full backlog in any window) |
 | `include_open` | Boolean | No | Default `true`. When `false`, excludes chronicles with no `end_time`. Only meaningful for activity chronicles. |
 | `overlap_lookback_seconds` | Number | No | Only used when `time_match: "overlap"`. Extends the fetch window backward by this many seconds before `start_time` so chronicles that started earlier but still overlap are found. Default `604800` (7 days, mirrors `CHRONICLE_STATE_TTL`'s default). |
 | `filters.producer_ids` / `labels` / `statuses` / `priorities` / `site_ids` / `datasource_ids` | Array | No | OR within a field, AND across fields (same semantics as subscription filters). Applied locally after fetching — the only server-side (GraphQL) filtering is the time-range chunking. |
