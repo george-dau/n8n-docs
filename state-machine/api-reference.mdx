@@ -220,6 +220,10 @@ curl -X POST http://n8n-state-machine:8080/api/chronicles/query \
 | `limit` | Number | No | Default `5000`, max `20000`. Applied to the matched set (sorted by start time) after filtering. |
 
 <Note>
+The total fetch span (`end_time - start_time`, plus `overlap_lookback_seconds` when `time_match: "overlap"`) is capped at 100 24h chunks. Requests exceeding it are rejected with a `400` — narrow the window or reduce the lookback.
+</Note>
+
+<Note>
 `record_kind: "event_chronicle"` maps each chronicle internally to a zero-length interval (`start = end = timestamp`) so window matching and aggregation work uniformly. This means `include_open` is a no-op for event chronicles (they're always closed), and `site_ids`/`datasource_ids` filters never match them (event chronicles carry no site/data-source data). An event chronicle's producer is still a chronicle producer, so `producer_ids` applies normally.
 </Note>
 
