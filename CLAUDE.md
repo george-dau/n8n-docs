@@ -49,12 +49,24 @@ When adding new pages, they must be added to the appropriate navigation group in
 
 ## Internal vs External Content
 
-Everything referenced in `docs.json` navigation is **published externally**. The following are excluded via `.mintignore` and are internal only:
+Everything referenced in `docs.json` navigation is **published externally**.
 
-- `.git`, `.github`, `.claude`, `.agents`, `.idea`, `node_modules`
-- `README.md`, `LICENSE.md`, `CHANGELOG.md`, `CONTRIBUTING.md`
-- `drafts/`
-- `AGENTS.md`
+**Being absent from `docs.json` navigation does NOT make a file private.** Mintlify
+serves every unignored `.md`/`.mdx` file at its URL path whether or not it appears in
+navigation. Navigation controls discoverability, `.mintignore` controls publication.
+Anything that must not be public has to be listed in `.mintignore`.
+
+Excluded from the published site:
+
+- Auto-ignored by Mintlify: `.git`, `.github`, `.claude`, `.agents`, `.idea`,
+  `node_modules`, `README.md`, `LICENSE.md`, `CHANGELOG.md`, `CONTRIBUTING.md`
+- Listed in `.mintignore`: `drafts/`, `*.draft.mdx`, `scenarios/`, `worlds-branding/`,
+  `worlds-training-docs/`, `CLAUDE.md`, `AGENTS.md`, `essentials/`, `api-reference/`,
+  `snippets/`, `quickstart.mdx`, `development.mdx`
+
+When adding a file that is not meant for customers, add it to `.mintignore` in the same
+change. To audit for accidental exposure, list every unignored `.md`/`.mdx` file and
+check each against the page paths in `docs.json`.
 
 ## Writing Standards
 
