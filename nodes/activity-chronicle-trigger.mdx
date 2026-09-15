@@ -1,0 +1,88 @@
+---
+title: "Activity Chronicle Trigger"
+description: "Receive activity chronicle lifecycle events from the Worlds platform"
+---
+
+The Activity Chronicle Trigger registers a webhook with the state machine and receives activity chronicle lifecycle events as they occur. Unlike the [Detection Webhook Trigger](/nodes/detection-webhook-trigger), which carries computer-vision track and zone data, this trigger carries **activity chronicles** — externally-produced event summaries created on the Worlds platform (for example, by an external system, an operator, or another automation) rather than derived from raw detections.
+
+Use this trigger when your workflow needs to react to the lifecycle of those chronicles: when one is created, when it changes, and when it closes.
+
+## When to use
+
+Use this node as the first node in any workflow that reacts to activity chronicle lifecycle events. It requires the **n8n-state-machine** service to be deployed and reachable — the same service that powers the [Detection Webhook Trigger](/nodes/detection-webhook-trigger) — since the state machine maintains the subscription to the Worlds API and delivers the webhook.
+
+## Credentials
+
+Select your **GraphQL Subscription API** credentials. These authenticate with the Worlds API and determine which chronicles are available to you. Credentials can be obtained from the Worlds platform and are shared across workflows — if you've already configured credentials in another workflow, the same ones will be available here.
+
+See [Prerequisites](/getting-started/prerequisites) for setup details.
+
+<Note>
+Activity chronicle subscriptions are **streaming only** — there is no batch mode. The state machine registers one unfiltered chronicle subscription per unique credential set and applies filtering and deduplication locally before delivering to your workflow.
+</Note>
+
+## Lifecycle signals
+
+This trigger fires on **every** activity chronicle lifecycle change — there is no signal selector. The payload's `signal` field identifies which change occurred: `chronicle_created`, `chronicle_updated`, or `chronicle_closed`. Route on this field downstream with an **IF** or **Switch** node if your workflow only needs to act on some of the lifecycle.
+
+| Signal | When it fires |
+| --- | --- |
+| `chronicle_created` | The first time the state machine sees this chronicle ID, and the chronicle is still open (`endTime` is null) |
+| `chronicle_updated` | Any other content change to a chronicle the state machine already knows about, including edits made after the chronicle closed |
+| `chronicle_closed` | The chronicle's `endTime` transitions from null to set — or, if the state machine sees the chronicle for the first time and it is already closed, `chronicle_closed` fires immediately with no preceding `chronicle_created` |
+
+<Note>
+**Dedup guarantee**: the state machine emits exactly one `chronicle_created` per chronicle ID. Deduplication is content-based — the state machine stores a hash of the chronicle's raw JSON and suppresses byte-identical re-deliveries. This lifecycle state survives state machine restarts.
+</Note>
+
+## Chronicle Producers
+
+**Chronicle Producers** is the primary filter, shown at the top level of the node. It's a multi-select populated with the chronicle producers (agents) available in your environment — use it to choose which agents to read chronicles from. Leave it empty to receive chronicles from every producer.
+
+## Additional Filters
+
+The remaining filters are secondary and live in the collapsed **Additional Filters** collection. Every filter is a list; within a single filter, values are matched with **OR** (any value matches). Across different filters, matches are combined with **AND**. An empty filter matches all chronicles.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| **Chronicle IDs** | Comma-separated text | Specific chronicle IDs to receive updates for |
+| **Data Sources** | Multi-select | Only chronicles associated with these data sources |
+| **Sites** | Multi-select | Only chronicles associated with these sites |
+| **Tags** | Multi-select | Only chronicles tagged with these tag IDs |
+| **Points of Interest** | Multi-select | Only chronicles associated with these points of interest |
+| **Labels** | Comma-separated text | Match against the chronicle's labels. Case-insensitive. |
+| **Locations** | Comma-separated text | Match against the chronicle's location. Case-insensitive. |
+| **Statuses** | Comma-separated text | Match against the chronicle's status. Case-insensitive. |
+| **Priorities** | Comma-separated text | Match against the chronicle's priority. Case-insensitive. |
+
+## Output
+
+```json
+{
+  "signal": "chronicle_updated",
+  "chronicle": {
+    "...": "raw ActivityChronicle object from the Worlds API, passed through unmodified"
+  },
+  "timestamp": "2026-08-19T10:00:05.000Z",
+  "trigger_config": {
+    "signal_type": "activity_chronicle",
+    "workflow": { "id": "...", "name": "My Workflow" }
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `signal` | One of `chronicle_created`, `chronicle_updated`, `chronicle_closed` — use this to route the execution downstream |
+| `chronicle` | The raw `ActivityChronicle` object from the Worlds API, passed through unmodified — no fields are added, removed, or renamed |
+| `timestamp` | The time the state machine emitted this signal (ISO 8601, UTC) — not the chronicle's `updatedAt` |
+| `trigger_config` | Metadata about the trigger that produced this execution: the signal type and the workflow's ID and name |
+
+<Note>
+`chronicle` is a passthrough of the Worlds API's `ActivityChronicle` object — its shape follows the Worlds API, not this node. Inspect a live execution to see the exact fields available for your tenant.
+</Note>
+
+## Requirements
+
+- The **n8n-state-machine** service must be deployed and reachable from n8n. This trigger registers its subscription with the state machine's REST API (`signal_type: "activity_chronicle"`) the same way the Detection Webhook Trigger does.
+- Activity chronicles must exist on the Worlds platform for the credentials and filters you configure — this trigger does not create chronicles, it only reports their lifecycle.
