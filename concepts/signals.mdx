@@ -87,6 +87,10 @@ This is the most common zone signal. A busy zone can generate many `zone_updated
 
 **Common use:** This is where zone-level business logic runs. The Zone Activity Check evaluates the current track count and thresholds on each update.
 
+<Note>
+`zone_updated` frequency depends on the subscription's **zone emit mode**. In the default `all` mode (shown above), it fires on every detection in the zone. In `composition` mode, it fires only when the zone's filtered tag → count composition changes, plus a periodic heartbeat — useful for avoiding overlapping executions on busy zones. See [Composition emit mode](/state-machine/overview#composition-emit-mode) in the State Machine Overview.
+</Note>
+
 ### zone_empty
 
 Fired **once** when the last track leaves the zone. The zone transitions back to 0 active tracks.
