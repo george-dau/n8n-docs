@@ -174,6 +174,125 @@ curl -X POST http://n8n-state-machine:8080/api/tracks/snapshot \
 
 Query the current state of a zone (active tracks, occupancy count).
 
+## Chronicle Queries
+
+### POST /api/chronicles/query
+
+Query and aggregate activity or event chronicles over a time range. Used by the [Chronicle Aggregation](/nodes/chronicle-aggregation) node resource. Pull-style: the endpoint chunks the requested window into ≤24h GraphQL fetches (bounded concurrency 4), dedupes across chunks, then filters and aggregates locally. Credentials are per-request and never persisted. Per-request timeout: 90s.
+
+```bash
+curl -X POST http://n8n-state-machine:8080/api/chronicles/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "credentials": {
+      "graphql_url": "https://your-instance.worlds.io/graphql",
+      "token_id": "your-token-id",
+      "token_value": "your-token-value"
+    },
+    "record_kind": "activity_chronicle",
+    "start_time": "2026-08-25T00:00:00.000Z",
+    "end_time": "2026-08-26T00:00:00.000Z",
+    "time_match": "overlap",
+    "include_open": true,
+    "overlap_lookback_seconds": 604800,
+    "filters": {
+      "producer_ids": ["producer-uuid"],
+      "labels": ["forklift"],
+      "statuses": ["active"],
+      "priorities": ["high"],
+      "site_ids": ["site-uuid"],
+      "datasource_ids": ["datasource-uuid"]
+    },
+    "aggregation": {
+      "output": "grouped",
+      "group_by": "label"
+    },
+    "limit": 5000
+  }'
+```
+
+**Request body:**
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `credentials.graphql_url` | String | Yes | Worlds GraphQL endpoint. Subject to the `ALLOWED_URL_DOMAINS` SSRF allowlist. |
+| `credentials.token_id` / `credentials.token_value` | String | Yes | `x-token-id` / `x-token-value` auth |
+| `credentials.ws_url` | String | No | Accepted but unused by this endpoint — this is an HTTP-only query, not a subscription. |
+| `record_kind` | String | Yes | `activity_chronicle` (has `start_time`/`end_time`, `sites`, `dataSources`) or `event_chronicle` (point-in-time: only `timestamp`) |
+| `start_time` / `end_time` | String (ISO 8601) | Yes | Query window |
+| `time_match` | String | No | `started_in` (default) — chronicle's start falls within `[start_time, end_time)`; or `overlap` — chronicle's `[start, end]` interval overlaps `[start_time, end_time)`, with an open chronicle treated as extending to now (producers that never close chronicles will match their full backlog in any window) |
+| `include_open` | Boolean | No | Default `true`. When `false`, excludes chronicles with no `end_time`. Only meaningful for activity chronicles. |
+| `overlap_lookback_seconds` | Number | No | Only used when `time_match: "overlap"`. Extends the fetch window backward by this many seconds before `start_time` so chronicles that started earlier but still overlap are found. Default `604800` (7 days, mirrors `CHRONICLE_STATE_TTL`'s default). |
+| `filters.producer_ids` / `labels` / `statuses` / `priorities` / `site_ids` / `datasource_ids` | Array | No | OR within a field, AND across fields (same semantics as subscription filters). Applied locally after fetching — the only server-side (GraphQL) filtering is the time-range chunking. |
+| `aggregation.output` | String | No | `raw` (default, returns `chronicles`), `rollup` (returns `rollup`), `grouped` (returns `groups`, requires `group_by`), or `raw_and_rollup` (returns both `chronicles` and `rollup`) |
+| `aggregation.group_by` | String | Required when `output: "grouped"` | One of `label`, `status`, `priority`, `producer`, `site`. Multi-valued dimensions (`label`, `site`) fan a chronicle into every matching group; no value for the dimension falls into a group keyed `"(none)"`. |
+| `limit` | Number | No | Default `5000`, max `20000`. Applied to the matched set (sorted by start time) after filtering. |
+
+<Note>
+The total fetch span (`end_time - start_time`, plus `overlap_lookback_seconds` when `time_match: "overlap"`) is capped at 100 24h chunks. Requests exceeding it are rejected with a `400` — narrow the window or reduce the lookback.
+</Note>
+
+<Note>
+`record_kind: "event_chronicle"` maps each chronicle internally to a zero-length interval (`start = end = timestamp`) so window matching and aggregation work uniformly. This means `include_open` is a no-op for event chronicles (they're always closed), and `site_ids`/`datasource_ids` filters never match them (event chronicles carry no site/data-source data). An event chronicle's producer is still a chronicle producer, so `producer_ids` applies normally.
+</Note>
+
+**Response body** (`aggregation.output: "grouped"` shown; `raw` returns `chronicles` instead of `groups`, `raw_and_rollup` returns both `chronicles` and `rollup`):
+
+```json
+{
+  "groups": [
+    {
+      "key": "forklift",
+      "count": 12,
+      "chronicles": [ { "...": "raw chronicle object, timestamps normalized to ISO 8601 UTC" } ]
+    },
+    {
+      "key": "(none)",
+      "count": 3,
+      "chronicles": [ { "...": "chronicles with no value for the group_by dimension" } ]
+    }
+  ],
+  "meta": {
+    "window": { "start_time": "2026-08-25T00:00:00.000Z", "end_time": "2026-08-26T00:00:00.000Z", "time_match": "overlap" },
+    "record_kind": "activity_chronicle",
+    "chunks_queried": 1,
+    "total_matched": 15,
+    "truncated": false
+  }
+}
+```
+
+`aggregation.output: "rollup"` (or `raw_and_rollup`, alongside `chronicles`) returns a `rollup` summary instead of `groups`:
+
+```json
+{
+  "rollup": {
+    "total": 15,
+    "by_status": { "active": 10, "closed": 5 },
+    "by_priority": { "high": 4, "medium": 11 },
+    "by_label": { "forklift": 12, "pedestrian": 3 },
+    "by_producer": { "producer-uuid": 15 },
+    "earliest_start": "2026-08-25T14:03:00.000Z",
+    "latest_end": "2026-08-25T23:58:00.000Z"
+  },
+  "meta": { "...": "same shape as above" }
+}
+```
+
+`earliest_start`/`latest_end` are omitted when the retained set is empty. `latest_end` only advances for chronicles with a known `end_time` (open chronicles don't contribute).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `meta.total_matched` | Number | The retained (post-truncation) count |
+| `meta.truncated` | Boolean | `true` when the match count exceeded `limit`. `rollup`/`groups` are computed over the retained set, not the full match set. |
+| `meta.chunks_queried` | Number | Number of ≤24h GraphQL chunks the window was split into |
+
+**Errors:** `400` on validation failure (bad JSON, missing/invalid fields), `502` on upstream GraphQL failure (error text surfaced in the response body), `503` if the handler isn't wired for this deployment, `405` on non-POST.
+
+<Warning>
+This endpoint ships with the state machine, not with the n8n nodes package. If the Chronicle Aggregation node reports a state machine version error, upgrade `n8n-state-machine` before upgrading `worlds-n8n-nodes` — an older state machine without this endpoint returns `404`, which the node surfaces as a clear "upgrade n8n-state-machine" message rather than a generic failure.
+</Warning>
+
 ## Replay
 
 ### POST /api/replay/{id}

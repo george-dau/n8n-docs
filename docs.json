@@ -123,6 +123,7 @@
             "group": "Action Nodes",
             "pages": [
               "nodes/actions",
+              "nodes/chronicle-aggregation",
               "nodes/debug"
             ]
           },
