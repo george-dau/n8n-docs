@@ -35,7 +35,7 @@ Before you can tag anything, you need indexed video to tag it from. From the **S
 
 From the following screen, drag the start and end time handles to select just the window containing the objects you are interested in tracking.
 
-![Worlds Segments Specific Everything](/images/Worlds_SegmentsSpecificEverything.png "Worlds Segments Specific Everything")
+![Worlds Find Objects](/images/Worlds_SegmentsSpecificEverything.png "Worlds Find Objects")
 
 **Tip:** Shorter indexes process faster. In general, aim for as short an index as possible, focused on the objects of interest you want to tag into your model. There's no harm in indexing extra video beyond that, it'll just take longer to process.
 
@@ -43,6 +43,8 @@ At the top of the video, you'll find a toggle between **Specific** and **Everyth
 
 - **Specific** (default) - enter a prompt in the text box, click the **Suggest terms** button to commit it (Worlds automatically applies synonymous terms to improve results), then click **Find Objects**. Worlds will only segment the objects matching your prompt.
 - **Everything** - segments all moving objects in the index, then groups them by visual similarity for you to sort through when tagging.
+
+**Reusing past prompts.** The **History** button opens every prompt already used in this collection, with how many times each was used and when. Search the list and select an entry to load those terms in place of what's currently entered. Reusing a prompt keeps segments consistent across indexes and cameras in the same collection, and inconsistent segments carry straight into your training data.
 
 **Tip:** Specific indexing is the faster path to a performant model, use it when you can. But be aware of vocabulary limitations: it works best for common objects like people and vehicles. More unusual or specific objects will likely need require segmenting **Everything**, followed by manually sorting the results.
 
@@ -66,7 +68,7 @@ The tagging interface shows your indexed segments in a grid, based on whether yo
 
 **Backgrounds:** Click the **Backgrounds** button above the video to expand a row of background images from this index. Click the plus icon to add a new background at the current timestamp, or select an existing background to remove it.
 
-**Tip:** A good background has no objects of interest in it at all. Find the cleanest, emptiest view you can, it directly improves your training data and final model quality. Each unique camera in your collection should have a selected background.
+**Tip:** A good background has no objects of interest in it at all. Find the cleanest, emptiest view you can, it directly improves your training data and final model quality. Each unique camera in your collection should have a selected background. If this index has no frame that's genuinely empty, don't settle for the best of a bad set, use [Background Studio](#step-4-curate-backgrounds-in-background-studio) to take any frame and erase the objects out of it.
 
 **Applying tags:** From the segments panel in the middle of the screen, you'll see every segment captured from your indexing job. Click to add or remove segments from your selection, or shift-click to select in bulk, and a menu appears at the top to apply a tag: use the dropdown to create a new tag or apply the segment to an existing object class.
 
@@ -76,7 +78,43 @@ The tagging interface shows your indexed segments in a grid, based on whether yo
 
 Once tagging is complete, the next step is generating training data.
 
-## Step 4: Data Generation
+## Step 4: Curate Backgrounds in Background Studio
+
+Background Studio builds clean background plates out of footage that was never empty to begin with. Rather than hunting for a frame with nothing in it, you pick any frame and have Worlds erase the objects out of it.
+
+Open the **Training Data** tab and select **Background Studio** under Collection Resources.
+
+### Pick a frame
+
+Video is stored in hourly segments. **Browse footage** lets you tab through those segments to pick a camera and hour, and **Previous** and **Next** jump to the neighbouring hour. Within a segment the player gives you frame-level control, so you can land on exactly the frame you want. Click **Use this frame as background** when you have it.
+
+![Worlds Background Studio](/images/Worlds_BackgroundStudio.png "Worlds Background Studio")
+
+**Note:** You aren't limited to video you've already indexed here. Any footage from a camera in the collection is available.
+
+### Review what gets erased
+
+Worlds runs detection across the frame and proposes what to remove, grouped by object class. The review screen opens marked **Needs approval**.
+
+![Worlds Background Studio Review](/images/Worlds_BackgroundStudioReview.png "Worlds Background Studio Review")
+
+- **Original**, **Detections**, and **Cleanup** below the frame switch between the untouched frame, the detections overlaid on it, and a preview of the cleaned result.
+- The right panel lists every class found with its count, and how many objects are currently marked for removal. Tick a class to erase it, or use **Erase all** and **Keep all** to set everything at once. **Reset** returns to the original proposal.
+- **Add a missed object** lets you mark something the detector didn't catch.
+
+**Tip:** You're deciding what shouldn't be in a background, not what matters to your model. Anything transient belongs in the removal list, people, vehicles, and pallets in motion included. Fixed infrastructure that's always in frame should stay.
+
+Click **Apply** to erase everything you've marked.
+
+### Approve the result
+
+The **Cleanup** preview shows the frame with those objects removed and the gaps filled in. If it looks right, click **Approve background**. If it doesn't, **Change what's marked** takes you back to the review step.
+
+![Worlds Background Studio Cleanup](/images/Worlds_BackgroundStudioCleanup.png "Worlds Background Studio Cleanup")
+
+**Warning:** Nothing reaches a training run until you approve it. A background left at **Needs approval** is not used, so finish this step or the work has no effect on the next model you train.
+
+## Step 5: Data Generation
 
 Once all indexed video is tagged, head to the **Training Data** tab and click **Generate Training Data** in the top right.
 
@@ -88,15 +126,17 @@ First, select which object classes from the collection should be included in thi
 
 **Tip:** Generally, select all classes. The exception is a class still under active development, exclude it if you'd rather get to a performant model on your other classes first, and fold it in later.
 
-On the next screen, choose your augmentation mix.
+On the next screen, choose your augmentation mix and overlap threshold.
 
 ![Worlds Training Data Mix](/images/Worlds_TrainingData_Mix.png "Worlds Training Data Mix")
 
-**Tip:** The default works well in most cases. You can adjust it in specific situations to improve the quality of your final model, but in general there's no need to touch these settings.
+**Tip:** The default augmentation mix works well in most cases. You can adjust it in specific situations to improve the quality of your final model, but in general there's no need to touch these settings.
+
+**Tip:** **Segment Overlap Threshold** sets how much objects are allowed to overlap in the images Worlds generates, and a higher value packs more segments into each frame. Scenes with a wider or lower field of view, and scenes with densely packed objects, benefit from a greater overlap threshold. It defaults to 15 and saves per collection, so whatever you set becomes that collection's default for future runs. After a run finishes, the value it used appears as an **Overlap** chip on the Latest Training Data card.
 
 Click **Generate Training Data** to kick off the job. Worlds generates a large volume of images from your source video and tagged segments, both to train the computer vision model and to build an evaluation dataset used to compute metrics on the new model. This can take a while depending on how much data is in your collection.
 
-## Step 5: Train the Model
+## Step 6: Train the Model
 
 Once data generation is complete, return to Worlds and go to the **Models** page. The **Train a New Model** button activates once all prerequisite steps in the collection are complete.
 
@@ -113,7 +153,7 @@ When the model is run, a new Detector will be provisioned automatically and appe
 
 **Tip:** Worlds also supports deployment of various foundation models without training - from the Models tab of the collection, click the **Add foundation model** button in the top-right. Foundation models do not require any of the prerequisites of a custom model (indexes, tags, training data) and do not generate metrics for evaluation, but can be useful for common objects to unblock downstream development while more performant custom models are trained.
 
-## Step 6: Evaluate the Model
+## Step 7: Evaluate the Model
 
 **Model metrics.** From the Models page, you'll see a model metrics view listing every model trained in the collection. At the top: overall metrics for F1, Precision, Recall, and mean Average Precision (mAP), plus a chart of model performance over time as each new model gets trained.
 
@@ -130,11 +170,15 @@ When the model is run, a new Detector will be provisioned automatically and appe
 
 **Note:** whenever you generate a new set of training data and train a new model, every past model (up to 10) gets re-evaluated against the new test set. As you add more varied segments and object classes over time, expect the metrics on _older_ models to decline, that's the test set getting harder, not those models getting worse. The Training Performance Over Time chart on the Models page is the one to watch, it should keep trending up as you iterate and tag more segments.
 
-**The inference viewer.** To see the inference output of a Detector, from the Sources tab select any video from any camera in the collection against which a model has been run, or from the model click **Live Detections** for any camera in the top right. If it's been run against one-off video, find that video listed under **Detections on Video** on the model's page and click through to the inference viewer.
+## Step 8: Review and Improve
+
+The inference viewer is where you see the full detection output of a deployed model, judge how it's doing against real footage, and correct what it got wrong.
+
+**Opening the viewer.** To see the inference output of a Detector, from the Sources tab select any video from any camera in the collection against which a model has been run, or from the model click **Live Detections** for any camera in the top right. If it's been run against one-off video, find that video listed under **Detections on Video** on the model's page and click through to the inference viewer.
 
 ![Worlds Inference View](/images/Worlds_InferenceView.png "Worlds Inference View")
 
-The inference viewer is where you go to evaluate a model's performance in more depth. The bottom left lists available videos for the selected source, with a date picker to navigate through time; selecting one loads it into the video player on the left. The middle panel shows a track for every detected object, with start time, end time, and duration, color-coded to match the tags panel on the right.
+The bottom left lists available videos for the selected source, with a date picker to navigate through time; selecting one loads it into the video player on the left. The middle panel shows a track for every detected object, with start time, end time, and duration, color-coded to match the tags panel on the right.
 
 - Click a tag on the right to filter to just that class.
 - Click a track to highlight it in video playback, or click further along a track to jump the video to that point in time.
@@ -144,11 +188,29 @@ This view is genuinely useful for two things: evaluating a model's performance i
 
 **Warning:** broken tracks aren't necessarily a sign of a bad model. Occlusion is a common cause, if a forklift drives in front of a tracked object, the system may drop that detection and pick it up as a _new_ track once it's visible again. This is expected behavior to watch for, and can usually be accounted for in dependent workflows, not automatically a flaw to fix.
 
+**Correcting what the model got wrong.** Turn on **Corrections** in the viewer and your review turns into training input:
+
+**Flag a false positive.** Click a detection the model shouldn't have made. Worlds shows the detection with the confidence it was scored at, and **Exclude from training** keeps that example out of future training data.
+
+![Worlds Feedback False Positive](/images/Worlds_FeedbackFalsePositive.png "Worlds Feedback False Positive")
+
+**Report a missed detection.** Click, or draw a box around, an object the model failed to detect. Worlds segments what you selected and previews the proposed outline, you choose a **Class label**, and **Add to training** turns it into a labeled training example.
+
+![Worlds Feedback Missed Detection](/images/Worlds_FeedbackMissedDetection.png "Worlds Feedback Missed Detection")
+
+Nothing is recorded until you confirm in the dialog, so you can back out of a correction you're unsure about.
+
+**Tip:** Drawing a box captures a whole object where a single click may only catch part of it, a person's torso instead of the entire person. Reach for a box whenever an object has loose edges or separated parts.
+
+Corrections collect under **User Feedback** on the Training Data tab and feed the next round of data generation. This is the quickest way to improve a deployed model without re-tagging from scratch: review real inference output, correct what's wrong, then generate training data again.
+
 ## Quick Reference: The Flow
 
 1. **Collections** - group cameras by shared visual context and goal
-2. **Indexing** - segment raw video into candidate objects, targeted (Specific) or exhaustive (Everything)
+2. **Indexing** - segment raw video into candidate objects, targeted (Specific) or exhaustive (Everything), reusing past prompts from History
 3. **Tagging** - find, review, and label segments into object classes
-4. **Generate Training Data** - select classes, set augmentation, and let Worlds build the training and evaluation datasets
-5. **Model Training** - train a vision model and deploy a detector
-6. **Evaluate the Model** - review metrics, precision/recall, and confusion matrix on the Models page; use the inference viewer to check its detections in detail
+4. **Backgrounds** - build clean background plates in Background Studio, and approve them
+5. **Generate Training Data** - select classes, set augmentation and segment overlap, and let Worlds build the training and evaluation datasets
+6. **Model Training** - train a vision model and deploy a detector
+7. **Evaluate the Model** - review metrics, precision/recall, and the confusion matrix on the Models page
+8. **Review and Improve** - check a model's detections in detail in the inference viewer, flag false positives and missed detections, then generate training data again

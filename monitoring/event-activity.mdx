@@ -7,52 +7,60 @@ Event Activity, under Monitoring in the navigation, is the basic list view of al
 
 ## Before You Start
 
-- **Design note:** This list view is due for a visual refresh in an upcoming release. The basic functionality described here will stay the same, but the layout will look different.
 - **Naming note:** Worlds is partway through migrating from a legacy "event" system to a new Chronicle system, which will eventually distinguish between Activity, Event, and Summary type records. Right now, all captured data is mirrored across both systems, and this page (despite being named Event Activity) is currently displaying Activity-type Chronicles, the same underlying data as the legacy event system. Expect this to evolve as that distinction becomes more visible in the UI.
 - Available to every role, but Users and Managers only see data for sites they have permission to.
 - **Key concept:** an "activity" is the output of a workflow. A workflow evaluates Worlds' inference data, decides what and when to log, then publishes that activity back into Worlds, where it shows up here and elsewhere in Monitoring.
 
 ## Working the List
 
-- **Auto Refresh** (toggle, top of screen) - when on, new activity appears at the top of the list live, as it's published, similar to Overwatch.
-- **Page size** - choose how many records load per page.
-- **Sort** - toggle ascending/descending, and change which field you're sorting by. By default, it's sorted by start time descending (newest first), but you can sort alphabetically by name or by other fields instead.
+Event Activity uses a two-panel layout: activities on the left, and the detail for whatever you've selected on the right. You can work down the list without navigating away or losing your place.
 
 ![Worlds Event Activity](/images/Worlds_EventActivity.png "Worlds Event Activity")
 
+- **Live** (top right) - when on, new activity appears at the top of the list as it's published, the same way it does in [Overwatch](/monitoring/overwatch).
+- **Result count** - the list header shows how many records you're looking at out of the total matching your filters.
+- **Sort** - change which field you're sorting by and toggle ascending or descending. It defaults to start time descending, newest first.
+
+Each row carries a thumbnail from the moment the activity fired, its priority, how long ago it happened, how long it lasted, and its name and description, so you can scan the list without opening anything.
+
+Select any row and its detail opens beside the list, keeping your place and your filters intact. The detail carries the activity's name and description, its start and end time, and the agent that produced it along with that agent's description, followed by its **Activity Assets** and **Activity Audit**. You can validate or invalidate an activity from here, the same as in [Overwatch](/monitoring/overwatch), and **Edit Activity** opens it for changes.
+
+## The Timeline
+
+Above the list, **Event Volume** plots the activities matching your filters across the selected period, coloured by priority. Hover any bar to read that point in time, and use the zoom controls at the top right to widen or narrow the window. The bucket size adapts to the range you're viewing, so a one-hour window groups by the minute while a longer range groups more coarsely.
+
+The range is no longer capped at 24 hours. Choose any start and end from the date control in the filter bar, and both the timeline and the list follow it.
+
+**Tip:** **Hide Timeline** collapses the panel when you'd rather give the list and detail the full height of the screen.
+
 ## Filtering
 
-A filtering menu on the right lets you narrow the list down:
+A filter bar runs across the top of the page:
 
-- **Name** - search by activity name
-- **Filter by Activity** - a multi-select dropdown to choose multiple activity types by name
-- **Label** - called "subtype" in the legacy event system
-- **Start date/time** - a specific range
-
-Below that, expandable sections let you filter by:
-
-- **Agent** - the agent that produced the activity
+- **Search activities** - free-text search by activity name
+- **Priority** - Critical, High, Medium; anything else shows as No Priority
+- **Status** - the activity's current state
 - **Site** - which site it's associated with
 - **Camera** - which camera detected it
-- **Priority** - 1 (Critical), 2 (High), 3 (Medium); anything else shows as No Priority
-- **Validation status** - whether a human has marked it Valid or Invalid
+- **Agent** - the agent that produced the activity
+- **Labels** - called "subtype" in the legacy event system
+- **Validation** - whether a human has marked it Valid or Invalid
+- **Date range** - any start and end you choose
 
-## The Detail Page
+**Reset** clears every filter and returns you to the default view.
 
-Click any row to open that record's detail page.
+## Activity Assets
 
-- If the activity has GPS data (from a calibrated camera plus a workflow that attaches that location), a map appears at the top showing where it happened. Otherwise, the map is hidden.
-- At the top: the activity's name and description, its start and end time, and the agent that produced it, along with the agent's description.
-- The right panel lists everything associated with the activity: tags, sites, locations, labels, points of interest, data sources (cameras), tracks, and any captured metadata fields.
-- At the bottom, you can Validate or Invalidate the event, same as in [Overwatch](/monitoring/overwatch).
+Any still images, GIFs, snapshots, or video clips a workflow created and attached to the activity appear under **Activity Assets**. Click one to expand it into a player with full playback controls, and a side panel carrying the asset's **Details** (its tags and metadata, plus **Open Raw JSON**) and its **Tracks**.
 
-![Worlds Activity Detail](/images/Worlds_ActivityDetail.png "Worlds Activity Detail")
+Two toggles in that panel control what's drawn over the video:
 
-**Assets:** Any still images, GIFs, snapshots, or video clips a workflow created and attached to the event appear here. Click one to expand it into a modal with a larger view, its metadata, and the raw JSON behind the event. If a snapshot is included, it also links out to the Inference Viewer, where you can see every detected object, track, and zone together, useful for confirming why an event fired and whether it actually met the workflow's criteria.
+- **Show Detections** - outline every detected object, labelled with its class.
+- **Show Zones** - outline the zones configured for that camera.
+
+Together they let you confirm why an activity fired and whether it genuinely met the workflow's criteria.
 
 ![Worlds Activity Asset](/images/Worlds_ActivityAsset.png "Worlds Activity Asset")
-
-**Surrounding activities:** The left panel shows nearby activity in time order. Any filters you applied on the list page carry over here too.
 
 ## Common Use
 
@@ -61,8 +69,10 @@ Event Activity is mainly a tool for reviewing work in progress: workflows, model
 ## Quick Reference
 
 - **Access** - every role; Users and Managers limited to sites they have permission to
-- **Auto Refresh** - live updates at the top of the list
-- **Sort & Page Size** - customize order, field, and records per page
-- **Filters** - name, activity type, label, date range, agent, site, camera, priority, validation status
-- **Detail page** - full activity data, GPS map (if available), assets, and a link to the Inference Viewer
-- **Surrounding activities** - nearby events in time order, respecting your list-page filters
+- **Layout** - two panels, list on the left and detail on the right
+- **Live** - new activity appears at the top of the list as it's published
+- **Timeline** - event volume by priority over any date range, with zoom and a collapse control
+- **Sort** - customize the field and direction
+- **Filters** - name, priority, status, site, camera, agent, labels, validation, and date range
+- **Detail** - opens beside the list; activity data, agent, assets, and audit
+- **Assets** - playback with detection and zone overlays, tags, metadata, and raw JSON
