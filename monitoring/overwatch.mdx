@@ -25,41 +25,54 @@ Click the date in the top right to open a date picker and review a full day's wo
 Across the top of the screen:
 
 - **Total events** for the selected date
-- **Events by priority** - 1 (Critical), 2 (High), 3 (Medium)
+- **Events by priority** - Critical, High, and Medium
 - **Camera count** associated with the site
-- **Track count** - defaults to zero until you enable object tracks (see below)
+- **Detections** - visual object detections from a calibrated camera, placed in lat/long space
+- **Tracked Objects** - GPS devices reporting their own lat/long positions
+- **Entities** - the sum of detections and tracked objects
+
+The three object counters default to zero until you enable the matching layers on the map (see below).
 
 <Frame>
   ![Worlds Overwatch Chips](/images/Worlds_OverwatchChips.png "Worlds Overwatch Chips")
 </Frame>
 
-## The Histogram and Objects Tab
+## The Histogram: Events and Entities
 
 The histogram along the bottom is interactive, click back in time to see events from that period. It's a quick way to see when activity is heaviest, on top of the right panel, which always keeps the most recent event at the top.
 
-Tab the histogram over to **Objects** to see a similar breakdown, but for every detected object, the raw output of every live computer vision detector running on cameras at this site, not just posted events. A small filter menu appears in the bottom right in this view to hide or show individual object types.
+Switch the histogram between **Events** and **Entities** using the toggle at the bottom left of the map. Entities plots every detected object, the raw output of every live computer vision detector running on cameras at this site, not just posted events. Each object class gets its own colour, and hovering any bar breaks that moment down class by class.
 
 <Frame>
-  ![Worlds Overwatch Histogram](/images/Worlds_OverwatchHistogram.png "Worlds Overwatch Histogram")
-</Frame>
-
-<Frame>
-  ![Worlds Overwatch Histogram Objects](/images/Worlds_OverwatchHistogramObjects.png "Worlds Overwatch Histogram Objects")
+  ![Worlds Overwatch Entities](/images/Worlds_OverwatchHistogramObjects.png "Worlds Overwatch Entities")
 </Frame>
 
 ## Map Layers and Object Tracks
 
-The layers icon in the top right of the map lets you toggle: showing or hiding cameras, hiding inactive or disabled cameras, and showing each camera's field of view.
+The layers icon in the top right of the map opens the layer controls.
 
-From the same menu, under Tracks, you can enable individual object classes (populated from every unique class your models detect at this site), forklift or person, for example, to see where that object has been seen on the map over the course of the day.
+<Frame>
+  ![Worlds Overwatch Layers](/images/Worlds_OverwatchLayers.png "Worlds Overwatch Layers")
+</Frame>
+
+- **Cameras** - show or hide cameras on the map, with options to hide inactive or disabled ones and to show each camera's field of view.
+- **Tracked Objects** and **Detections** - toggled separately and drawn with different markers, so you can bring up GPS-reported positions and camera-based detections independently.
+- **Events** - show or hide events on the map.
+- **Geofences** - show or hide the geofences configured for the site.
+
+Under **Entity Types**, enable individual object classes, populated from every unique class your models detect at this site, forklift or person for example, to see where that object has been seen over the course of the day. Each class carries the colour it's drawn in on the map and in the Entities histogram.
+
+**Tip:** Right-click and drag to pan and tilt the map for a clearer look at where objects and events sit. Right-clicking an object on the map opens a context menu of quick actions, so you can jump to its settings or details without leaving the spatial view.
 
 **Tip:** Loading a track pulls a large volume of data, give it a second to render after enabling one.
 
 **Note:** Tracks are especially useful at larger sites, sometimes alongside GPS tracking devices and geofences for event logic. More commonly, though, event logic is tied to a specific camera, in which case that camera's tracks can only appear on the Overwatch map if the camera is calibrated. Calibration happens in [Builder](/sites-and-cameras/builder).
 
-## The Activity Panel
+## The Recent Activity Panel
 
-The right panel streams events and activity. While the live indicator is on, new events publish here as they're detected, and highlight the relevant camera as they appear.
+The **Recent Activity** panel on the right streams events and activity, with a running count for the selected date. While the live indicator is on, new events publish here as they're detected, and highlight the relevant camera as they appear.
+
+Each card carries a thumbnail from the moment the event fired, its priority, how long ago it happened, and how long it lasted, so you can triage the list without opening anything.
 
 Click any event to open its video and captured details, where you can also mark it **Valid** or **Invalid**.
 
@@ -70,7 +83,7 @@ Click any event to open its video and captured details, where you can also mark 
 
 The small menu at the top of an event's detail panel links to its full record in [Event Activity](/monitoring/event-activity). Close the panel by clicking outside it or clicking the arrow in the top left.
 
-Use the search field at the top of the activity list to find an event by name, or click the filters icon for more powerful filtering: by agent, label, priority, name, camera, and more.
+Use the **Filter by name or type** field at the top of the panel to find an event, or click **Filters** for more powerful filtering: by agent, label, priority, name, camera, and more.
 
 <Frame>
   ![Worlds Overwatch Activity Detail](/images/Worlds_OverwatchActivityDetail-1.png "Worlds Overwatch Activity Detail")
@@ -87,9 +100,9 @@ Filter down to the use case that matters (security, safety, whatever it is) and 
 - **Access** - every role; Managers and Users limited to sites they have permission to
 - **Live indicator** - blinking means new data is actively streaming; new events surface at the top of the list and highlight the source camera
 - **Date picker** - review a full day of past data
-- **Top metrics** - total events, events by priority, camera count, track count
-- **Histogram / Objects tab** - events over time, or all raw detections
-- **Map layers** - cameras, camera field of view, object tracks
+- **Top metrics** - total events, events by priority, camera count, plus detections, tracked objects, and entities
+- **Histogram** - events over time, or switch to Entities for every detected object by class
+- **Map layers** - cameras, camera field of view, detections, tracked objects, events, geofences, and per-class entity types
 - **Object tracks** - need a calibrated camera (from [Builder](/sites-and-cameras/builder)) to appear on the map
-- **Activity panel** - live event stream; mark Valid/Invalid; search and filter by agent, label, priority, name, or camera
+- **Recent Activity panel** - live event stream with thumbnails and priority; mark Valid/Invalid; search and filter by agent, label, priority, name, or camera
 - **Primary use case** - live monitoring for security, safety, and any real-time response workflow

@@ -14,3 +14,14 @@ worlds-branding/
 
 # Training doc authoring template (for writers, not published)
 worlds-training-docs/
+
+# Internal agent instructions (not published)
+CLAUDE.md
+AGENTS.md
+
+# Mintlify starter boilerplate (reference only, not published)
+essentials/
+api-reference/
+snippets/
+quickstart.mdx
+development.mdx
