@@ -3,7 +3,7 @@ title: "Settings"
 description: "Manage users, storage, transcoders, and detection models at the organization and environment level."
 ---
 
-Settings is where organization- and environment-level configuration lives: managing users, storage, transcoders, and the detection models running across your account.
+Settings is where organization- and environment-level configuration lives: managing users, storage, transcoders, edge deployments, and the detection models running across your account.
 
 ## Before You Start
 
@@ -11,7 +11,7 @@ Access to Settings, and what you can do within it, depends on your role:
 
 - **User** - no access to the Settings menu at all.
 - **Manager** - access to Settings, but only the Users page, and scoped to the sites they have access to. A Manager is meant to act as a local site administrator: they can view users in the organization, invite and manage users of an equal or lesser role, and manage site permissions, limited to the sites they themselves can access.
-- **Administrator** - access to Users, Storage Accounts, Detectors, and Transcoders.
+- **Administrator** - access to Users, Storage Accounts, Detectors, Transcoders, and Edge Deployments.
 - **Super Administrator** - additional org-wide tools on top of everything above: creating custom dashboards visible to all users, managing feature flags for alpha/beta functionality, exporting and importing models across environments, and managing organizations. This is an internal role reserved for Worlds staff and isn't covered in depth here.
 
 ## Users
@@ -57,26 +57,68 @@ Many customers instead run local (edge) transcoding hardware, since it scales be
 
 Any edge transcoders already configured will appear in this list, showing the transcoder's name, its associated cameras, the site it belongs to, and its last activity.
 
-**Note:** This page is read-only. Physical edge transcoders must be configured outside of Worlds (typically with support from the Worlds team during onboarding, see [Setting Up Transcoding with Worlds](/infrastructure/transcoder-setup)) before they'll appear here. To adjust the load on an edge transcoder, edit the individual camera and assign it to a specific edge transcoder, that's not done from this page.
+**Note:** This page is read-only. Standalone edge transcoders are set up outside of Worlds, typically with support from the Worlds team during onboarding (see [Transcoders](/infrastructure/transcoder-setup)), before they appear in this list. To adjust the load on an edge transcoder, edit the individual camera and assign it to a specific edge transcoder, that's not done from this page.
+
+**Note:** A site running a full edge, where transcoding and inference both happen on site, is managed under **Edge Deployments** rather than here. See [Edge Deployments](/infrastructure/edge-deployments).
 
 ## Detectors
 
-Lists every active model currently running inference and producing detections across your organization.
+Lists every live detector in your organization. A detector is a trained model paired with the cameras it runs inference on, and this page is built around that pairing rather than around the collection the model came from.
 
-Come here to enable or disable a detector if you need to replace, delete, or modify a running inference service. Editing a detector lets you:
+Each row shows the detector along with the collection and model behind it, its cameras, its frames-per-second setting, the pod it is running in, its last activity, and a toggle for whether it is running. Expand the cameras cell on any row to see which cameras that detector covers.
+
+To create one, click **New Detector** and choose the model and the cameras it should run against. You no longer need to route through Collections to put a trained model into production.
+
+Click any detector to open it. Editing lets you:
 
 - Change which cameras it's running inference on
 - Adjust the model used for inference
 - Adjust the target frames-per-second setting
+- Change the collection it's associated with
+- Toggle whether it's running
 
 **Tip:** These settings are useful for two different kinds of tuning: improving accuracy in your inference and workflow pipeline, or optimizing resource usage, especially relevant if Worlds is running on physical edge hardware.
 
+**Note:** The **Pod** column shows the pod each detector is actually running in, which matters when a deployment spreads detectors across more than one pod.
+
 ![Worlds Detectors](/images/Worlds_Detectors.png "Worlds Detectors")
+
+## Edge Deployments
+
+Where edges are created, assigned to sites, enrolled, and monitored. An edge runs transcoding and inference on hardware at your site, while management and results stay in the Worlds hub. For the full picture, including sizing and network requirements, see [Edge Deployments](/infrastructure/edge-deployments).
+
+The list shows each edge's name, ID, status, last heartbeat, and description.
+
+### Creating an edge
+
+Click **New Edge Deployment**. Three fields:
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| ID | Yes | Permanent and cannot be changed afterwards. At most 16 characters, using lowercase letters, digits, dots, dashes, and underscores, for example `dev-colo1`. |
+| Name | Yes | A display name, editable later |
+| Description | No | Where the edge is and what it covers |
+
+### Managing an edge
+
+Opening an edge gives you four blocks:
+
+- **Details** - its ID, name, description, and the time of its last heartbeat
+- **Sites** - the sites whose video this edge processes. A site can belong to only one edge.
+- **Enrollment** - issue an enrollment token, which lets the installer fetch that edge's credentials and configuration on first boot. Previously issued tokens are listed with the time they were used.
+- **Environment** - what the edge last reported about itself: cluster node and pod counts, per-node filesystem usage, and its retention and storage figures, along with how long ago it reported
+
+**Warning:** Enrollment tokens are single-use and shown only once. Copy the token when you issue it and pass it on through a secure channel. An edge that has already enrolled needs a freshly issued token if it is ever rebuilt.
+
+**Note:** Assign an edge's sites before issuing its enrollment token. The edge's scope is bound into the credential it receives when it enrolls.
+
+**Delete** removes the edge from the hub, tears down its transcoders, and releases its detectors back to the cloud for reassignment.
 
 ## Quick Reference
 
 - **Users** - Manager and above; invite and manage users, assign roles and site permissions
 - **Storage Accounts** - Administrator and above; define cloud/physical storage, assignable per site
 - **Transcoders** - Administrator and above; read-only list of configured edge transcoders; load balancing happens at the camera level
-- **Detectors** - Administrator and above; enable, disable, or edit running inference models
+- **Detectors** - Administrator and above; create a live detector from a model and cameras, or edit and stop an existing one
+- **Edge Deployments** - Administrator and above; create edges, assign their sites, issue single-use enrollment tokens, and read reported cluster and storage health
 - **Super Administrator** - broader org-wide tools (dashboards, feature flags, model import/export, organization management); internal Worlds role, not covered here

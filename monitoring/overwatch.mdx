@@ -27,24 +27,26 @@ Across the top of the screen:
 - **Total events** for the selected date
 - **Events by priority** - Critical, High, and Medium
 - **Camera count** associated with the site
-- **Detections** - visual object detections from a calibrated camera, placed in lat/long space
-- **Tracked Objects** - GPS devices reporting their own lat/long positions
-- **Entities** - the sum of detections and tracked objects
+- **Object Detections** - everything the site is currently tracking, broken into two categories:
+  - **GPS** - devices reporting their own lat/long positions
+  - **Visual** - objects detected by a calibrated camera and placed in lat/long space
 
-The three object counters default to zero until you enable the matching layers on the map (see below).
+The Object Detections badge and its GPS and Visual counts are interactive. Click one to show or hide that category on the map. The numbers reflect what is visible on the map right now, not everything loaded for the date, so they move as you toggle layers and object types. The priority badges work the same way.
+
+**Note:** These counts are of distinct objects, not of raw detection moments, and they leave out anything without position data, since an object with no position cannot be placed on the map. They also keep up with edits: delete or re-tag a track and the counts follow.
 
 <Frame>
   ![Worlds Overwatch Chips](/images/Worlds_OverwatchChips.png "Worlds Overwatch Chips")
 </Frame>
 
-## The Histogram: Events and Entities
+## The Histogram: Events and Object Detections
 
 The histogram along the bottom is interactive, click back in time to see events from that period. It's a quick way to see when activity is heaviest, on top of the right panel, which always keeps the most recent event at the top.
 
-Switch the histogram between **Events** and **Entities** using the toggle at the bottom left of the map. Entities plots every detected object, the raw output of every live computer vision detector running on cameras at this site, not just posted events. Each object class gets its own colour, and hovering any bar breaks that moment down class by class.
+Switch the histogram between **Events** and **Object Detections** using the toggle at the bottom left of the map. Object Detections plots every detected object, the raw output of every live computer vision detector running on cameras at this site, not just posted events. Each object class gets its own colour, and hovering any bar breaks that moment down class by class.
 
 <Frame>
-  ![Worlds Overwatch Entities](/images/Worlds_OverwatchHistogramObjects.png "Worlds Overwatch Entities")
+  ![Worlds Overwatch Object Detections](/images/Worlds_OverwatchHistogramObjects.png "Worlds Overwatch Object Detections")
 </Frame>
 
 ## Map Layers and Object Tracks
@@ -56,11 +58,11 @@ The layers icon in the top right of the map opens the layer controls.
 </Frame>
 
 - **Cameras** - show or hide cameras on the map, with options to hide inactive or disabled ones and to show each camera's field of view.
-- **Tracked Objects** and **Detections** - toggled separately and drawn with different markers, so you can bring up GPS-reported positions and camera-based detections independently.
+- **GPS Detections** and **Visual Detections** - toggled separately and drawn with different markers, so you can bring up GPS-reported positions and camera-based detections independently.
 - **Events** - show or hide events on the map.
 - **Geofences** - show or hide the geofences configured for the site.
 
-Under **Entity Types**, enable individual object classes, populated from every unique class your models detect at this site, forklift or person for example, to see where that object has been seen over the course of the day. Each class carries the colour it's drawn in on the map and in the Entities histogram.
+Under **Object Types**, enable individual object classes, populated from every unique class your models detect at this site, forklift or person for example, to see where that object has been seen over the course of the day. A type spans both categories, so toggling one filters GPS and visual detections alike. Each class carries the colour it's drawn in on the map and in the Object Detections histogram.
 
 **Tip:** Right-click and drag to pan and tilt the map for a clearer look at where objects and events sit. Right-clicking an object on the map opens a context menu of quick actions, so you can jump to its settings or details without leaving the spatial view.
 
@@ -89,6 +91,30 @@ Use the **Filter by name or type** field at the top of the panel to find an even
   ![Worlds Overwatch Activity Detail](/images/Worlds_OverwatchActivityDetail-1.png "Worlds Overwatch Activity Detail")
 </Frame>
 
+## Opening Things on the Map
+
+Events are not the only thing with a detail panel. Clicking a tracked object, a detection, or a camera opens the same side panel, so you can follow something from the map without leaving the spatial view.
+
+### Tracked Objects
+
+Click a GPS-tracked object to open its **Tracked Object** panel:
+
+- **Details** - what the object is and how it is identified
+- **History** - the object's path for the selected day, drawn on its own map with a scrubber to move back and forth through it. This is the quickest way to answer where something has been over the course of a day.
+- **Events** - the events this object was involved in, so you can go straight from an object to what it triggered
+
+### Visual Detections
+
+Click a camera-based detection to open its **Visual Detection** panel:
+
+- **Details** - what was detected and when
+- The **camera feed** for the moment it was seen, so you can confirm the detection against the footage without opening another view
+- **Related events** - any events this detection contributed to
+
+### Cameras
+
+Click a camera to open its panel, which carries a filtered list of that camera's events. Start from a live camera, scan what has happened on that feed through the day, and jump straight back to the moment that matters, rather than filtering down from every event at the site.
+
 ## Common Uses
 
 Overwatch works well for a quick check of recent activity, a review of a full day's events at a site, or digging into historical tracks. But its primary purpose is live monitoring: security and safety stakeholders, or really anyone whose job requires reacting to something in real time.
@@ -100,9 +126,10 @@ Filter down to the use case that matters (security, safety, whatever it is) and 
 - **Access** - every role; Managers and Users limited to sites they have permission to
 - **Live indicator** - blinking means new data is actively streaming; new events surface at the top of the list and highlight the source camera
 - **Date picker** - review a full day of past data
-- **Top metrics** - total events, events by priority, camera count, plus detections, tracked objects, and entities
-- **Histogram** - events over time, or switch to Entities for every detected object by class
-- **Map layers** - cameras, camera field of view, detections, tracked objects, events, geofences, and per-class entity types
+- **Top metrics** - total events, events by priority, camera count, plus Object Detections split into GPS and Visual; the badges are clickable map toggles
+- **Histogram** - events over time, or switch to Object Detections for every detected object by class
+- **Map layers** - cameras, camera field of view, GPS detections, visual detections, events, geofences, and per-class object types
 - **Object tracks** - need a calibrated camera (from [Builder](/sites-and-cameras/builder)) to appear on the map
 - **Recent Activity panel** - live event stream with thumbnails and priority; mark Valid/Invalid; search and filter by agent, label, priority, name, or camera
+- **Detail panels** - tracked objects (details, day path with scrubber, related events), visual detections (details, camera feed, related events), and cameras (that camera's event list)
 - **Primary use case** - live monitoring for security, safety, and any real-time response workflow
