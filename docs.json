@@ -150,7 +150,8 @@
             "group": "Deployment",
             "pages": [
               "infrastructure/storage-account-creation",
-              "infrastructure/transcoder-setup"
+              "infrastructure/transcoder-setup",
+              "infrastructure/edge-deployments"
             ]
           }
         ]

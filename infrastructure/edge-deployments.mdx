@@ -1,0 +1,260 @@
+---
+title: "Edge Deployments"
+description: "Run Worlds video processing on hardware at your site, with management, results, and analysis in the Worlds hub."
+---
+
+Worlds Edge records video and runs detection models on a GPU box at your site. Everything else stays in the Worlds hub: sites, cameras, detectors, and edges are configured centrally and pushed down live, while detections, tracks, search, and alerts come back up for review in the UI and the public API.
+
+The result is that recorded video never has to leave your building, and the only thing crossing the network by default is results. It suits sites where bandwidth is scarce, where data-residency rules keep footage on premises, or where a policy forbids opening inbound ports.
+
+This guide covers, in order: choosing between deployment models, the architecture, network requirements, host prerequisites, installing an edge, and operating one day to day.
+
+## Before You Start
+
+- **Complete the network requirements before the box is installed.** The edge needs outbound reachability on day one, and a failed install usually traces back to a destination that was never opened.
+- **Enrollment tokens are single-use and shown only once.** Issue one when the install is ready to happen, not before.
+- **One edge is one machine.** A site larger than one machine's rated capacity runs several edges, rather than one larger machine. See Sizing an Edge below.
+- **Worlds does not store your recorded video.** It stays on the edge until someone requests a clip, and synced clips land in storage you control.
+
+## Choosing a Deployment Model
+
+Worlds runs three ways. Edge is the middle path, and the right one when the link is the constraint.
+
+| | All-cloud | All on-prem | Hybrid edge |
+| --- | --- | --- | --- |
+| Video processed | Worlds cloud | Your data centre | On site |
+| Video stored | Cloud | Your storage | On the edge, synced on request |
+| Management and results | Worlds cloud | Your own instance | Worlds hub |
+| Crosses the network | Every camera stream | Nothing | Results, and requested clips |
+| Site hardware | None | Full platform | One GPU box |
+| Best fit | Good connectivity | Isolated environments | Limited bandwidth, footage stays on site, GPUs owned |
+
+## Architecture
+
+Transcode and inference happen on site. Everything else happens in the hub.
+
+**On the edge, at your site:**
+
+| Component | Role |
+| --- | --- |
+| Video pipeline | Records video from cameras over RTSP on the site LAN, and runs the detection models on the GPU |
+| Image service | Produces clips and snapshots from local video |
+| Local storage | Holds recorded video on site, pruned by retention rules |
+| Edge manager | Enrolls the edge, heartbeats, reports health, and serves the hub's sync requests |
+
+**In the hub, in the Worlds cloud:**
+
+| Component | Role |
+| --- | --- |
+| Management | Sites, cameras, detectors, and edges |
+| Results | Detections, tracks, search, and alerts |
+| Cloud storage | Thumbnails, stills, and synced clips |
+| Applications | The Worlds UI and the public API |
+
+### How the Edge Talks to the Hub
+
+The edge opens one outbound connection to the hub and everything rides on it. The hub never reaches in.
+
+**Edge to hub:** heartbeats and health metrics, detections and thumbnails as they happen, and sync progress for requested footage.
+
+**Hub to edge:** configuration pushed live with no restarts, sync requests that can be for a completed or a still-recording video and can be cancelled, and detector assignments that keep an edge's work on its own pods.
+
+**Once, at the start:** enrollment is a single HTTPS call using a one-time link, which returns the edge's identity, credentials, and hub addresses. A restarted edge resumes from what it already holds and never re-enrolls.
+
+## Network Requirements
+
+Every connection is outbound from the edge. No inbound firewall rules are required, and no VPN is needed.
+
+Work with your IT and security team to allow the destinations below, where `<DOMAIN>` is your Worlds domain in the form `<company>.worlds.io`. Worlds provides the exact hostname for the message bus and the registry with your install.
+
+| Destination | Port | Protocol | Phase | Purpose |
+| --- | --- | --- | --- | --- |
+| `api.<DOMAIN>` | 443 | HTTPS | Runtime | Worlds API and coordinator |
+| Message bus endpoint | 443 | WSS (TLS) | Runtime | Detections, heartbeats, snapshot and clip messaging |
+| `tracks-service.<DOMAIN>` | 443 | HTTPS | Runtime | Storage security and video service |
+| Registry host | 443 | HTTPS | Install and runtime | Chart and container image pulls |
+| `*.blob.core.windows.net` | 443 | HTTPS | Install and runtime | Worlds object storage, and registry layer storage for an Azure registry |
+
+**FQDN allowlist** (for proxy and URL-filter allowlists):
+
+```text
+api.<DOMAIN>
+tracks-service.<DOMAIN>
+*.blob.core.windows.net
+```
+
+Add the message bus and registry hostnames Worlds provides to the same list.
+
+On the local network, the edge reaches your cameras directly over RTSP on port 554.
+
+**Warning:** Open destinations by FQDN or by cloud service tag, never by IP. Addresses rotate, and an IP allowlist breaks silently, often weeks later.
+
+**Note:** Send your site's static egress source IP to Worlds along with the install date. Worlds registers it where the hub requires an ingress allowlist.
+
+## Sizing an Edge
+
+An edge runs on a single machine. A site with more cameras than one machine's rated capacity runs more than one edge, rather than a larger machine.
+
+### Reference platform
+
+Worlds validates capacity on a compact, commercially available workstation. It is a standard commercial product, not custom hardware, and is sold fully configured by Simply NUC or as a barebone kit through CDW.
+
+| | |
+| --- | --- |
+| Platform | ASUS NUC 15 Performance, 3-liter chassis |
+| CPU | Intel Core Ultra 9 275HX, 24 cores |
+| GPU | NVIDIA GeForce RTX 5070, 8 GB GDDR7 |
+| Memory | 64 GB DDR5, two SO-DIMM slots, up to 96 GB |
+| Storage | Dual M.2 NVMe, PCIe 5.0 x4 and PCIe 4.0 x4 |
+| Network | 2.5 GbE LAN, Wi-Fi 7 |
+| Power | 330 W external supply |
+
+### Rated capacity
+
+Ratings are set per stream profile: the resolution of the camera stream, and the frame rate at which Worlds analyzes it. Cameras may stream at higher native frame rates than the analyzed rate. Because resolution drives capacity directly, settle camera choice and [Camera Selection](/infrastructure/camera-selection-guide) alongside this table rather than after it.
+
+| Stream profile | Analyzed rate | Rated cameras |
+| --- | --- | --- |
+| 720p | 5 fps | 80 |
+| 720p | 10 fps | 40 |
+| 1080p | 5 fps | 40 |
+| 1080p | 10 fps | 30 |
+
+End to end, from what the camera sees to an event in Worlds, the reference platform runs 5 to 10 seconds.
+
+### Measured performance at rated load
+
+Utilization and detection latency at the rated camera count for each profile. These are sustained operating points, not peaks.
+
+| Stream profile | Cameras | Mean latency | Peak latency | CPU | GPU | Host memory |
+| --- | --- | --- | --- | --- | --- | --- |
+| 720p, 5 fps | 80 | 0.8 s | 1.7 s | 45% | 51% | 28 GiB |
+| 720p, 10 fps | 40 | 0.8 s | 1.7 s | 26% | 51% | 18 GiB |
+| 1080p, 5 fps | 40 | 1.1 s | 1.7 s | 44% | 30% | 20 GiB |
+| 1080p, 10 fps | 30 | 0.6 s | 1.8 s | 38% | 42% | 18 GiB |
+
+### How the ratings were set
+
+Ratings come from stepped load testing. Camera count increases in steps, and each step runs under sustained load while detection latency and host utilization are sampled continuously. A step passes only when every limit below holds for the full measurement window, so rated counts sit below the platform's measured limits at every operating point.
+
+| Limit | Threshold |
+| --- | --- |
+| Detection latency, mean | 5 s or less |
+| Detection latency, peak | 15 s or less |
+| Detections slower than 5 s | 10% or less |
+| CPU utilization | 90% or less |
+| Host memory | 80% or less |
+| GPU memory | 80% or less |
+
+**Note:** Validation ran with one active detection model, on-device video storage, and software video processing. Results vary with scene content and camera configuration.
+
+### Sizing a site
+
+Size each site by its dominant stream profile, and add an edge per group of rated cameras. Profiles can be mixed on a single edge, in which case the edge is rated by the most demanding profile it carries.
+
+For camera counts, resolutions, or retention requirements beyond this guide, Worlds provides a site-specific hardware recommendation.
+
+### Speccing your own hardware
+
+If you would rather deploy on datacenter-class GPUs than on the reference platform, separate Worlds benchmark testing puts one NVIDIA L4-class GPU at roughly 25 cameras at 1080p with 10 fps inference, alongside 8 CPU cores and 20 GiB of RAM. That sits close to the reference platform's rating of 30 at the same profile, which makes it a useful cross-check when evaluating a different GPU.
+
+Those figures are modelled from benchmark testing rather than validated against the pass criteria above, so provision above them and confirm a configuration with Worlds before committing to it.
+
+### Storage
+
+Budget roughly 5 GB per camera per day of recorded video, on top of the 100 GB the operating system and cluster need. Video is pruned automatically as the disk fills, so this sets how much history an edge holds rather than whether it runs.
+
+**Note:** This is disk-pressure pruning on the edge itself, and it is separate from the platform's retention policy, which governs how long video that has reached cloud storage is kept. See [Storage Accounts](/infrastructure/storage-account-creation).
+
+## Deploying an Edge
+
+Worlds installs and commissions edge hardware, the same way it does for Worlds-managed edge transcoders. You prepare the site and create the edge in the product; Worlds handles the software install on the box.
+
+### What you provide
+
+- **Hardware** meeting the sizing above, powered and on the site network
+- **Network access**, per Network Requirements, in place before the install
+- **Camera details** for the site the edge will cover
+- **A static egress source IP**, sent to Worlds with the install date
+
+### Step 1: Create the edge deployment
+
+In **Settings**, open **Edge Deployments** and click **New Edge Deployment**. Three fields:
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| ID | Yes | Permanent and cannot be changed later. At most 16 characters, using lowercase letters, digits, dots, dashes, and underscores. It is used in messaging subjects, for example `dev-colo1`. |
+| Name | Yes | A display name, which you can change later |
+| Description | No | Where the edge is and what it covers |
+
+### Step 2: Assign sites
+
+On the edge's page, use **Sites** to attach the sites whose video this edge processes. A site can belong to only one edge.
+
+Assign sites before issuing an enrollment token. The edge's scope is bound into the credential it receives at enrollment.
+
+### Step 3: Issue an enrollment token
+
+Under **Enrollment**, click **Issue Enrollment Token**. The token lets the installer fetch that edge's credentials and configuration on first boot.
+
+**Warning:** Enrollment tokens are single-use and shown only once. Copy the token when it is issued and pass it to whoever performs the install through a secure channel. Once an edge has enrolled, its token shows as used and a rebuild needs a freshly issued one.
+
+### Step 4: Worlds installs the edge
+
+Worlds deploys the edge software onto the prepared hardware as a single chart on lightweight Kubernetes, and the enrollment token is exchanged on first boot for the edge's own credentials, the hub's message bus connection, and its storage configuration. Nothing on the box holds a shared or reusable credential.
+
+### Step 5: Confirm the edge is online
+
+The edge appears in the **Edge Deployments** list in [Settings](/settings/overview) with its status and last heartbeat. Once it shows **Online**, assign cameras to the site it covers and detection begins.
+
+## Operating an Edge
+
+### Monitoring
+
+The Edge Monitoring Dashboard in the hub shows each edge's disk usage, network quality, running services, and the versions of every Worlds component on the box, alongside the time each was last reported. Because an edge's cluster is not scraped directly, these arrive attached to the edge's heartbeat.
+
+An edge that stops heartbeating is marked offline in the hub, and recovers to online on its own once beats resume.
+
+### Requesting footage
+
+Recorded video stays on the edge until someone asks for it. Request a clip from the hub and it syncs on demand, including from a recording still in progress, where segments upload as they close so you can watch while recording continues. A sync can be cancelled while it runs, and video that has not yet synced is marked as such in the UI, so it is always clear what is available in the cloud and what is still on site.
+
+### Retention
+
+An edge records continuously onto a fixed disk, and nothing else deletes from it, so the edge reclaims its own space. As the volume fills past its threshold, already-synced video is removed first, since the hub holds another copy, and only then unique footage, oldest first. A site on a constrained uplink keeps recording rather than filling up and stopping.
+
+### Configuration changes
+
+Configuration is edited in the hub and pushed down live. Edges do not need restarting to pick up a change.
+
+### Removing an edge
+
+**Delete** on the edge's page removes it from the hub, tears down its transcoders, and releases its detectors back to the cloud for reassignment. Removing the software from the box itself is handled by Worlds, and video still held locally is not recoverable through the hub once the edge is gone.
+
+## Current Limits
+
+- **One machine per edge.** A larger site runs several edges side by side. A single edge spanning several machines is planned, not shipped.
+- **Results are consumed in the hub.** Site workflows that act on detections make a round trip to the hub today. A local message bus on the edge is planned.
+- **Re-enrollment takes a new edge ID.** Credential rotation and decommissioning in place are not yet supported.
+
+## Quick Reference
+
+| Item | Detail |
+| --- | --- |
+| Site hardware | One commodity GPU box per group of rated cameras, 100 GB or more root filesystem |
+| Rated capacity | 30 cameras at 1080p and 10 fps, up to 80 at 720p and 5 fps, per edge |
+| Latency | 5 to 10 seconds, camera to event |
+| Kubernetes | Lightweight Kubernetes (k3s) on the site machine, installed by Worlds |
+| Outbound ports | 443 only, to the hub, the message bus, the registry, and object storage |
+| Inbound ports | None |
+| Local network | RTSP 554 to cameras |
+| Enrollment | Single-use token, issued from Settings, shown only once |
+| Video storage | On the edge, roughly 5 GB per camera per day, pruned automatically |
+| Video to cloud | On request only, including live recordings, cancellable |
+| Edge ID | Permanent, 16 characters or fewer, lowercase letters, digits, dots, dashes, underscores |
+
+## Next Steps
+
+- [Camera Selection](/infrastructure/camera-selection-guide) for choosing and positioning the cameras an edge will record
+- [Storage Accounts](/infrastructure/storage-account-creation) for the cloud storage synced clips land in
+- [Transcoders](/infrastructure/transcoder-setup) for deployments where video is transcoded on site but inference runs in the cloud
