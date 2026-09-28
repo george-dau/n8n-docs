@@ -1,0 +1,54 @@
+---
+title: "3.12.0"
+---
+
+September 21, 2026
+
+---
+
+#### **Introducing Worlds Edge**
+
+Video processing where the cameras are. Worlds Edge records video and runs detection models on a GPU box at your site, and everything else stays in the Worlds hub: sites, cameras, detectors, and edges are configured centrally and pushed down live, while detections, tracks, search, and alerts come back up for review and analysis in the UI and the public API. One outbound connection carries all of it.
+
+- **Built for Sites Where the Bandwidth Isn't There** - Remote locations, cellular or satellite links, ordinary business internet: dozens of cameras make more video than the line can carry. Worlds Edge keeps recorded video on site and sends only results, so detections, thumbnails, and stills arrive as they happen without saturating the link. When you need the actual footage you ask for it, and the clip syncs on request, even from a recording still in progress. The edge prunes its own local storage as it fills, reclaiming already-synced footage before anything unique, so a site on a constrained uplink keeps recording instead of filling up and stopping.
+- **Recorded Video Never Has to Leave the Building** - For sites under strict data-residency rules, or a policy against opening inbound ports, the edge talks outbound only, on port 443. No VPN, no inbound firewall rules, and the hub never reaches into your network. Each edge enrolls once through a single-use link that becomes its own credential, with nothing shared and nothing reusable. Video moves only when a person asks for it, and the hub shows you exactly what has left the site.
+- **Flexible Deployment, Lower Cost** - Cloud GPU capacity is scarce and expensive, and every camera you add pushes that bill higher. Worlds Edge moves the processing onto commodity hardware instead, where a single GPU box runs a full site under lightweight Kubernetes: buy one outright, repurpose a machine you already have, or put it in colo, whichever suits the site and the budget. Deployment is one chart and one enrollment link, so you can stand up a location yourself rather than waiting on a provisioning cycle, and an edge that restarts picks up where it left off.
+
+---
+
+#### **Overwatch**
+
+Everything on the map is something you can open now, and the numbers above it line up with the data underneath:
+
+- **Tracked Object Details** - Overwatch counts what's on the map as **Object Detections**, split into **GPS** and **Visual**. Both open now. A GPS object gets a detail panel carrying its identity, its full track history for the day, and the events it was part of. A visual detection takes you from a dot on the map straight to the camera that saw it and the snapshot it came from.
+- **Per-Camera Events** - Click a camera to open its detail panel, which now carries a filtered list of that camera's events. Start from the live view, scan what's happened on that feed, and jump straight back to the moment that matters instead of filtering down from the whole site.
+- **Improved Count Accuracy** - Object Detection counts now reflect the data underneath them and account for newly supported data types. Distinct objects are counted rather than raw detection moments, objects still in motion stay open instead of reporting an end time they haven't reached, and counts refresh as tracks are deleted, re-tagged, or updated.
+
+---
+
+#### **Agent Orchestration**
+
+Building an agent and running one are different jobs, and the product treats them that way now:
+
+- **Agent Overview** - Every agent gets an overview page summarizing its purpose, scope, and output, so you can review exactly what an agent will do before you publish it, and keep track of what your active agents are doing long after.
+- **Drafts** - Save an agent as a draft, step away, and come back to finish it, then activate or discard it right from its card.
+
+---
+
+#### **System Management**
+
+The Detectors page now reflects how you actually think about detection:
+
+- **Detectors, Not Collections** - The page is built around the live detector, a model paired with a camera, rather than the collection sitting underneath it, and you can create one directly from the page instead of routing through Collections. Each detector also reports the edge node it's genuinely running on.
+
+---
+
+#### **Platform Performance**
+
+More headroom on busy sites, steadier long runs, and a routine round of security hardening.
+
+- **Even Detector Distribution** - Detector assignment balances across available capacity instead of stacking onto a single worker, raising throughput on busy sites and ending the out-of-memory restarts that came with the pile-up.
+- **Steadier Long Runs** - Fixed a memory leak that was causing periodic restarts in production.
+- **Faster Search, Smaller Footprint** - Better compression cut vector storage by roughly a third, and search got faster along with it.
+- **Retention When It Counts** - Video retention moved out of the nightly batch, so footage is kept the moment it's needed rather than hours later.
+- **Platform Hardening** - Patched a large batch of dependency-level vulnerabilities across web frameworks, HTML sanitization, data serialization, and compression libraries as part of routine security maintenance.
