@@ -211,13 +211,15 @@ The edge appears in the **Edge Deployments** list in [Settings](/settings/overvi
 
 ### Monitoring
 
-The Edge Monitoring Dashboard in the hub shows each edge's disk usage, network quality, running services, and the versions of every Worlds component on the box, alongside the time each was last reported. Because an edge's cluster is not scraped directly, these arrive attached to the edge's heartbeat.
+The Edge Monitoring Dashboard in the hub shows each edge's disk usage, network quality, running services, and the versions of every Worlds component on the box, alongside the time each was last reported. Because an edge's cluster is not scraped directly, these arrive attached to the edge's heartbeat. In [Settings](/settings/overview), **Edge Deployments** also lists each edge's version, and an edge's **Components** block flags any component that differs from the rest of your fleet.
 
 An edge that stops heartbeating is marked offline in the hub, and recovers to online on its own once beats resume.
 
 ### Requesting footage
 
 Recorded video stays on the edge until someone asks for it. Request a clip from the hub and it syncs on demand, including from a recording still in progress, where segments upload as they close so you can watch while recording continues. A sync can be cancelled while it runs, and video that has not yet synced is marked as such in the UI, so it is always clear what is available in the cloud and what is still on site.
+
+API clients with Administrator access can request the same sync through the public API with the `requestVideoSync` mutation, and each video's `sync` field reports its state and progress.
 
 ### Retention
 

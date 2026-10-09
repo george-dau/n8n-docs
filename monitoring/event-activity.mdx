@@ -23,7 +23,7 @@ Event Activity uses a two-panel layout: activities on the left, and the detail f
 
 Each row carries a thumbnail from the moment the activity fired, its priority, how long ago it happened, how long it lasted, and its name and description, so you can scan the list without opening anything.
 
-Select any row and its detail opens beside the list, keeping your place and your filters intact. The detail carries the activity's name and description, its start and end time, and the agent that produced it along with that agent's description, followed by its **Activity Assets** and **Activity Audit**. You can validate or invalidate an activity from here, the same as in [Overwatch](/monitoring/overwatch), and **Edit Activity** opens it for changes.
+Select any row and its detail opens beside the list, keeping your place and your filters intact. The detail carries the activity's name and description, its start and end time, and the agent that produced it along with that agent's description, with tabs for **Details**, **Media & Assets**, **Map**, and **Metadata**. You can validate or invalidate an activity from here, the same as in [Overwatch](/monitoring/overwatch), and **Edit Activity** opens it for changes. **Discuss this** in the detail header opens [Iris](/platform-overview/iris) in a new conversation about that activity.
 
 ## The Timeline
 
@@ -41,7 +41,7 @@ A filter bar runs across the top of the page:
 - **Priority** - Critical, High, Medium; anything else shows as No Priority
 - **Status** - the activity's current state
 - **Site** - which site it's associated with
-- **Camera** - which camera detected it
+- **Camera** - which camera detected it, grouped by site
 - **Agent** - the agent that produced the activity
 - **Labels** - called "subtype" in the legacy event system
 - **Validation** - whether a human has marked it Valid or Invalid
@@ -49,16 +49,16 @@ A filter bar runs across the top of the page:
 
 **Reset** clears every filter and returns you to the default view.
 
-## Activity Assets
+## Media & Assets
 
-Any still images, GIFs, snapshots, or video clips a workflow created and attached to the activity appear under **Activity Assets**. Click one to expand it into a player with full playback controls, and a side panel carrying the asset's **Details** (its tags and metadata, plus **Open Raw JSON**) and its **Tracks**.
+Any still images, GIFs, snapshots, or video clips a workflow created and attached to the activity appear on the **Media & Assets** tab, oldest first. Filter them by **All**, **Recordings**, **Clips**, or **Images**. Click one to expand it into a player with full playback controls, and a side panel carrying the asset's **Details** (its tags and metadata, plus **Open Raw JSON**) and its **Tracks**.
 
 Two toggles in that panel control what's drawn over the video:
 
 - **Show Detections** - outline every detected object, labelled with its class.
 - **Show Zones** - outline the zones configured for that camera.
 
-Together they let you confirm why an activity fired and whether it genuinely met the workflow's criteria.
+Together they let you confirm why an activity fired and whether it genuinely met the workflow's criteria. The activity's own tracks are highlighted and the rest dimmed, so the objects that triggered it stand out, and **Copy link to this moment** shares the asset at the current playback position.
 
 ![Worlds Activity Asset](/images/Worlds_ActivityAsset.png "Worlds Activity Asset")
 
@@ -74,5 +74,5 @@ Event Activity is mainly a tool for reviewing work in progress: workflows, model
 - **Timeline** - event volume by priority over any date range, with zoom and a collapse control
 - **Sort** - customize the field and direction
 - **Filters** - name, priority, status, site, camera, agent, labels, validation, and date range
-- **Detail** - opens beside the list; activity data, agent, assets, and audit
-- **Assets** - playback with detection and zone overlays, tags, metadata, and raw JSON
+- **Detail** - opens beside the list; Details, Media & Assets, Map, and Metadata tabs; **Discuss this** opens Iris about the activity
+- **Media & Assets** - oldest first, filterable by type; playback with detection and zone overlays, the activity's own tracks highlighted, tags, metadata, raw JSON, and a link to the current moment
