@@ -1,0 +1,51 @@
+---
+title: "3.13.2"
+---
+
+October 5, 2026
+
+---
+
+#### **Overwatch**
+
+A new way to see your site, and settings made for the people using it every day:
+
+- **Perspective View** - Tilt the map and the buildings around your site rise up in 3D, so you read the layout the way you'd see it standing there instead of straight from above.
+- **Overwatch Settings** - A new settings menu for everyday users, kept separate from developer controls, with behavior presets that change how events act on the map. **Automatic Decay** keeps today's behavior, where events fade on their own, and **Validation Queue** keeps them highlighted until someone validates them.
+
+---
+
+#### **Iris & Agents**
+
+What your agents find now shows up everywhere else in Worlds, not just on the agent's own page:
+
+- **Agent Findings in Event Activity** - Agents post what they find as activity chronicles under their own producer, so their findings appear in Event Activity and Overwatch next to everything else, ready to filter, review, and validate. This applies to agents created from this release on.
+- **Dashboards from Chat** - Ask an agent to build a dashboard of its output, and it has better pieces to build with: heat grids, distribution bars, Sankey charts, data tables, threshold gauges, and a live camera widget.
+- **Discuss This Event** - Iris is page-aware on event details. Select **Discuss this** and Iris opens a conversation about that exact event, with starter questions like "How often does this happen?" and "Was this correctly detected?"
+
+---
+
+#### **System Management & Monitoring**
+
+Easier to tell where activity comes from, and easier to know when a device drops:
+
+- **Producer Icons** - Give each chronicle producer its own icon when you create or edit it, and every activity from that producer carries it across the product, so you can tell at a glance which agent or integration a row came from.
+- **Device Status Subscription** - Subscribe to a set of devices through the public API and get a message the moment one goes online or offline, instead of polling for it. It's the building block for outage alerts in n8n or your own systems.
+
+---
+
+#### **Edge**
+
+More control over what comes up from your sites, and a clearer view of what they're running:
+
+- **Video Sync on Request** - API clients can ask an edge to send a specific video up to the hub with the new `requestVideoSync` mutation, and every video reports its sync status, so video that only lives on site comes to the cloud when someone needs it.
+- **Edge Software Versions** - **Settings > Edges** shows the software version each edge is running, with a **Components** card that flags anything out of step with the rest of your fleet. Versions fill in as each edge picks up its next update.
+
+---
+
+#### **Performance & Bug Fixes**
+
+Lighter detection for simple jobs, and a fix that makes review smoother:
+
+- **Untracked Detectors** - Detectors can skip tracking. Set `"trackingMode": "untracked"` on a detector through the API and each detection is recorded as its own reading instead of being stitched into a track, which suits counting, occupancy, and presence checks where it doesn't matter which person is which.
+- **Detections in the Clip Viewer** - Detection boxes and tracks render again on event clips and recordings, with the event's own tracks highlighted.
