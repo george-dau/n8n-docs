@@ -64,11 +64,22 @@ The layers icon in the top right of the map opens the layer controls.
 
 Under **Object Types**, enable individual object classes, populated from every unique class your models detect at this site, forklift or person for example, to see where that object has been seen over the course of the day. A type spans both categories, so toggling one filters GPS and visual detections alike. Each class carries the colour it's drawn in on the map and in the Object Detections histogram.
 
+**Perspective view** - the button beside the layers icon tilts the map and raises the buildings around your site in 3D. Click it again to return to the flat, top-down view. Overwatch also remembers your layer selections the next time you open it.
+
 **Tip:** Right-click and drag to pan and tilt the map for a clearer look at where objects and events sit. Right-clicking an object on the map opens a context menu of quick actions, so you can jump to its settings or details without leaving the spatial view.
 
 **Tip:** Loading a track pulls a large volume of data, give it a second to render after enabling one.
 
 **Note:** Tracks are especially useful at larger sites, sometimes alongside GPS tracking devices and geofences for event logic. More commonly, though, event logic is tied to a specific camera, in which case that camera's tracks can only appear on the Overwatch map if the camera is calibrated. Calibration happens in [Builder](/sites-and-cameras/builder).
+
+## Overwatch Settings
+
+The **Settings** button in the top bar opens Overwatch settings.
+
+- **Behavior** - how priority events act on the map. **Automatic decay**, the default, fades them after a set time you can adjust, and **Validation queue** keeps them active until they're validated or invalidated.
+- **Layers** - which map layers show by default, including whether Overwatch starts in perspective view.
+
+Super Administrators also see a **Developer** group with map, timing, and marker controls.
 
 ## The Recent Activity Panel
 
@@ -128,7 +139,9 @@ Filter down to the use case that matters (security, safety, whatever it is) and 
 - **Date picker** - review a full day of past data
 - **Top metrics** - total events, events by priority, camera count, plus Object Detections split into GPS and Visual; the badges are clickable map toggles
 - **Histogram** - events over time, or switch to Object Detections for every detected object by class
-- **Map layers** - cameras, camera field of view, GPS detections, visual detections, events, geofences, and per-class object types
+- **Map layers** - cameras, camera field of view, GPS detections, visual detections, events, geofences, and per-class object types; your selections are remembered
+- **Perspective view** - tilts the map and raises buildings in 3D, from the button beside the layers icon
+- **Settings** - event behavior (Automatic decay or Validation queue) and default map layers, from the top bar
 - **Object tracks** - need a calibrated camera (from [Builder](/sites-and-cameras/builder)) to appear on the map
 - **Recent Activity panel** - live event stream with thumbnails and priority; mark Valid/Invalid; search and filter by agent, label, priority, name, or camera
 - **Detail panels** - tracked objects (details, day path with scrubber, related events), visual detections (details, camera feed, related events), and cameras (that camera's event list)

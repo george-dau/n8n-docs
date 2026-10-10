@@ -87,7 +87,7 @@ Click any detector to open it. Editing lets you:
 
 Where edges are created, assigned to sites, enrolled, and monitored. An edge runs transcoding and inference on hardware at your site, while management and results stay in the Worlds hub. For the full picture, including sizing and network requirements, see [Edge Deployments](/infrastructure/edge-deployments).
 
-The list shows each edge's name, ID, status, last heartbeat, and description.
+The list shows each edge's name, ID, status, last heartbeat, version, and description.
 
 ### Creating an edge
 
@@ -101,12 +101,13 @@ Click **New Edge Deployment**. Three fields:
 
 ### Managing an edge
 
-Opening an edge gives you four blocks:
+Opening an edge gives you five blocks:
 
 - **Details** - its ID, name, description, and the time of its last heartbeat
 - **Sites** - the sites whose video this edge processes. A site can belong to only one edge.
 - **Enrollment** - issue an enrollment token, which lets the installer fetch that edge's credentials and configuration on first boot. Previously issued tokens are listed with the time they were used.
 - **Environment** - what the edge last reported about itself: cluster node and pod counts, per-node filesystem usage, and its retention and storage figures, along with how long ago it reported
+- **Components** - the version of each Worlds component the edge runs, next to the version most edges run, with **Differs from fleet** marking anything out of step. Versions appear once an edge is running a release that reports them.
 
 **Warning:** Enrollment tokens are single-use and shown only once. Copy the token when you issue it and pass it on through a secure channel. An edge that has already enrolled needs a freshly issued token if it is ever rebuilt.
 
